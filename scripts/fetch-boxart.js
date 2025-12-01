@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import https from 'https';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 import { platformConfig, allGames } from '../src/lib/data.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -12,6 +13,41 @@ const args = process.argv.slice(2);
 const FAIL_FAST = args.includes('--fail-fast') || args.includes('-f');
 const DEBUG = args.includes('--debug') || args.includes('-d');
 const REFETCH = args.includes('--refetch') || args.includes('-r');
+
+// Check if pngquant is available
+let hasPngquant = false;
+try {
+    execSync('which pngquant', { stdio: 'ignore' });
+    hasPngquant = true;
+    console.log('pngquant found - images will be compressed after download');
+} catch {
+    if (DEBUG) console.log('pngquant not found - skipping compression');
+}
+
+// PNG magic bytes
+const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+const isValidPng = (filepath) => {
+    try {
+        const fd = fs.openSync(filepath, 'r');
+        const buffer = Buffer.alloc(8);
+        fs.readSync(fd, buffer, 0, 8, 0);
+        fs.closeSync(fd);
+        return buffer.equals(PNG_MAGIC);
+    } catch {
+        return false;
+    }
+};
+
+const compressImage = (filepath) => {
+    if (!hasPngquant) return;
+    try {
+        execSync(`pngquant --quality=65-80 --force --ext .png "${filepath}"`, { stdio: 'ignore' });
+        if (DEBUG) console.log(`  Compressed: ${path.basename(filepath)}`);
+    } catch (error) {
+        if (DEBUG) console.log(`  Compression failed: ${path.basename(filepath)}`);
+    }
+};
 
 const PUBLIC_DIR = path.join(__dirname, '../public/boxart');
 
@@ -214,7 +250,26 @@ const processGames = async () => {
             if (DEBUG) console.log(`  URL: ${url}`);
 
             console.log(`Downloading: ${game.name}...`);
+            const baseUrl = `https://raw.githubusercontent.com/libretro-thumbnails/${repoName}/master/Named_Boxarts/`;
             await downloadImage(url, filepath);
+
+            // Handle redirects (text files pointing to another file in the same directory)
+            if (!isValidPng(filepath)) {
+                const redirect = fs.readFileSync(filepath, 'utf8').trim();
+                fs.unlinkSync(filepath);
+                if (!redirect.endsWith('.png')) {
+                    throw new Error('Downloaded file is not a valid PNG');
+                }
+                if (DEBUG) console.log(`  Redirect -> ${redirect}`);
+                await downloadImage(baseUrl + encodeURIComponent(redirect), filepath);
+                if (!isValidPng(filepath)) {
+                    fs.unlinkSync(filepath);
+                    throw new Error('Redirected file is not a valid PNG');
+                }
+            }
+
+            // Compress with pngquant if available
+            compressImage(filepath);
             if (DEBUG) console.log(`  Success!`);
         } catch (error) {
             console.error(`Failed to download ${game.name}: ${error.message}`);
