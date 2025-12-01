@@ -2,13 +2,23 @@
   import BoxArt from './BoxArt.svelte';
   import { platformConfig } from './data.js';
 
-  let { game, isFavorite, onToggleFavorite } = $props();
+  let { game, isFavorite, onToggleFavorite, onGenreClick, onGemClick } = $props();
 
   let config = $derived(platformConfig[game.platform]);
 
   function toggleFavorite(event) {
     event.stopPropagation();
     onToggleFavorite?.(game.id);
+  }
+
+  function handleGenreClick(event, genre) {
+    event.stopPropagation();
+    onGenreClick?.(genre);
+  }
+
+  function handleGemClick(event) {
+    event.stopPropagation();
+    onGemClick?.();
   }
 </script>
 
@@ -26,14 +36,20 @@
     </h3>
     <div class="flex flex-wrap gap-1 mb-2">
       {#each game.genres as genre}
-        <span class="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-300">
+        <button
+          onclick={(e) => handleGenreClick(e, genre)}
+          class="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-300 hover:bg-purple-600 hover:text-white transition-colors cursor-pointer"
+        >
           {genre}
-        </span>
+        </button>
       {/each}
-      {#if game.hidden}
-        <span class="text-xs px-2 py-0.5 rounded-full bg-amber-900/50 text-amber-300">
+      {#if game.gem}
+        <button
+          onclick={handleGemClick}
+          class="text-xs px-2 py-0.5 rounded-full bg-amber-900/50 text-amber-300 hover:bg-amber-600 hover:text-white transition-colors cursor-pointer"
+        >
           💎 Gem
-        </span>
+        </button>
       {/if}
     </div>
     <p class="text-gray-400 text-xs line-clamp-2">{game.notes}</p>

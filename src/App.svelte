@@ -10,7 +10,7 @@
   // State using $state rune
   let selectedPlatform = $state('All');
   let selectedGenre = $state('All');
-  let showHiddenOnly = $state(false);
+  let showGemsOnly = $state(false);
   let showFavoritesOnly = $state(false);
   let searchQuery = $state('');
   let sortBy = $state('name-asc');
@@ -57,12 +57,12 @@
     let games = allGames.filter(game => {
       const matchesPlatform = selectedPlatform === 'All' || game.platform === selectedPlatform;
       const matchesGenre = selectedGenre === 'All' || game.genres.includes(selectedGenre);
-      const matchesHidden = !showHiddenOnly || game.hidden;
+      const matchesGems = !showGemsOnly || game.gem;
       const matchesFavorites = !showFavoritesOnly || favorites.includes(game.id);
       const matchesSearch = searchQuery === '' ||
         game.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         game.notes.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesPlatform && matchesGenre && matchesHidden && matchesFavorites && matchesSearch;
+      return matchesPlatform && matchesGenre && matchesGems && matchesFavorites && matchesSearch;
     });
 
     // Sort
@@ -115,7 +115,7 @@
   function resetFilters() {
     selectedPlatform = 'All';
     selectedGenre = 'All';
-    showHiddenOnly = false;
+    showGemsOnly = false;
     showFavoritesOnly = false;
     searchQuery = '';
   }
@@ -185,9 +185,9 @@
         </select>
 
         <button
-          onclick={() => showHiddenOnly = !showHiddenOnly}
+          onclick={() => showGemsOnly = !showGemsOnly}
           class={`px-2 py-1 rounded-lg text-xs font-medium transition-all ${
-            showHiddenOnly
+            showGemsOnly
               ? 'bg-amber-600 text-white'
               : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
           }`}
@@ -242,6 +242,8 @@
           {game}
           isFavorite={favorites.includes(game.id)}
           onToggleFavorite={toggleFavorite}
+          onGenreClick={(genre) => { selectedGenre = genre; showGemsOnly = false; }}
+          onGemClick={() => { showGemsOnly = true; selectedGenre = 'All'; }}
         />
       {/each}
     </div>
