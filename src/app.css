@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@theme {
+  --font-retro: "Press Start 2P", cursive;
+  --font-modern: "Inter", sans-serif;
+}
+
+/* Custom Utilities */
+.retro-font {
+  font-family: var(--font-retro);
+}
+
+.modern-font {
+  font-family: var(--font-modern);
+}
+
+.game-card {
+  transition: all 0.3s ease;
+}
+
+.game-card:hover {
+  transform: translateY(-8px) scale(1.02);
+}
+
+.box-art {
+  aspect-ratio: 1 / 1.2;
+  background-size: cover;
+  background-position: center;
+}
+
+.box-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scanlines {
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.1),
+    rgba(0, 0, 0, 0.1) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 0.95; }
+  94% { opacity: 1; }
+}
+
+.crt-flicker {
+  animation: flicker 0.15s infinite;
+}
+
+.fav-btn {
+  transition: all 0.2s ease;
+}
+
+.fav-btn:hover {
+  transform: scale(1.2);
+}
+
+.fav-btn.active {
+  animation: pulse 0.3s ease;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
