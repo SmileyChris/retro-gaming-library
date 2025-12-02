@@ -15,6 +15,8 @@
   function handlePlatformClick(platform) {
     if (platform === 'Favourites') {
       navigate('/favourites');
+    } else if (platform === 'Gems') {
+      navigate('/gems');
     } else {
       navigate(`/platform/${encodeURIComponent(platform)}`);
     }

@@ -18,21 +18,26 @@
 
   // Calculate game counts per platform
   let platformCounts = $derived.by(() => {
-    const counts = { 'All': allGames.length, 'Favourites': favorites.length };
+    const counts = {
+      'All': allGames.length,
+      'Gems': allGames.filter(g => g.gem).length,
+      'Favourites': favorites.length
+    };
     allGames.forEach(g => {
       counts[g.platform] = (counts[g.platform] || 0) + 1;
     });
     return counts;
   });
 
-  // Build platform list with "All" first, then Favourites if any
+  // Build platform list with "All" first, then Gems, then Favourites if any
   let platforms = $derived.by(() => {
     const list = [
-      { key: 'All', name: 'All Games', logo: '/logo.png', color: '#6366F1' }
+      { key: 'All', name: 'All Games', logo: '/logo.png', color: '#6366F1' },
+      { key: 'Gems', name: 'Hidden Gems', logo: null, icon: '💎', color: '#F59E0B' }
     ];
 
     if (favorites.length > 0) {
-      list.push({ key: 'Favourites', name: 'Favourites', logo: null, icon: '❤️', color: '#EF4444' });
+      list.push({ key: 'Favourites', name: 'Favourites', logo: null, icon: '🤍', color: '#EF4444' });
     }
 
     list.push(...Object.entries(platformConfig).map(([key, config]) => ({
@@ -143,7 +148,7 @@
               src={platform.logo}
               alt={platform.name}
               class="platform-logo"
-              style={platform.key !== 'All' ? `view-transition-name: platform-${platform.key}` : ''}
+              style="{platform.key === 'All' ? 'filter: grayscale(1) brightness(1.5) contrast(1.2);' : ''}{platform.key !== 'All' ? `view-transition-name: platform-${platform.key}` : ''}"
               draggable="false"
               onerror={(e) => {
                 // Fallback to emoji/text if logo fails to load
@@ -155,7 +160,10 @@
               {platformConfig[platform.key]?.icon || '🎮'}
             </div>
           {:else}
-            <div class="platform-icon-only" style={platform.key === 'Favourites' ? 'view-transition-name: platform-Favourites' : ''}>
+            <div
+              class="platform-icon-only"
+              style="{platform.key === 'Favourites' || platform.key === 'Gems' ? `view-transition-name: platform-${platform.key};` : ''}{platform.key === 'Gems' ? 'filter: grayscale(1) brightness(1.5) contrast(1.2);' : ''}"
+            >
               {platform.icon || '🎮'}
             </div>
           {/if}
@@ -211,7 +219,7 @@
     .platform-scroll-inner {
       flex-wrap: wrap;
       justify-content: center;
-      max-width: 680px;
+      max-width: 820px;
     }
   }
 
