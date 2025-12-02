@@ -1,8 +1,9 @@
 <script>
   import BoxArt from './BoxArt.svelte';
   import { platformConfig } from './data.js';
+  import { navigate } from './router.svelte.js';
 
-  let { game, isFavorite, onToggleFavorite, onGenreClick, onGemClick } = $props();
+  let { game, isFavorite, onToggleFavorite } = $props();
 
   let config = $derived(platformConfig[game.platform]);
 
@@ -13,12 +14,12 @@
 
   function handleGenreClick(event, genre) {
     event.stopPropagation();
-    onGenreClick?.(genre);
+    navigate(`/genre/${encodeURIComponent(genre)}`);
   }
 
   function handleGemClick(event) {
     event.stopPropagation();
-    onGemClick?.();
+    navigate('/gems');
   }
 </script>
 

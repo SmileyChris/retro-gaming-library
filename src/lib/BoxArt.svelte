@@ -1,7 +1,13 @@
 <script>
   import { platformConfig } from './data.js';
+  import { navigate } from './router.svelte.js';
 
   let { game } = $props();
+
+  function handlePlatformClick(event) {
+    event.stopPropagation();
+    navigate(`/platform/${encodeURIComponent(game.platform)}`);
+  }
 
   let imgError = $state(false);
   let imgLoaded = $state(false);
@@ -56,10 +62,13 @@
     </div>
   {/if}
 
-  <div class="absolute bottom-0 left-0 right-0 bg-black/60 py-1 px-2">
+  <button
+    onclick={handlePlatformClick}
+    class="absolute bottom-0 left-0 right-0 bg-black/60 py-1 px-2 hover:bg-black/80 transition-colors cursor-pointer"
+  >
     <div class="text-white/90 text-xs font-medium flex items-center gap-1">
       <span>{config.icon}</span>
       <span>{game.platform}</span>
     </div>
-  </div>
+  </button>
 </div>
