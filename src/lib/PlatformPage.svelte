@@ -1,11 +1,19 @@
 <script>
-  import { untrack } from 'svelte';
+  import { untrack, tick } from 'svelte';
   import GameCard from './GameCard.svelte';
   import { platformConfig, allGames } from './data.js';
   import { navigate } from './router.svelte.js';
   import { getSearchQuery, setSearchQuery } from './searchStore.svelte.js';
 
   let { platform = 'All', initialGenre = null, initialGems = false, initialFavourites = false } = $props();
+
+  // Defer game list rendering until after view transition
+  let ready = $state(false);
+  $effect(() => {
+    requestAnimationFrame(() => {
+      ready = true;
+    });
+  });
 
   // Get unique genres (flattened from arrays)
   const allGenres = [...new Set(allGames.flatMap(g => g.genres))].sort();
@@ -118,7 +126,7 @@
   });
 </script>
 
-<div class="min-h-screen flex flex-col bg-[#1a1625]">
+<div class="min-h-screen flex flex-col bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900">
   <!-- Header -->
   <header class="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border-b border-gray-700 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 py-4">
@@ -127,7 +135,7 @@
         <!-- Back button and title -->
         <div class="flex items-center gap-4">
           <button
-            onclick={() => navigate('/')}
+            onclick={() => { setSearchQuery(''); navigate('/'); }}
             class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition"
             title="Home"
           >
@@ -182,21 +190,23 @@
 
   <!-- Game Grid -->
   <main class="max-w-7xl mx-auto px-4 py-6 flex-grow">
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-      {#each filteredAndSortedGames as game (game.id)}
-        <div style="order: {favorites.includes(game.id) ? 0 : 1}{filteredAndSortedGames.length < 30 ? `; view-transition-name: game-${game.id}` : ''}">
-          <GameCard
-            {game}
-            isFavorite={favorites.includes(game.id)}
-            onToggleFavorite={toggleFavorite}
-          />
-        </div>
-      {/each}
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+      {#if ready}
+        {#each filteredAndSortedGames as game (game.id)}
+          <div style="order: {favorites.includes(game.id) ? 0 : 1}{filteredAndSortedGames.length < 30 ? `; view-transition-name: game-${game.id}` : ''}">
+            <GameCard
+              {game}
+              isFavorite={favorites.includes(game.id)}
+              onToggleFavorite={toggleFavorite}
+            />
+          </div>
+        {/each}
+      {/if}
     </div>
 
     {#if filteredAndSortedGames.length === 0}
       <div class="text-center py-16">
-        <div class="text-6xl mb-4">🎮</div>
+        <img src="/logo.png" alt="" class="w-24 h-24 mx-auto mb-4 opacity-50" style="filter: grayscale(1);" />
         <p class="text-gray-400 text-lg">No games found</p>
         {#if searchQuery}
           <button
@@ -211,7 +221,7 @@
   </main>
 
   <!-- Footer -->
-  <footer class="bg-gray-800 border-t border-gray-700 py-6">
+  <footer class="py-6">
     <div class="max-w-7xl mx-auto px-4">
       {#if initialGenre}
         <!-- Show genres when viewing a genre page -->
@@ -239,7 +249,6 @@
               <img
                 src={config.logo}
                 alt={plat}
-                style={plat !== platform ? `view-transition-name: platform-${plat}` : ''}
                 class="h-7 object-contain"
                 onerror={(e) => { e.target.style.display = 'none'; }}
               />

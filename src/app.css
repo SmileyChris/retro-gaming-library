@@ -51,11 +51,7 @@
 }
 
 .fav-btn {
-  transition: all 0.2s ease;
-}
-
-.fav-btn:hover {
-  transform: scale(1.2);
+  transition: opacity 0.2s ease;
 }
 
 .fav-btn.active {

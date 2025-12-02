@@ -23,10 +23,10 @@
   }
 </script>
 
-<div class="game-card bg-gray-800 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-gray-500 relative">
+<div class="game-card bg-gray-900 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-gray-500 relative">
   <button
     onclick={toggleFavorite}
-    class={`fav-btn absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-sm hover:bg-black/70 transition ${isFavorite ? 'active' : ''}`}
+    class={`fav-btn absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center rounded-full transition ${isFavorite ? 'bg-black/50 backdrop-blur-sm hover:opacity-75' : 'opacity-50 hover:opacity-100 bg-black/50 backdrop-blur-sm'}`}
   >
     <span class="text-lg">{isFavorite ? '❤️' : '🤍'}</span>
   </button>
