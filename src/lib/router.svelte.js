@@ -19,7 +19,8 @@ function parseHash() {
       genre: null,
       gems: false,
       favourites: false,
-      search: params.get('search') || ''
+      search: params.get('search') || '',
+      highlight: params.get('highlight') || null
     };
   }
 
@@ -32,7 +33,8 @@ function parseHash() {
       genre: decodeURIComponent(genreMatch[1]),
       gems: false,
       favourites: false,
-      search: ''
+      search: '',
+      highlight: params.get('highlight') || null
     };
   }
 
@@ -44,7 +46,8 @@ function parseHash() {
       genre: null,
       gems: true,
       favourites: false,
-      search: ''
+      search: '',
+      highlight: params.get('highlight') || null
     };
   }
 
@@ -56,7 +59,8 @@ function parseHash() {
       genre: null,
       gems: false,
       favourites: true,
-      search: ''
+      search: '',
+      highlight: params.get('highlight') || null
     };
   }
 

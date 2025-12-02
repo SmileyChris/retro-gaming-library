@@ -5,7 +5,7 @@
   import { navigate } from './router.svelte.js';
   import { getSearchQuery, setSearchQuery } from './searchStore.svelte.js';
 
-  let { platform = 'All', initialGenre = null, initialGems = false, initialFavourites = false } = $props();
+  let { platform = 'All', initialGenre = null, initialGems = false, initialFavourites = false, initialHighlight = null } = $props();
 
   // Defer game list rendering until after view transition
   let ready = $state(false);
@@ -124,6 +124,84 @@
       return matchesPlatform && matchesGenre && matchesGems && matchesSearch && favorites.includes(game.id);
     }).length;
   });
+
+  // Random game selection
+  let highlightedGameId = $state(null);
+  let isAnimating = $state(false);
+  let highlightTimeout = null;
+
+  function pickRandomGame() {
+    if (filteredAndSortedGames.length === 0) return;
+
+    // Clear any pending timeout
+    if (highlightTimeout) {
+      clearTimeout(highlightTimeout);
+    }
+
+    // Reset animations by clearing highlight first
+    highlightedGameId = null;
+    isAnimating = false;
+
+    // Wait for DOM to clear animations, then start new one
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const randomIndex = Math.floor(Math.random() * filteredAndSortedGames.length);
+        const randomGame = filteredAndSortedGames[randomIndex];
+        highlightedGameId = randomGame.id;
+        isAnimating = true;
+
+        // Update URL with highlight param
+        const basePath = window.location.hash.split('?')[0];
+        window.history.replaceState(null, '', `${basePath}?highlight=${randomGame.id}`);
+
+        // Scroll to the game card
+        tick().then(() => {
+          const element = document.querySelector(`[data-game-id="${randomGame.id}"]`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        });
+
+        // Clear animation flag after animation (but keep highlight)
+        highlightTimeout = setTimeout(() => {
+          isAnimating = false;
+          highlightTimeout = null;
+        }, 6000);
+      });
+    });
+  }
+
+  // Handle initial highlight from navigation
+  $effect(() => {
+    if (initialHighlight && ready) {
+      if (highlightTimeout) {
+        clearTimeout(highlightTimeout);
+      }
+      // Small delay to ensure DOM is fully rendered with filtered games
+      setTimeout(() => {
+        // Check if highlighted game is in the current filtered list
+        const gameInList = filteredAndSortedGames.some(g => g.id === initialHighlight);
+        if (!gameInList) {
+          // Redirect to All with highlight
+          navigate(`/platform/All?highlight=${initialHighlight}`);
+          return;
+        }
+
+        highlightedGameId = initialHighlight;
+        isAnimating = true;
+        tick().then(() => {
+          const element = document.querySelector(`[data-game-id="${initialHighlight}"]`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        });
+        highlightTimeout = setTimeout(() => {
+          isAnimating = false;
+          highlightTimeout = null;
+        }, 6000);
+      }, 100);
+    }
+  });
 </script>
 
 <div class="min-h-screen flex flex-col bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900">
@@ -167,9 +245,21 @@
           </div>
         </div>
 
-        <!-- Search -->
-        <div class="max-w-md mx-auto md:ml-auto md:mr-0 md:w-48 lg:w-64 xl:w-80">
-          <input
+        <!-- Random + Search -->
+        <div class="flex items-center gap-2 max-w-md mx-auto md:ml-auto md:mr-0">
+          {#if filteredAndSortedGames.length > 1}
+            <button
+              onclick={pickRandomGame}
+              class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition shrink-0"
+              title="Random game"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+            </button>
+          {/if}
+          <div class="md:w-48 lg:w-64 xl:w-80">
+            <input
             type="search"
             placeholder="Search games..."
             value={searchQuery}
@@ -183,6 +273,7 @@
             style="view-transition-name: search-box"
             class="w-full px-4 py-2 rounded-full bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
           />
+          </div>
         </div>
       </div>
     </div>
@@ -190,14 +281,20 @@
 
   <!-- Game Grid -->
   <main class="max-w-7xl mx-auto px-4 py-6 flex-grow">
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
       {#if ready}
         {#each filteredAndSortedGames as game (game.id)}
-          <div style="order: {favorites.includes(game.id) ? 0 : 1}{filteredAndSortedGames.length < 30 ? `; view-transition-name: game-${game.id}` : ''}">
+          <div
+            data-game-id={game.id}
+            style="order: {favorites.includes(game.id) ? 0 : 1}{filteredAndSortedGames.length < 30 ? `; view-transition-name: game-${game.id}` : ''}{highlightedGameId ? `; animation: ${highlightedGameId === game.id ? 'randomPick 4s' : 'fadeOut 6s'} ease-out` : ''}; max-width: 250px"
+            class={highlightedGameId === game.id ? 'random-highlight-base' : ''}
+          >
             <GameCard
               {game}
               isFavorite={favorites.includes(game.id)}
               onToggleFavorite={toggleFavorite}
+              isHighlighted={highlightedGameId === game.id}
+              highlightAnimation={highlightedGameId === game.id && isAnimating}
             />
           </div>
         {/each}

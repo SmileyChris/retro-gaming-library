@@ -14,6 +14,7 @@
     initialGenre={route.genre}
     initialGems={route.gems}
     initialFavourites={route.favourites}
+    initialHighlight={route.highlight}
   />
 {:else}
   <HomePage />

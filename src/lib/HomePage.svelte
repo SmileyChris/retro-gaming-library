@@ -12,6 +12,12 @@
     }
   }
 
+  function pickRandomGame() {
+    const randomIndex = Math.floor(Math.random() * allGames.length);
+    const randomGame = allGames[randomIndex];
+    navigate(`/platform/${encodeURIComponent(randomGame.platform)}?highlight=${randomGame.id}`);
+  }
+
   function handlePlatformClick(platform) {
     if (platform === 'Favourites') {
       navigate('/favourites');
@@ -45,7 +51,16 @@
 
   <!-- Search Bar -->
   <div class="w-full max-w-md mb-12">
-    <div class="relative">
+    <div class="flex items-center gap-3">
+      <button
+        onclick={pickRandomGame}
+        class="flex items-center justify-center w-14 h-14 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition shrink-0"
+        title="Random game"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+      </button>
       <input
         type="search"
         placeholder="Search games..."

@@ -3,7 +3,7 @@
   import { platformConfig } from './data.js';
   import { navigate } from './router.svelte.js';
 
-  let { game, isFavorite, onToggleFavorite } = $props();
+  let { game, isFavorite, onToggleFavorite, isHighlighted = false, highlightAnimation = false } = $props();
 
   let config = $derived(platformConfig[game.platform]);
 
@@ -23,7 +23,10 @@
   }
 </script>
 
-<div class="game-card bg-gray-900 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-gray-500 relative">
+<div
+  class="game-card bg-gray-900 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-gray-500 relative"
+  style={highlightAnimation ? 'animation: randomPickGlow 4s ease-out forwards' : (isHighlighted ? 'box-shadow: 0 0 15px 3px rgba(168, 85, 247, 0.5)' : '')}
+>
   <button
     onclick={toggleFavorite}
     class={`fav-btn absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center rounded-full transition ${isFavorite ? 'bg-black/50 backdrop-blur-sm hover:opacity-75' : 'opacity-50 hover:opacity-100 bg-black/50 backdrop-blur-sm'}`}
