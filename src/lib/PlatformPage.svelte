@@ -32,6 +32,9 @@
     }
   }
 
+  // Precompute Set for O(1) lookups (used many times per render)
+  let favoritesSet = $derived(new Set(favorites));
+
   // Save favorites to localStorage using $effect
   $effect(() => {
     const currentFavorites = favorites;
@@ -46,7 +49,7 @@
 
   function toggleFavorite(gameId) {
     const update = () => {
-      if (favorites.includes(gameId)) {
+      if (favoritesSet.has(gameId)) {
         favorites = favorites.filter(id => id !== gameId);
       } else {
         favorites = [...favorites, gameId];
@@ -66,7 +69,7 @@
       const matchesPlatform = platform === 'All' || game.platform === platform;
       const matchesGenre = !initialGenre || game.genres.includes(initialGenre);
       const matchesGems = !initialGems || game.gem;
-      const matchesFavorites = !initialFavourites || favorites.includes(game.id);
+      const matchesFavorites = !initialFavourites || favoritesSet.has(game.id);
       const matchesSearch = search.query === '' ||
         game.name.toLowerCase().includes(search.query.toLowerCase()) ||
         game.notes.toLowerCase().includes(search.query.toLowerCase());
@@ -119,7 +122,7 @@
       const matchesSearch = search.query === '' ||
         game.name.toLowerCase().includes(search.query.toLowerCase()) ||
         game.notes.toLowerCase().includes(search.query.toLowerCase());
-      return matchesPlatform && matchesGenre && matchesGems && matchesSearch && favorites.includes(game.id);
+      return matchesPlatform && matchesGenre && matchesGems && matchesSearch && favoritesSet.has(game.id);
     }).length;
   });
 
@@ -297,12 +300,12 @@
       {#each filteredAndSortedGames as game, index (game.id)}
         <div
           data-game-id={game.id}
-          style="order: {favorites.includes(game.id) ? 0 : 1}{highlightedGameId ? `; animation: ${highlightedGameId === game.id ? 'randomPick 4s' : 'fadeOut 6s'} ease-out` : ''}; max-width: 250px"
+          style="order: {favoritesSet.has(game.id) ? 0 : 1}{highlightedGameId ? `; animation: ${highlightedGameId === game.id ? 'randomPick 4s' : 'fadeOut 6s'} ease-out` : ''}; max-width: 250px"
           class={highlightedGameId === game.id ? 'random-highlight-base' : ''}
         >
           <GameCard
             {game}
-            isFavorite={favorites.includes(game.id)}
+            isFavorite={favoritesSet.has(game.id)}
             onToggleFavorite={toggleFavorite}
             isHighlighted={highlightedGameId === game.id}
             highlightAnimation={highlightedGameId === game.id && isAnimating}
