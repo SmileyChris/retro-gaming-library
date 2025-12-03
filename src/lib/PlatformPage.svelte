@@ -242,19 +242,19 @@
           </button>
           <div class="flex items-center gap-3 lg:gap-5">
             {#if initialFavourites}
-              <span class="text-3xl" style="view-transition-name: platform-Favourites">❤️</span>
+              <span class="text-3xl">❤️</span>
             {:else if initialGems}
-              <span class="text-3xl" style="view-transition-name: platform-Gems">💎</span>
+              <span class="text-3xl">💎</span>
             {:else if initialGenre}
               <span class="text-3xl">🎯</span>
             {:else if platform === 'All'}
-              <img src="/logo.png" alt="All Games" style="view-transition-name: platform-All" class="h-8 w-8 object-contain" />
+              <img src="/logo.png" alt="All Games" class="h-8 w-8 object-contain" />
             {:else}
-              <img src={platformInfo?.logo} alt={platform} style="view-transition-name: platform-{platform}" class="h-8 object-contain" onerror={(e) => { e.target.style.display = 'none'; }} />
+              <img src={platformInfo?.logo} alt={platform} class="h-8 object-contain" onerror={(e) => { e.target.style.display = 'none'; }} />
             {/if}
             <div>
               <h1 class="retro-font text-lg md:text-xl text-white">
-                <span style={!initialGenre && !initialGems && !initialFavourites ? `view-transition-name: platform-${platform}-name` : ''}>{pageTitle}</span> <span class="text-gray-400 font-normal" style={!initialGenre && !initialGems && !initialFavourites ? `view-transition-name: platform-${platform}-count` : ''}>({gameCount})</span>
+                {pageTitle} <span class="text-gray-400 font-normal">({gameCount})</span>
               </h1>
               <p class="text-gray-400 text-xs">
                 {#if pageSubtitle}{pageSubtitle}{/if}

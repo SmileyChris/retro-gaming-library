@@ -127,7 +127,7 @@
 
 /* Game detail view transitions */
 ::view-transition-group(*) {
-  animation-duration: 0.3s;
+  animation-duration: 0.25s;
   animation-timing-function: ease-out;
 }
 

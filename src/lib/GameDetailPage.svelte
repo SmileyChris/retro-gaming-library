@@ -1,6 +1,6 @@
 <script>
-  import { untrack } from 'svelte';
-  import { navigate } from './router.svelte.js';
+  import { untrack, tick } from 'svelte';
+  import { navigate, transitioningGame } from './router.svelte.js';
   import { platformConfig, allGames } from './data.js';
 
   let { gameId } = $props();
@@ -51,11 +51,17 @@
   let retrosticUrl = $derived(game && config?.retrostic ? `https://www.retrostic.com/roms/${config.retrostic}` : null);
   let romspediaUrl = $derived(game && config?.romspedia ? `https://www.romspedia.com/roms/${config.romspedia}` : null);
 
+  async function navigateAway(path) {
+    transitioningGame.id = game.id;
+    await tick();
+    navigate(path);
+  }
+
   function goBack() {
     if (window.history.length > 1) {
       window.history.back();
     } else {
-      navigate('/');
+      navigateAway('/');
     }
   }
 </script>
@@ -77,7 +83,7 @@
           </button>
           <div class="flex items-center gap-8">
             <button
-              onclick={() => navigate(`/platform/${encodeURIComponent(game.platform)}`)}
+              onclick={() => navigateAway(`/platform/${encodeURIComponent(game.platform)}`)}
               class="hover:opacity-80 transition"
               title={game.platform}
             >
@@ -137,7 +143,7 @@
             <div class="flex flex-wrap gap-2" style="view-transition-name: game-{game.id}-genres">
               {#each game.genres as genre}
                 <button
-                  onclick={() => navigate(`/genre/${encodeURIComponent(genre)}`)}
+                  onclick={() => navigateAway(`/genre/${encodeURIComponent(genre)}`)}
                   class="px-4 py-2 rounded-lg bg-gray-700 text-white hover:bg-purple-600 transition"
                 >
                   {genre}
@@ -145,7 +151,7 @@
               {/each}
               {#if game.gem}
                 <button
-                  onclick={() => navigate('/gems')}
+                  onclick={() => navigateAway('/gems')}
                   class="px-4 py-2 rounded-lg bg-amber-900/50 text-amber-300 hover:bg-amber-600 hover:text-white transition"
                 >
                   💎 Hidden Gem
