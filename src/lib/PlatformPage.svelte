@@ -113,6 +113,24 @@
 
   let gameCount = $derived(filteredAndSortedGames.length);
 
+  // Get category name for "no results" messaging
+  let categoryName = $derived.by(() => {
+    if (initialFavourites) return 'Favourites';
+    if (initialGems) return 'Hidden Gems';
+    if (initialGenre) return initialGenre;
+    if (platform !== 'All') return platform;
+    return null;
+  });
+
+  // Get matches across all games when current category has no results
+  let allGamesMatches = $derived.by(() => {
+    if (filteredAndSortedGames.length > 0 || !search.query || !categoryName) return [];
+    return allGames.filter(game =>
+      game.name.toLowerCase().includes(search.query.toLowerCase()) ||
+      game.notes.toLowerCase().includes(search.query.toLowerCase())
+    ).sort((a, b) => a.name.localeCompare(b.name));
+  });
+
   // Count favorites that match current filters including search
   let matchingFavorites = $derived.by(() => {
     return allGames.filter(game => {
@@ -318,7 +336,7 @@
     {#if filteredAndSortedGames.length === 0}
       <div class="text-center py-16">
         <img src="/logo.png" alt="" class="w-24 h-24 mx-auto mb-4 opacity-50" style="filter: grayscale(1);" />
-        <p class="text-gray-400 text-lg">No games found</p>
+        <p class="text-gray-400 text-lg retro-font">No matching {categoryName || ''} games</p>
         {#if search.query}
           <button
             onclick={() => search.query = ''}
@@ -328,6 +346,24 @@
           </button>
         {/if}
       </div>
+
+      {#if allGamesMatches.length > 0}
+        <div class="mt-8 pt-8 border-t border-gray-700">
+          <p class="text-gray-400 text-center mb-6 retro-font">Other matches ({allGamesMatches.length})</p>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {#each allGamesMatches as game (game.id)}
+              <div style="max-width: 250px">
+                <GameCard
+                  {game}
+                  isFavorite={favoritesSet.has(game.id)}
+                  onToggleFavorite={toggleFavorite}
+                  lazyImage={false}
+                />
+              </div>
+            {/each}
+          </div>
+        </div>
+      {/if}
     {/if}
   </main>
 
