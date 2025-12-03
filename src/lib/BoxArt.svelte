@@ -2,7 +2,7 @@
   import { platformConfig } from './data.js';
   import { navigate } from './router.svelte.js';
 
-  let { game, element = $bindable(null), isTransitioning = false } = $props();
+  let { game, element = $bindable(null), isTransitioning = false, lazy = true } = $props();
 
   const config = platformConfig[game.platform];
   const filename = game.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.png';
@@ -23,7 +23,7 @@
     src={localUrl}
     alt={game.name}
     class="absolute inset-0 w-full h-full object-cover"
-    loading="lazy"
+    loading={lazy ? "lazy" : "eager"}
   />
 
   <button

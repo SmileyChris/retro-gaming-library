@@ -1,9 +1,10 @@
 <script>
+  import { tick } from 'svelte';
   import BoxArt from './BoxArt.svelte';
   import { platformConfig } from './data.js';
   import { navigate, transitioningGame } from './router.svelte.js';
 
-  let { game, isFavorite, onToggleFavorite, isHighlighted = false, highlightAnimation = false } = $props();
+  let { game, isFavorite, onToggleFavorite, isHighlighted = false, highlightAnimation = false, lazyImage = true } = $props();
 
   let config = $derived(platformConfig[game.platform]);
   let boxArtElement = null;
@@ -27,9 +28,10 @@
     navigate('/gems');
   }
 
-  function handleCardClick() {
+  async function handleCardClick() {
     // Set transitioning game - this triggers reactive class/style bindings
     transitioningGame.id = game.id;
+    await tick();
     navigate(`/game/${encodeURIComponent(game.id)}`);
   }
 </script>
@@ -48,7 +50,7 @@
   >
     <span class="text-lg">{isFavorite ? '❤️' : '🤍'}</span>
   </button>
-  <BoxArt {game} bind:element={boxArtElement} {isTransitioning} />
+  <BoxArt {game} bind:element={boxArtElement} {isTransitioning} lazy={lazyImage} />
   <div class="p-3">
     <h3
       bind:this={titleElement}

@@ -296,7 +296,7 @@
   <!-- Game Grid -->
   <main class="max-w-7xl mx-auto px-4 py-6 flex-grow">
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-      {#each filteredAndSortedGames as game (game.id)}
+      {#each filteredAndSortedGames as game, index (game.id)}
         <div
           data-game-id={game.id}
           style="order: {favorites.includes(game.id) ? 0 : 1}{highlightedGameId ? `; animation: ${highlightedGameId === game.id ? 'randomPick 4s' : 'fadeOut 6s'} ease-out` : ''}; max-width: 250px"
@@ -308,6 +308,7 @@
             onToggleFavorite={toggleFavorite}
             isHighlighted={highlightedGameId === game.id}
             highlightAnimation={highlightedGameId === game.id && isAnimating}
+            lazyImage={index >= 18}
           />
         </div>
       {/each}

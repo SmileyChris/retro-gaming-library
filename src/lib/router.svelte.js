@@ -111,7 +111,6 @@ export function navigate(path) {
     const transition = document.startViewTransition(async () => {
       window.location.hash = path;
       currentRoute = parseHash();
-      // Wait for Svelte to render new page before capturing new state
       await tick();
     });
     transition.finished.then(() => {
