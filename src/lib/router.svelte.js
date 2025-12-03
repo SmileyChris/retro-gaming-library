@@ -1,4 +1,5 @@
 // Simple hash-based router using Svelte 5 runes
+import { tick } from 'svelte';
 
 function parseHash() {
   const hash = window.location.hash.slice(1) || '/';
@@ -64,30 +65,63 @@ function parseHash() {
     };
   }
 
+  // Game detail page: /game/:id
+  const gameMatch = path.match(/^\/game\/(.+)$/);
+  if (gameMatch) {
+    return {
+      page: 'game',
+      gameId: decodeURIComponent(gameMatch[1])
+    };
+  }
+
   return { page: 'home', platform: null, genre: null, gems: false, favourites: false, search: '' };
 }
 
 let currentRoute = $state(parseHash());
+let isNavigating = false;
+
+// Track which game is transitioning (for back navigation)
+export const transitioningGame = $state({ id: null });
 
 // Listen for hash changes (browser back/forward)
 if (typeof window !== 'undefined') {
   window.addEventListener('hashchange', () => {
-    currentRoute = parseHash();
+    // Skip if this was triggered by navigate()
+    if (isNavigating) return;
+
+    // If leaving a game detail page, set the transitioning game ID
+    if (currentRoute.page === 'game' && currentRoute.gameId) {
+      transitioningGame.id = currentRoute.gameId;
+    }
+
+    // Browser back/forward - use view transition
+    if (document.startViewTransition) {
+      document.startViewTransition(() => {
+        currentRoute = parseHash();
+      });
+    } else {
+      currentRoute = parseHash();
+    }
   });
 }
 
-function updateRoute(path) {
-  window.location.hash = path;
-  currentRoute = parseHash();
-}
-
 export function navigate(path) {
+  isNavigating = true;
   if (document.startViewTransition) {
-    document.startViewTransition(() => {
-      updateRoute(path);
+    const transition = document.startViewTransition(async () => {
+      window.location.hash = path;
+      currentRoute = parseHash();
+      // Wait for Svelte to render new page before capturing new state
+      await tick();
+    });
+    transition.finished.then(() => {
+      isNavigating = false;
+      transitioningGame.id = null;
     });
   } else {
-    updateRoute(path);
+    window.location.hash = path;
+    currentRoute = parseHash();
+    isNavigating = false;
   }
 }
 

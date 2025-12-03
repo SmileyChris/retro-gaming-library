@@ -16,6 +16,7 @@
 
 .game-card {
   transition: border-color 0.2s ease;
+  view-transition-class: game-card-transition;
 }
 
 .box-art {
@@ -98,4 +99,43 @@
 
 .spin-once {
   animation: spin 0.5s ease-out;
+}
+
+/* View transition classes for game cards */
+::view-transition-group(.game-card-transition) {
+  animation-duration: 0.25s;
+  animation-timing-function: ease-out;
+}
+
+::view-transition-old(.game-card-transition) {
+  animation: fade-out 0.15s ease-out;
+}
+
+::view-transition-new(.game-card-transition) {
+  animation: fade-in 0.25s ease-out;
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Game detail view transitions */
+::view-transition-group(*) {
+  animation-duration: 0.3s;
+  animation-timing-function: ease-out;
+}
+
+/* View transition names using CSS custom properties */
+.vt-game-image {
+  view-transition-name: var(--vt-image-name);
+}
+
+.vt-game-title {
+  view-transition-name: var(--vt-title-name);
 }

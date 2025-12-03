@@ -7,14 +7,6 @@
 
   let { platform = 'All', initialGenre = null, initialGems = false, initialFavourites = false, initialHighlight = null } = $props();
 
-  // Defer game list rendering until after view transition
-  let ready = $state(false);
-  $effect(() => {
-    requestAnimationFrame(() => {
-      ready = true;
-    });
-  });
-
   // Search input ref - focus if navigated with existing search query
   let searchInput = $state(null);
   $effect(() => {
@@ -193,7 +185,7 @@
 
   // Handle initial highlight from navigation
   $effect(() => {
-    if (initialHighlight && ready) {
+    if (initialHighlight) {
       if (highlightTimeout) {
         clearTimeout(highlightTimeout);
       }
@@ -304,23 +296,21 @@
   <!-- Game Grid -->
   <main class="max-w-7xl mx-auto px-4 py-6 flex-grow">
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-      {#if ready}
-        {#each filteredAndSortedGames as game (game.id)}
-          <div
-            data-game-id={game.id}
-            style="order: {favorites.includes(game.id) ? 0 : 1}{filteredAndSortedGames.length < 30 ? `; view-transition-name: game-${game.id}` : ''}{highlightedGameId ? `; animation: ${highlightedGameId === game.id ? 'randomPick 4s' : 'fadeOut 6s'} ease-out` : ''}; max-width: 250px"
-            class={highlightedGameId === game.id ? 'random-highlight-base' : ''}
-          >
-            <GameCard
-              {game}
-              isFavorite={favorites.includes(game.id)}
-              onToggleFavorite={toggleFavorite}
-              isHighlighted={highlightedGameId === game.id}
-              highlightAnimation={highlightedGameId === game.id && isAnimating}
-            />
-          </div>
-        {/each}
-      {/if}
+      {#each filteredAndSortedGames as game (game.id)}
+        <div
+          data-game-id={game.id}
+          style="order: {favorites.includes(game.id) ? 0 : 1}{highlightedGameId ? `; animation: ${highlightedGameId === game.id ? 'randomPick 4s' : 'fadeOut 6s'} ease-out` : ''}; max-width: 250px"
+          class={highlightedGameId === game.id ? 'random-highlight-base' : ''}
+        >
+          <GameCard
+            {game}
+            isFavorite={favorites.includes(game.id)}
+            onToggleFavorite={toggleFavorite}
+            isHighlighted={highlightedGameId === game.id}
+            highlightAnimation={highlightedGameId === game.id && isAnimating}
+          />
+        </div>
+      {/each}
     </div>
 
     {#if filteredAndSortedGames.length === 0}

@@ -2,6 +2,7 @@
   import { getRoute } from './router.svelte.js';
   import HomePage from './HomePage.svelte';
   import PlatformPage from './PlatformPage.svelte';
+  import GameDetailPage from './GameDetailPage.svelte';
 
   let route = $derived(getRoute());
 </script>
@@ -16,6 +17,8 @@
     initialFavourites={route.favourites}
     initialHighlight={route.highlight}
   />
+{:else if route.page === 'game'}
+  <GameDetailPage gameId={route.gameId} />
 {:else}
   <HomePage />
 {/if}

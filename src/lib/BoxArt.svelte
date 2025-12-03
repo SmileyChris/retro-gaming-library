@@ -2,7 +2,7 @@
   import { platformConfig } from './data.js';
   import { navigate } from './router.svelte.js';
 
-  let { game } = $props();
+  let { game, element = $bindable(null), isTransitioning = false } = $props();
 
   const config = platformConfig[game.platform];
   const filename = game.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.png';
@@ -14,7 +14,11 @@
   }
 </script>
 
-<div class={`box-art relative bg-gradient-to-br ${config.gradient} rounded-lg overflow-hidden shadow-lg`}>
+<div
+  bind:this={element}
+  class={`box-art relative bg-gradient-to-br ${config.gradient} rounded-lg overflow-hidden shadow-lg ${isTransitioning ? 'vt-game-image' : ''}`}
+  style={isTransitioning ? `--vt-image-name: game-${game.id}-image` : ''}
+>
   <img
     src={localUrl}
     alt={game.name}

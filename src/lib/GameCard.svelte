@@ -1,11 +1,16 @@
 <script>
   import BoxArt from './BoxArt.svelte';
   import { platformConfig } from './data.js';
-  import { navigate } from './router.svelte.js';
+  import { navigate, transitioningGame } from './router.svelte.js';
 
   let { game, isFavorite, onToggleFavorite, isHighlighted = false, highlightAnimation = false } = $props();
 
   let config = $derived(platformConfig[game.platform]);
+  let boxArtElement = null;
+  let titleElement = null;
+
+  // Check if this card should have transition names (for back navigation)
+  let isTransitioning = $derived(transitioningGame.id === game.id);
 
   function toggleFavorite(event) {
     event.stopPropagation();
@@ -21,11 +26,21 @@
     event.stopPropagation();
     navigate('/gems');
   }
+
+  function handleCardClick() {
+    // Set transitioning game - this triggers reactive class/style bindings
+    transitioningGame.id = game.id;
+    navigate(`/game/${encodeURIComponent(game.id)}`);
+  }
 </script>
 
 <div
-  class="game-card bg-gray-900 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-gray-500 relative"
+  class="game-card bg-gray-900 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-gray-500 relative cursor-pointer"
   style={highlightAnimation ? 'animation: randomPickGlow 4s ease-out forwards' : (isHighlighted ? 'box-shadow: 0 0 15px 3px rgba(168, 85, 247, 0.5)' : '')}
+  onclick={handleCardClick}
+  role="button"
+  tabindex="0"
+  onkeydown={(e) => e.key === 'Enter' && handleCardClick()}
 >
   <button
     onclick={toggleFavorite}
@@ -33,9 +48,13 @@
   >
     <span class="text-lg">{isFavorite ? '❤️' : '🤍'}</span>
   </button>
-  <BoxArt {game} />
+  <BoxArt {game} bind:element={boxArtElement} {isTransitioning} />
   <div class="p-3">
-    <h3 class="text-white font-semibold text-sm mb-1 line-clamp-2 leading-tight pr-6">
+    <h3
+      bind:this={titleElement}
+      class={`text-white font-semibold text-sm mb-1 line-clamp-2 leading-tight pr-6 ${isTransitioning ? 'vt-game-title' : ''}`}
+      style={isTransitioning ? `--vt-title-name: game-${game.id}-title` : ''}
+    >
       {game.name}
     </h3>
     <div class="flex flex-wrap gap-1 mb-2">
