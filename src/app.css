@@ -139,3 +139,11 @@
 .vt-game-title {
   view-transition-name: var(--vt-title-name);
 }
+
+.vt-random-btn {
+  view-transition-name: random-btn;
+}
+
+.vt-search-box {
+  view-transition-name: search-box;
+}

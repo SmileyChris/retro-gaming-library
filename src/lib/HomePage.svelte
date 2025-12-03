@@ -1,16 +1,23 @@
 <script>
+  import { tick } from 'svelte';
   import { navigate } from './router.svelte.js';
   import { platformConfig, allGames } from './data.js';
   import { search } from './searchStore.svelte.js';
   import PlatformSelector from './PlatformSelector.svelte';
 
-  function handleSearchInput() {
+  let shouldTransition = $state(false);
+
+  async function handleSearchInput() {
     if (search.query.trim()) {
+      shouldTransition = true;
+      await tick();
       navigate('/platform/All');
     }
   }
 
-  function pickRandomGame() {
+  async function pickRandomGame() {
+    shouldTransition = true;
+    await tick();
     const randomIndex = Math.floor(Math.random() * allGames.length);
     const randomGame = allGames[randomIndex];
     navigate(`/platform/${encodeURIComponent(randomGame.platform)}?highlight=${randomGame.id}`);
@@ -35,7 +42,6 @@
   <img
     src="/logo.png"
     alt="Retro Gaming Library"
-    style="view-transition-name: platform-All"
     class="w-32 h-32 md:w-40 md:h-40 mb-6 drop-shadow-2xl"
   />
 
@@ -52,8 +58,7 @@
     <div class="flex items-center gap-3">
       <button
         onclick={(e) => { e.currentTarget.querySelector('svg').classList.add('spin-once'); pickRandomGame(); }}
-        style="view-transition-name: random-btn"
-        class="flex items-center justify-center w-14 h-14 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition shrink-0"
+        class={`flex items-center justify-center w-14 h-14 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition shrink-0 ${shouldTransition ? 'vt-random-btn' : ''}`}
         title="Random game"
       >
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" onanimationend={(e) => e.target.classList.remove('spin-once')}>
@@ -65,8 +70,7 @@
         placeholder="Search games..."
         bind:value={search.query}
         oninput={handleSearchInput}
-        style="view-transition-name: search-box"
-        class="w-full px-6 py-4 rounded-full bg-gray-800 border border-gray-600 text-white text-lg placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
+        class={`w-full px-6 py-4 rounded-full bg-gray-800 border border-gray-600 text-white text-lg placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition ${shouldTransition ? 'vt-search-box' : ''}`}
       />
     </div>
   </div>

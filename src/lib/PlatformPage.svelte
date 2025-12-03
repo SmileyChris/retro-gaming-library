@@ -7,8 +7,9 @@
 
   let { platform = 'All', initialGenre = null, initialGems = false, initialFavourites = false, initialHighlight = null } = $props();
 
-  // Search input ref - focus if navigated with existing search query
+  // Element refs
   let searchInput = $state(null);
+  let randomBtnSvg = $state(null);
   $effect(() => {
     if (searchInput && untrack(() => search.query)) {
       searchInput.focus();
@@ -203,7 +204,6 @@
         isAnimating = true;
 
         // Spin the random button
-        const randomBtnSvg = document.querySelector('[style*="view-transition-name: random-btn"] svg');
         if (randomBtnSvg) {
           randomBtnSvg.classList.add('spin-once');
         }
@@ -268,12 +268,11 @@
         <div class="flex items-center gap-2 max-w-md mx-auto md:ml-auto md:mr-0">
           {#if filteredAndSortedGames.length > 1}
             <button
-              onclick={(e) => { e.currentTarget.querySelector('svg').classList.add('spin-once'); pickRandomGame(); }}
-              style="view-transition-name: random-btn"
-              class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition shrink-0"
+              onclick={() => { randomBtnSvg?.classList.add('spin-once'); pickRandomGame(); }}
+              class="vt-random-btn flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition shrink-0"
               title="Random game"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" onanimationend={(e) => e.target.classList.remove('spin-once')}>
+              <svg bind:this={randomBtnSvg} class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" onanimationend={(e) => e.target.classList.remove('spin-once')}>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
             </button>
@@ -284,8 +283,7 @@
             bind:value={search.query}
             type="search"
             placeholder="Search games..."
-            style="view-transition-name: search-box"
-            class="w-full px-4 py-2 rounded-full bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
+            class="vt-search-box w-full px-4 py-2 rounded-full bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
           />
           </div>
         </div>

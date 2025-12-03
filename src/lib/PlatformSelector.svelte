@@ -148,7 +148,7 @@
               src={platform.logo}
               alt={platform.name}
               class="platform-logo"
-              style="{platform.key === 'All' ? 'filter: grayscale(1) brightness(1.5) contrast(1.2);' : ''}{platform.key !== 'All' ? `view-transition-name: platform-${platform.key}` : ''}"
+              style={platform.key === 'All' ? 'filter: grayscale(1) brightness(1.5) contrast(1.2);' : ''}
               draggable="false"
               onerror={(e) => {
                 // Fallback to emoji/text if logo fails to load
@@ -162,14 +162,14 @@
           {:else}
             <div
               class="platform-icon-only"
-              style="{platform.key === 'Favourites' || platform.key === 'Gems' ? `view-transition-name: platform-${platform.key};` : ''}{platform.key === 'Gems' ? 'filter: grayscale(1) brightness(1.5) contrast(1.2);' : ''}"
+              style={platform.key === 'Gems' ? 'filter: grayscale(1) brightness(1.5) contrast(1.2);' : ''}
             >
               {platform.icon || '🎮'}
             </div>
           {/if}
         </div>
-        <div class="platform-name" style="view-transition-name: platform-{platform.key}-name">{platform.name}</div>
-        <div class="platform-count" style="color: {platform.color}; view-transition-name: platform-{platform.key}-count">
+        <div class="platform-name">{platform.name}</div>
+        <div class="platform-count" style="color: {platform.color}">
           {platformCounts[platform.key] || 0}
         </div>
       </div>
