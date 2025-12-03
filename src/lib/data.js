@@ -83,7 +83,7 @@ export const platformConfig = {
 };
 
 export const allGames = [
-    // SNES (37 games)
+    // SNES (38 games)
     { id: "snes-1", name: "Chrono Trigger", platform: "SNES", genres: ["RPG"], notes: "Perfect pacing, multiple endings", gem: false, libretroName: "Chrono Trigger (USA)" },
     { id: "snes-2", name: "Final Fantasy VI", platform: "SNES", genres: ["RPG"], notes: "Epic 40+ hour adventure, best villain", gem: false, libretroName: "Final Fantasy III (USA)" },
     { id: "snes-3", name: "Super Metroid", platform: "SNES", genres: ["Action", "Adventure"], notes: "Gold standard Metroidvania", gem: false, libretroName: "Super Metroid (Japan, USA) (En,Ja)" },
@@ -121,8 +121,9 @@ export const allGames = [
     { id: "snes-35", name: "Lemmings", platform: "SNES", genres: ["Puzzle"], notes: "Save suicidal creatures", gem: false, libretroName: "Lemmings (USA)" },
     { id: "snes-36", name: "Out of This World", platform: "SNES", genres: ["Platformer", "Adventure"], notes: "Rotoscoped alien survival", gem: false, libretroName: "Out of This World (USA)" },
     { id: "snes-37", name: "Space Megaforce", platform: "SNES", genres: ["Shmup"], notes: "Compile's best shooter", gem: true, libretroName: "Super Aleste (Japan)" },
+    { id: "snes-38", name: "Disney's Aladdin", platform: "SNES", genres: ["Platformer", "Action"], notes: "Capcom's tight platformer, Shinji Mikami directed", gem: false, libretroName: "Disney's Aladdin (USA)" },
 
-    // GBA (37 games)
+    // GBA (38 games)
     { id: "gba-1", name: "Metroid Fusion", platform: "GBA", genres: ["Action", "Adventure"], notes: "Atmospheric with SA-X tension", gem: false, libretroName: "Metroid Fusion (USA)" },
     { id: "gba-2", name: "The Legend of Zelda: The Minish Cap", platform: "GBA", genres: ["Action", "Adventure"], notes: "Charming Capcom Zelda", gem: false, libretroName: "Legend of Zelda, The - The Minish Cap (USA)" },
     { id: "gba-3", name: "Pokémon Emerald", platform: "GBA", genres: ["RPG"], notes: "Definitive Gen III, Battle Frontier", gem: false, libretroName: "Pokemon - Emerald Version (USA, Europe)" },
@@ -157,11 +158,11 @@ export const allGames = [
     { id: "gba-32", name: "Kuru Kuru Kururin", platform: "GBA", genres: ["Puzzle"], notes: "Spinning stick mazes", gem: true, libretroName: "Kuru Kuru Kururin (Europe) (En,Fr,De,Es,It)" },
     { id: "gba-33", name: "ChuChu Rocket!", platform: "GBA", genres: ["Puzzle"], notes: "Frantic mouse-routing", gem: false, libretroName: "ChuChu Rocket! (USA)" },
     { id: "gba-34", name: "Pinball of the Dead", platform: "GBA", genres: ["Pinball"], notes: "Absurd and fun", gem: true, libretroName: "Pinball of the Dead, The (USA)" },
-    { id: "gba-35", name: "Yoshi Topsy-Turvy", platform: "GBA", genres: ["Platformer"], notes: "Built-in tilt sensor", gem: true, libretroName: "Yoshi Topsy-Turvy (USA)" },
     { id: "gba-36", name: "DK: King of Swing", platform: "GBA", genres: ["Action"], notes: "L/R peg-climbing", gem: true, libretroName: "DK - King of Swing (USA)" },
     { id: "gba-37", name: "Denki Blocks", platform: "GBA", genres: ["Puzzle"], notes: "150+ brain-teasers", gem: true, libretroName: "Denki Blocks! (USA)" },
+    { id: "gba-38", name: "Metal Slug Advance", platform: "GBA", genres: ["Action", "Platformer"], notes: "GBA-exclusive run-and-gun with card system, solid port of arcade chaos", gem: false, libretroName: "Metal Slug Advance (USA)" },
 
-    // Genesis (31 games)
+    // Genesis (30 games)
     { id: "gen-1", name: "Sonic the Hedgehog 2", platform: "Genesis", genres: ["Platformer"], notes: "Definitive 16-bit Sonic", gem: false, libretroName: "Sonic The Hedgehog 2 (World)" },
     { id: "gen-2", name: "Streets of Rage 2", platform: "Genesis", genres: ["Beat-Em-Up"], notes: "Gold standard, iconic OST", gem: false, libretroName: "Streets of Rage 2 (USA)" },
     { id: "gen-3", name: "Gunstar Heroes", platform: "Genesis", genres: ["Action"], notes: "Treasure masterpiece", gem: false, libretroName: "Gunstar Heroes (USA)" },
@@ -175,7 +176,6 @@ export const allGames = [
     { id: "gen-11", name: "Dynamite Headdy", platform: "Genesis", genres: ["Platformer"], notes: "Head-swapping platformer", gem: false, libretroName: "Dynamite Headdy (USA)" },
     { id: "gen-12", name: "Castle of Illusion", platform: "Genesis", genres: ["Platformer"], notes: "Gorgeous Disney", gem: false, libretroName: "Castle of Illusion Starring Mickey Mouse (USA)" },
     { id: "gen-13", name: "Vectorman", platform: "Genesis", genres: ["Action"], notes: "Aged beautifully", gem: true, libretroName: "Vectorman (USA)" },
-    { id: "gen-14", name: "Landstalker", platform: "Genesis", genres: ["Action", "RPG"], notes: "Isometric Zelda-like", gem: true, libretroName: "Landstalker (USA)" },
     { id: "gen-15", name: "Beyond Oasis", platform: "Genesis", genres: ["Action", "Adventure"], notes: "Sega's answer to Zelda", gem: false, libretroName: "Beyond Oasis (USA)" },
     { id: "gen-16", name: "Ranger X", platform: "Genesis", genres: ["Action"], notes: "Innovative mech shooter", gem: true, libretroName: "Ranger X (USA)" },
     { id: "gen-17", name: "Strider", platform: "Genesis", genres: ["Action"], notes: "Fluid acrobatic action", gem: false, libretroName: "Strider (USA)" },
