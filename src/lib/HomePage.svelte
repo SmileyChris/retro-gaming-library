@@ -1,13 +1,11 @@
 <script>
   import { navigate } from './router.svelte.js';
   import { platformConfig, allGames } from './data.js';
-  import { getSearchQuery, setSearchQuery } from './searchStore.svelte.js';
+  import { search } from './searchStore.svelte.js';
   import PlatformSelector from './PlatformSelector.svelte';
 
-  let searchQuery = $derived(getSearchQuery());
-
   function handleSearchInput() {
-    if (searchQuery.trim()) {
+    if (search.query.trim()) {
       navigate('/platform/All');
     }
   }
@@ -64,9 +62,8 @@
       <input
         type="search"
         placeholder="Search games..."
-        value={searchQuery}
-        oninput={(e) => { setSearchQuery(e.target.value); handleSearchInput(); }}
-        autofocus
+        bind:value={search.query}
+        oninput={handleSearchInput}
         style="view-transition-name: search-box"
         class="w-full px-6 py-4 rounded-full bg-gray-800 border border-gray-600 text-white text-lg placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
       />

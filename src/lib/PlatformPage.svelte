@@ -3,7 +3,7 @@
   import GameCard from './GameCard.svelte';
   import { platformConfig, allGames } from './data.js';
   import { navigate } from './router.svelte.js';
-  import { getSearchQuery, setSearchQuery } from './searchStore.svelte.js';
+  import { search } from './searchStore.svelte.js';
 
   let { platform = 'All', initialGenre = null, initialGems = false, initialFavourites = false, initialHighlight = null } = $props();
 
@@ -15,11 +15,16 @@
     });
   });
 
+  // Search input ref - focus if navigated with existing search query
+  let searchInput = $state(null);
+  $effect(() => {
+    if (searchInput && untrack(() => search.query)) {
+      searchInput.focus();
+    }
+  });
+
   // Get unique genres (flattened from arrays)
   const allGenres = [...new Set(allGames.flatMap(g => g.genres))].sort();
-
-  // Use shared search state
-  let searchQuery = $derived(getSearchQuery());
   let favorites = $state([]);
 
   // Load favorites from localStorage on init
@@ -69,9 +74,9 @@
       const matchesGenre = !initialGenre || game.genres.includes(initialGenre);
       const matchesGems = !initialGems || game.gem;
       const matchesFavorites = !initialFavourites || favorites.includes(game.id);
-      const matchesSearch = searchQuery === '' ||
-        game.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        game.notes.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = search.query === '' ||
+        game.name.toLowerCase().includes(search.query.toLowerCase()) ||
+        game.notes.toLowerCase().includes(search.query.toLowerCase());
       return matchesPlatform && matchesGenre && matchesGems && matchesFavorites && matchesSearch;
     });
 
@@ -118,9 +123,9 @@
       const matchesPlatform = platform === 'All' || game.platform === platform;
       const matchesGenre = !initialGenre || game.genres.includes(initialGenre);
       const matchesGems = !initialGems || game.gem;
-      const matchesSearch = searchQuery === '' ||
-        game.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        game.notes.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = search.query === '' ||
+        game.name.toLowerCase().includes(search.query.toLowerCase()) ||
+        game.notes.toLowerCase().includes(search.query.toLowerCase());
       return matchesPlatform && matchesGenre && matchesGems && matchesSearch && favorites.includes(game.id);
     }).length;
   });
@@ -228,7 +233,7 @@
         <!-- Back button and title -->
         <div class="flex items-center gap-4">
           <button
-            onclick={() => { setSearchQuery(''); navigate('/'); }}
+            onclick={() => { search.query = ''; navigate('/'); }}
             class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition"
             title="Home"
           >
@@ -275,16 +280,10 @@
           {/if}
           <div class="md:w-48 lg:w-64 xl:w-80">
             <input
+            bind:this={searchInput}
+            bind:value={search.query}
             type="search"
             placeholder="Search games..."
-            value={searchQuery}
-            oninput={(e) => {
-              setSearchQuery(e.target.value);
-              if (e.target.value === '' && platform === 'All' && !initialGenre && !initialGems && !initialFavourites) {
-                navigate('/');
-              }
-            }}
-            autofocus
             style="view-transition-name: search-box"
             class="w-full px-4 py-2 rounded-full bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
           />
@@ -320,9 +319,9 @@
       <div class="text-center py-16">
         <img src="/logo.png" alt="" class="w-24 h-24 mx-auto mb-4 opacity-50" style="filter: grayscale(1);" />
         <p class="text-gray-400 text-lg">No games found</p>
-        {#if searchQuery}
+        {#if search.query}
           <button
-            onclick={() => searchQuery = ''}
+            onclick={() => search.query = ''}
             class="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
           >
             Clear Search
