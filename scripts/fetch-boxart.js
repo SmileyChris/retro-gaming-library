@@ -4,6 +4,7 @@ import https from 'https';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
 import { platformConfig, allGames } from '../src/lib/data.js';
+import sharp from 'sharp';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,11 +18,11 @@ const REFETCH = args.includes('--refetch') || args.includes('-r');
 // Check if pngquant is available
 let hasPngquant = false;
 try {
-    execSync('which pngquant', { stdio: 'ignore' });
+    execSync('pngquant --version', { stdio: 'ignore' });
     hasPngquant = true;
     console.log('pngquant found - images will be compressed after download');
 } catch {
-    if (DEBUG) console.log('pngquant not found - skipping compression');
+    console.log('pngquant not found - using sharp for compression');
 }
 
 // PNG magic bytes
@@ -39,10 +40,16 @@ const isValidPng = (filepath) => {
     }
 };
 
-const compressImage = (filepath) => {
-    if (!hasPngquant) return;
+const compressImage = async (filepath) => {
     try {
-        execSync(`pngquant --quality=65-80 --force --ext .png "${filepath}"`, { stdio: 'ignore' });
+        if (hasPngquant) {
+            execSync(`pngquant --quality=65-80 --force --ext .png "${filepath}"`, { stdio: 'ignore' });
+        } else {
+            const buffer = await sharp(filepath)
+                .png({ palette: true, quality: 80 })
+                .toBuffer();
+            fs.writeFileSync(filepath, buffer);
+        }
         if (DEBUG) console.log(`  Compressed: ${path.basename(filepath)}`);
     } catch (error) {
         if (DEBUG) console.log(`  Compression failed: ${path.basename(filepath)}`);
@@ -268,8 +275,8 @@ const processGames = async () => {
                 }
             }
 
-            // Compress with pngquant if available
-            compressImage(filepath);
+            // Compress image
+            await compressImage(filepath);
             if (DEBUG) console.log(`  Success!`);
         } catch (error) {
             console.error(`Failed to download ${game.name}: ${error.message}`);
