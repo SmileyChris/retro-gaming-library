@@ -1,17 +1,18 @@
 # Retro Gaming Library
 
-A curated collection of 200 essential retro games across 8 classic platforms, built with Svelte 5 and Tailwind CSS.
+A curated collection of 219 essential retro games across 9 classic platforms, built with Svelte 5 and Tailwind CSS.
 
 ## Platforms
 
-- **SNES** - 37 games
-- **GBA** - 37 games
-- **Genesis** - 31 games
+- **SNES** - 39 games
+- **GBA** - 38 games
+- **Genesis** - 32 games
 - **NES** - 20 games
 - **N64** - 15 games
-- **PS1** - 30 games
+- **PS1** - 31 games
 - **GB/GBC** - 15 games
 - **Saturn** - 15 games
+- **Master System** - 14 games
 
 ## Features
 

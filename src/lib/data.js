@@ -79,11 +79,21 @@ export const platformConfig = {
         arkosFolder: 'saturn',
         retrostic: 'saturn',
         romspedia: 'sega-saturn'
+    },
+    'Master System': {
+        color: '#E11D48',
+        gradient: 'from-red-500 to-rose-600',
+        icon: '🎮',
+        logo: '/logos/sms.svg',
+        libretro: 'Sega - Master System - Mark III',
+        arkosFolder: 'mastersystem',
+        retrostic: 'master-system',
+        romspedia: 'sega-master-system'
     }
 };
 
 export const allGames = [
-    // SNES (38 games)
+    // SNES (39 games)
     { id: "snes-1", name: "Chrono Trigger", platform: "SNES", genres: ["RPG"], notes: "Perfect pacing, multiple endings", gem: false, libretroName: "Chrono Trigger (USA)" },
     { id: "snes-2", name: "Final Fantasy VI", platform: "SNES", genres: ["RPG"], notes: "Epic 40+ hour adventure, best villain", gem: false, libretroName: "Final Fantasy III (USA)" },
     { id: "snes-3", name: "Super Metroid", platform: "SNES", genres: ["Action", "Adventure"], notes: "Gold standard Metroidvania", gem: false, libretroName: "Super Metroid (Japan, USA) (En,Ja)" },
@@ -122,6 +132,7 @@ export const allGames = [
     { id: "snes-36", name: "Out of This World", platform: "SNES", genres: ["Platformer", "Adventure"], notes: "Rotoscoped alien survival", gem: false, libretroName: "Out of This World (USA)" },
     { id: "snes-37", name: "Space Megaforce", platform: "SNES", genres: ["Shmup"], notes: "Compile's best shooter", gem: true, libretroName: "Super Aleste (Japan)" },
     { id: "snes-38", name: "Disney's Aladdin", platform: "SNES", genres: ["Platformer", "Action"], notes: "Capcom's tight platformer, Shinji Mikami directed", gem: false, libretroName: "Disney's Aladdin (USA)" },
+    { id: "snes-39", name: "Magical Pop'n", platform: "SNES", genres: ["Action", "Platformer"], notes: "Top-tier hidden gem, Metroidvania excellence", gem: true, libretroName: "Magical Pop'n (Japan)" },
 
     // GBA (38 games)
     { id: "gba-1", name: "Metroid Fusion", platform: "GBA", genres: ["Action", "Adventure"], notes: "Atmospheric with SA-X tension", gem: false, libretroName: "Metroid Fusion (USA)" },
@@ -161,8 +172,9 @@ export const allGames = [
     { id: "gba-36", name: "DK: King of Swing", platform: "GBA", genres: ["Action"], notes: "L/R peg-climbing", gem: true, libretroName: "DK - King of Swing (USA)" },
     { id: "gba-37", name: "Denki Blocks", platform: "GBA", genres: ["Puzzle"], notes: "150+ brain-teasers", gem: true, libretroName: "Denki Blocks! (USA)" },
     { id: "gba-38", name: "Metal Slug Advance", platform: "GBA", genres: ["Action", "Platformer"], notes: "GBA-exclusive run-and-gun with card system, solid port of arcade chaos", gem: false, libretroName: "Metal Slug Advance (USA)" },
+    { id: "gba-39", name: "Disney's Lilo & Stitch", platform: "GBA", genres: ["Action", "Platformer"], notes: "Metal Slug-style action, highly rated Disney sleeper", gem: true, libretroName: "Disney's Lilo & Stitch (USA)" },
 
-    // Genesis (30 games)
+    // Genesis (32 games)
     { id: "gen-1", name: "Sonic the Hedgehog 2", platform: "Genesis", genres: ["Platformer"], notes: "Definitive 16-bit Sonic", gem: false, libretroName: "Sonic The Hedgehog 2 (World)" },
     { id: "gen-2", name: "Streets of Rage 2", platform: "Genesis", genres: ["Beat-Em-Up"], notes: "Gold standard, iconic OST", gem: false, libretroName: "Streets of Rage 2 (USA)" },
     { id: "gen-3", name: "Gunstar Heroes", platform: "Genesis", genres: ["Action"], notes: "Treasure masterpiece", gem: false, libretroName: "Gunstar Heroes (USA)" },
@@ -193,6 +205,8 @@ export const allGames = [
     { id: "gen-29", name: "Micro Machines 2", platform: "Genesis", genres: ["Racing"], notes: "8-player mode", gem: true, libretroName: "Micro Machines 2 - Turbo Tournament (Europe)" },
     { id: "gen-30", name: "The Ooze", platform: "Genesis", genres: ["Action"], notes: "Play as toxic sludge", gem: true, libretroName: "Ooze, The (USA)" },
     { id: "gen-31", name: "Wiz 'n' Liz", platform: "Genesis", genres: ["Action"], notes: "Frantic spell-mixing", gem: true, libretroName: "Wiz 'n' Liz (USA)" },
+    { id: "gen-32", name: "Dragon's Fury", platform: "Genesis", genres: ["Pinball"], notes: "Best Genesis pinball, dark fantasy theme with bonus boss battles", gem: false, libretroName: "Dragon's Fury (USA)" },
+    { id: "gen-33", name: "Psycho Pinball", platform: "Genesis", genres: ["Pinball"], notes: "Four interconnected tables, fantastic art and music", gem: true, libretroName: "Psycho Pinball (Europe)" },
 
     // NES (20 games)
     { id: "nes-1", name: "Super Mario Bros. 3", platform: "NES", genres: ["Platformer"], notes: "Apex of 8-bit design", gem: false, libretroName: "Super Mario Bros. 3 (USA)" },
@@ -233,7 +247,7 @@ export const allGames = [
     { id: "n64-14", name: "Blast Corps", platform: "N64", genres: ["Action"], notes: "Demolition chaos", gem: true, libretroName: "Blast Corps (USA)" },
     { id: "n64-15", name: "Pilotwings 64", platform: "N64", genres: ["Simulation"], notes: "Relaxing, tight controls", gem: false, libretroName: "Pilotwings 64 (USA)" },
 
-    // PS1 (30 games)
+    // PS1 (31 games)
     { id: "ps1-1", name: "Final Fantasy VII", platform: "PS1", genres: ["RPG"], notes: "Crown jewel of PS1 RPGs", gem: false, libretroName: "Final Fantasy VII (USA) (Disc 1)" },
     { id: "ps1-2", name: "Metal Gear Solid", platform: "PS1", genres: ["Stealth", "Action"], notes: "Defined stealth gaming", gem: false, libretroName: "Metal Gear Solid (USA) (Disc 1) (Rev 1)" },
     { id: "ps1-3", name: "Castlevania: Symphony of the Night", platform: "PS1", genres: ["Action", "Adventure"], notes: "2D masterpiece", gem: false, libretroName: "Castlevania - Symphony of the Night (USA)" },
@@ -264,8 +278,9 @@ export const allGames = [
     { id: "ps1-28", name: "Tomba!", platform: "PS1", genres: ["Platformer", "Adventure"], notes: "2.5D with quests", gem: true, libretroName: "Tomba! (USA)" },
     { id: "ps1-29", name: "Einhänder", platform: "PS1", genres: ["Shmup"], notes: "Square's shooter", gem: true, libretroName: "Einhander (USA)" },
     { id: "ps1-30", name: "Alundra", platform: "PS1", genres: ["Action", "RPG"], notes: "Best 2D Zelda clone", gem: true, libretroName: "Alundra (USA)" },
+    { id: "ps1-31", name: "Brave Fencer Musashi", platform: "PS1", genres: ["Action", "RPG"], notes: "Underrated Squaresoft action-RPG gem", gem: true, libretroName: "Brave Fencer Musashi (USA)" },
 
-    // GB/GBC (15 games)
+    // GB/GBC (16 games)
     { id: "gb-1", name: "Pokémon Crystal", platform: "GB/GBC", genres: ["RPG"], notes: "Definitive Gen II", gem: false, libretroName: "Pokemon - Crystal Version (USA, Europe)" },
     { id: "gb-2", name: "Link's Awakening DX", platform: "GB/GBC", genres: ["Action", "Adventure"], notes: "Arguably best 2D Zelda", gem: false, libretroName: "Legend of Zelda, The - Link's Awakening DX (USA, Europe)" },
     { id: "gb-3", name: "Oracle of Seasons", platform: "GB/GBC", genres: ["Action", "Adventure"], notes: "Combat-focused Zelda", gem: false, libretroName: "Legend of Zelda, The - Oracle of Seasons (USA)" },
@@ -281,6 +296,7 @@ export const allGames = [
     { id: "gb-13", name: "Mario Tennis", platform: "GB/GBC", genres: ["Sports", "RPG"], notes: "Deep career mode", gem: false, libretroName: "Mario Tennis (USA)" },
     { id: "gb-14", name: "Mario Golf", platform: "GB/GBC", genres: ["Sports", "RPG"], notes: "Full-featured with progression", gem: false, libretroName: "Mario Golf (USA)" },
     { id: "gb-15", name: "Metroid II: Return of Samus", platform: "GB/GBC", genres: ["Action", "Adventure"], notes: "Atmospheric expansion", gem: false, libretroName: "Metroid II - Return of Samus (World)" },
+    { id: "gb-16", name: "Cannon Fodder", platform: "GB/GBC", genres: ["Action", "Strategy"], notes: "Dark humor war game, surprisingly great handheld port", gem: true, libretroName: "Cannon Fodder (Europe) (En,Fr,De)" },
 
     // Saturn (15 games)
     { id: "sat-1", name: "Panzer Dragoon Saga", platform: "Saturn", genres: ["RPG"], notes: "Saturn's crown jewel", gem: false, libretroName: "Panzer Dragoon Saga (USA) (Disc 1)" },
@@ -297,5 +313,21 @@ export const allGames = [
     { id: "sat-12", name: "Sega Rally Championship", platform: "Saturn", genres: ["Racing"], notes: "Handling still fantastic", gem: false, libretroName: "Sega Rally Championship (USA)" },
     { id: "sat-13", name: "Saturn Bomberman", platform: "Saturn", genres: ["Party"], notes: "10-player chaos", gem: false, libretroName: "Saturn Bomberman (USA)" },
     { id: "sat-14", name: "Darius Gaiden", platform: "Saturn", genres: ["Shmup"], notes: "Stunning 2D visuals", gem: true, libretroName: "Darius Gaiden (Japan)" },
-    { id: "sat-15", name: "Burning Rangers", platform: "Saturn", genres: ["Action"], notes: "Sonic Team firefighting", gem: true, libretroName: "Burning Rangers (USA)" }
+    { id: "sat-15", name: "Burning Rangers", platform: "Saturn", genres: ["Action"], notes: "Sonic Team firefighting", gem: true, libretroName: "Burning Rangers (USA)" },
+
+    // Master System (14 games)
+    { id: "sms-1", name: "Phantasy Star", platform: "Master System", genres: ["RPG"], notes: "Groundbreaking 8-bit RPG with 3D dungeons and female protagonist", gem: false, libretroName: "Phantasy Star (USA, Europe) (v1.3)" },
+    { id: "sms-2", name: "Wonder Boy III: The Dragon's Trap", platform: "Master System", genres: ["Action", "Adventure", "Platformer"], notes: "Metroidvania pioneer, EGM's 1989 SMS Game of the Year", gem: false, libretroName: "Wonder Boy III - The Dragon's Trap (USA, Europe)" },
+    { id: "sms-3", name: "Golden Axe Warrior", platform: "Master System", genres: ["Action", "Adventure"], notes: "Zelda-style adventure that improves on the formula", gem: true, libretroName: "Golden Axe Warrior (USA, Europe)" },
+    { id: "sms-4", name: "Alex Kidd in Miracle World", platform: "Master System", genres: ["Platformer"], notes: "Sega's pre-Sonic mascot, built into SMS II consoles", gem: false, libretroName: "Alex Kidd in Miracle World (USA, Europe)" },
+    { id: "sms-5", name: "Sonic the Hedgehog", platform: "Master System", genres: ["Platformer"], notes: "Unique 8-bit version with original levels, not a port", gem: false, libretroName: "Sonic the Hedgehog (USA, Europe)" },
+    { id: "sms-6", name: "Castle of Illusion Starring Mickey Mouse", platform: "Master System", genres: ["Platformer"], notes: "Rated best SMS game of all time by Sega Power", gem: false, libretroName: "Castle of Illusion Starring Mickey Mouse (USA, Europe)" },
+    { id: "sms-7", name: "Land of Illusion Starring Mickey Mouse", platform: "Master System", genres: ["Platformer", "Adventure"], notes: "Built from ground up for SMS, Metroidvania elements", gem: true, libretroName: "Land of Illusion Starring Mickey Mouse (USA, Europe)" },
+    { id: "sms-8", name: "Psycho Fox", platform: "Master System", genres: ["Platformer"], notes: "Mario meets Sonic hybrid, highly acclaimed", gem: true, libretroName: "Psycho Fox (USA, Europe)" },
+    { id: "sms-9", name: "Shinobi", platform: "Master System", genres: ["Action", "Platformer"], notes: "Origin of Sega's legendary ninja franchise", gem: false, libretroName: "Shinobi (USA, Europe)" },
+    { id: "sms-10", name: "Alex Kidd in Shinobi World", platform: "Master System", genres: ["Action", "Platformer"], notes: "Charming parody mashup that works surprisingly well", gem: true, libretroName: "Alex Kidd in Shinobi World (USA, Europe)" },
+    { id: "sms-11", name: "OutRun", platform: "Master System", genres: ["Racing"], notes: "Impressive arcade port, iconic soundtrack", gem: false, libretroName: "Out Run (USA, Europe)" },
+    { id: "sms-12", name: "Bubble Bobble", platform: "Master System", genres: ["Puzzle", "Platformer"], notes: "200 levels, enhanced port with co-op", gem: false, libretroName: "Bubble Bobble (Europe)" },
+    { id: "sms-13", name: "Zillion", platform: "Master System", genres: ["Action", "Adventure"], notes: "Metroid-influenced exploration, based on anime", gem: true, libretroName: "Zillion (USA, Europe)" },
+    { id: "sms-14", name: "Wonder Boy in Monster Land", platform: "Master System", genres: ["Action", "Adventure"], notes: "Action-RPG hybrid that defined the series", gem: false, libretroName: "Wonder Boy in Monster Land (USA, Europe)" }
 ];

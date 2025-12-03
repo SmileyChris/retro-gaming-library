@@ -39,7 +39,7 @@ The `navigate()` function uses View Transitions API when available.
 ### Data Structure
 `src/lib/data.js` exports:
 - `platformConfig`: Platform metadata (colors, gradients, LibRetro system names, external site mappings)
-- `allGames`: Array of 200 games with `{id, name, platform, genres[], notes, gem, libretroName}`
+- `allGames`: Array of 219 games with `{id, name, platform, genres[], notes, gem, libretroName}`
 
 ### Key Components
 - **Router.svelte**: Switches between HomePage and PlatformPage based on route
