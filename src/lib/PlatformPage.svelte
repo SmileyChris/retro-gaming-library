@@ -171,6 +171,21 @@
     });
   }
 
+  // Reset highlight when route changes without a highlight param
+  $effect(() => {
+    // Track route-related props to detect navigation
+    platform; initialGenre; initialGems; initialFavourites;
+
+    if (!initialHighlight) {
+      if (highlightTimeout) {
+        clearTimeout(highlightTimeout);
+        highlightTimeout = null;
+      }
+      highlightedGameId = null;
+      isAnimating = false;
+    }
+  });
+
   // Handle initial highlight from navigation
   $effect(() => {
     if (initialHighlight && ready) {
