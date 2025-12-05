@@ -1,8 +1,9 @@
 // Extended game descriptions - keyed by game ID
 // These are curated descriptions providing historical context and gameplay details
+// All platforms now have complete coverage
 
 export const gameDescriptions = {
-    // Saturn
+    // Saturn (15 games)
     "sat-1": `One of the rarest and most revered RPGs ever made, Panzer Dragoon Saga transforms the rail shooter formula into a fully 3D role-playing epic with real-time morphing dragon battles and branching evolution paths. Developed by Team Andromeda to compete with Final Fantasy VII, it pushed the Saturn to its absolute limits with gorgeous pre-rendered cutscenes and an emotionally resonant story about pursuing destiny across a dying world.
 
 This swan song for the Saturn remains one of gaming's holy grails—with only around 20,000 copies released in the West, original discs regularly fetch four-figure sums. Its unique battle system lets you position your dragon around enemies in real-time while managing action gauges, creating tactical depth that still feels fresh decades later.`,
@@ -63,7 +64,7 @@ With 28 branching stages providing immense replayability and multiple endings to
 
 The random generator creates 3,125 unique level variations, ensuring no two rescue missions play identically. Its late 1998 release—after Sega had shifted focus to Dreamcast—made Burning Rangers extremely rare, and its innovative premise has never been properly replicated.`,
 
-    // Master System
+    // Master System (14 games)
     "sms-1": `Released in December 1987—just two days after Final Fantasy hit the Famicom—Phantasy Star stands as Sega's bold answer to the burgeoning console RPG scene, and it arrived swinging above its weight class. While Dragon Quest and Final Fantasy were establishing the genre's conventions on Nintendo's hardware, Sega delivered something genuinely different: a science fantasy epic spanning three planets, starring a female protagonist years before it became commonplace, and pushing the Master System's 8-bit architecture to its absolute limits. Alis Landale's quest for revenge against the tyrannical King Lassic unfolds across a world that fuses medieval fantasy with Star Wars-inspired sci-fi, featuring talking cat-like companions, ancient civilizations, and robotic enforcers.
 
 The game's technical achievements remain staggering even today. Housed on a massive 4-megabit cartridge with FM sound synthesis, Phantasy Star features fully animated enemy sprites in battle and, most impressively, smooth first-person 3D dungeons that the Famicom simply couldn't handle. These maze-like depths demanded careful mapping and spatial reasoning, creating a sense of genuine exploration and danger that few contemporary games could match. The Master System's superior color palette allowed Phantasy Star to look a generation ahead of its NES rivals.
@@ -148,7 +149,7 @@ The Master System version is the definitive way most Western players experienced
 
 Its legacy extends well beyond the 8-bit era: Wonder Boy in Monster Land essentially defined the template for the beloved Monster World series that followed, with later entries like The Dragon's Trap refining its formula into cult classics worthy of modern remakes.`,
 
-    // SNES
+    // SNES (39 games)
     "snes-1": `Born from what Square dubbed the "Dream Team"—Final Fantasy creator Hironobu Sakaguchi, Dragon Quest mastermind Yuji Horii, and Dragon Ball artist Akira Toriyama—Chrono Trigger arrived in 1995 as an audacious collaboration between two rival RPG franchises' brightest minds. Their mission was to create "something no one had done before," and the result was a time-traveling epic that would redefine what console RPGs could achieve. Composer Yasunori Mitsuda crafted one of gaming's most beloved soundtracks, with Nobuo Uematsu stepping in to complete the score, while writer Masato Kato wove a narrative spanning seven distinct eras that responded dynamically to player choices across millennia.
 
 The game's innovations extended far beyond its ambitious premise. Chrono Trigger pioneered the New Game Plus feature that would become an RPG staple, allowing players to replay with their hard-earned stats and discover the game's thirteen different endings based on when and how they confronted the world-devouring threat Lavos. Combat broke from JRPG conventions by making enemies visible on field maps rather than random encounters, with battles erupting directly on the map instead of transitioning to separate screens. The Active Time Battle system gained new depth through Dual and Triple Techs, where party members could combine abilities for devastating combo attacks that rewarded strategic character pairings.
@@ -383,7 +384,7 @@ The gameplay strikes a remarkable balance between Metroid-style exploration and 
 
 Magical Pop'n's rarity—combined with its exceptional quality—has made original cartridges extremely valuable, with copies regularly selling for hundreds of dollars. The game represents everything the hidden gem designation is meant to capture: a title overlooked in its time that deserves recognition alongside the platform's acknowledged classics. For players seeking proof that the Super Famicom's library still holds undiscovered treasures, Magical Pop'n stands as perhaps the ultimate example—a game that matches or exceeds its more famous contemporaries while remaining virtually unknown outside dedicated retro gaming circles.`,
 
-    // GBA
+    // GBA (38 games)
     "gba-1": `Released alongside Metroid Prime in November 2002, Metroid Fusion marked the series' return after an eight-year hiatus and showcased the Game Boy Advance's capabilities just a year into its lifecycle. Developed by Nintendo R&D1 under series designer Yoshio Sakamoto, the team eschewed previous Metroid programming techniques in favor of building upon their recent work on Wario Land 4, creating what would become one of the most technically accomplished titles on the handheld. The game introduces a darker narrative where Samus, infected by shapeshifting X parasites and saved only by a Metroid DNA vaccine, investigates a quarantined space station while being hunted by the SA-X—a parasitic copy of herself at full power.
 
 Fusion refines the Metroid formula with quality-of-life enhancements suited to portable play: Navigation Rooms provide mission objectives between exploration segments, ledge-grabbing and ladder-climbing expand movement options, and absorbing defeated X parasites creates a constant risk-reward loop for health and ammunition recovery. The SA-X encounters transform the traditional power fantasy into survival horror, forcing players to hide from an enemy wielding all of Samus's original abilities while stripped of her iconic suit's defenses. Though more linear than Super Metroid, this structure serves the handheld format's shorter play sessions while maintaining the series' environmental puzzle-solving and sequence-breaking potential.
@@ -611,4 +612,465 @@ Metal Slug Advance proved that SNK's flagship run-and-gun franchise could thrive
 The gameplay split between Stitch's explosive action stages and Lilo's stealth-puzzle segments, but the former stole the show entirely. Stitch tears through levels with dual plasma blasters that fire at multiple angles, hurls pineapple bombs like Metal Slug grenades, and even pilots a tank-like vehicle in pure SNK fashion. Digital Eclipse's animation prowess shines throughout, with sprites boasting astonishing frame counts that make the game feel like a living Saturday morning cartoon—except one where you're obliterating alien soldiers and environmental hazards with reckless abandon.
 
 Despite concerns that the punishing difficulty would alienate its young target audience, Lilo & Stitch earned an impressive 80 on Metacritic—making it the highest-rated game in the franchise—and sold 620,000 copies in North America alone by 2006. It stands as a triumphant example of what licensed games could achieve when developers were trusted (or accidentally left unsupervised) to follow their creative instincts.`,
+
+/* Genesis (33 games) */
+"gen-1": `Often cited as the definitive 16-bit platformer, Sonic the Hedgehog 2 refined every rough edge of its predecessor to deliver a blisteringly fast, confident sequel that solidified the Genesis's reputation. By introducing Miles "Tails" Prower and the revolutionary Spin Dash move, the game eliminated the momentum-breaking waiting game of the original, allowing players to rocket through loops and corkscrews with unprecedented flow.
+
+The level design is a masterclass in zoning, from the neon-soaked dazzling speeds of Chemical Plant Zone to the vertiginous heights of Hill Top Zone. Beyond the main campaign, the introduction of 3D half-pipe special stages showcased the hardware's raw processing power, while the ability to transform into Super Sonic rewarded dedicated players with god-like invincibility, setting a standard for unlockables that the series follows to this day.`,
+
+"gen-2": `Yuzo Koshiro’s pulsing techno soundtrack and huge, expressive sprites make Streets of Rage 2 the undisputed king of 16-bit beat-’em-ups. While the genre often suffered from repetitive button-mashing, Sega created a combat system with genuine depth, giving each of the four characters—including the roller-blading Skate and the wrestler Max—distinct move sets, blitz attacks, and risk-reward specials that drained health for massive damage.
+
+The game is a technical marvel, featuring vibrant urban environments that drip with atmosphere, from rain-slicked bridges to neon-lit amusement parks. It remains the gold standard for the brawler genre, offering a perfect balance of impact, enemy variety, and co-op synergy that few games, modern or retro, have ever managed to replicate.`,
+
+"gen-3": `Developed by Treasure, Gunstar Heroes is a high-octane run-and-gun shooter that pushed the Genesis processor to its breaking point with multi-jointed bosses and frenetic on-screen chaos. The game’s brilliance lies in its weapon combination system; players can mix four base weapon types to create wildly different armaments, such as homing lasers or flamethrower swords, encouraging experimentation over rote memorization.
+
+Unlike the grim militarism of Contra, Gunstar Heroes employs a vibrant, anime-inspired aesthetic full of personality and humor. From the legendary mine cart chase to the shapeshifting "Seven Force" boss battle, the game is a non-stop rollercoaster of set pieces that remains one of the most technically impressive and purely enjoyable action games of the 16-bit era.`,
+
+"gen-4": `Phantasy Star IV: The End of the Millennium stands as the crowning achievement of Sega’s flagship RPG series, weaving a narrative that effectively closes the solar system-spanning saga. By utilizing manga-style panel cutscenes, the game delivers character interactions and plot beats with a visual dynamism that traditional text boxes couldn't match, creating a cinematic feel rare for cartridges of the time.
+
+The gameplay is streamlined and snappy, featuring programmable macros that allow players to automate complex party maneuvers and discover spectacular "combo" attacks where characters combine magic and skills. With its perfect pacing, memorable cast, and a soundtrack that pushes the FM synthesis chip to its melodic limits, this is widely considered one of the finest Japanese RPGs ever made.`,
+
+"gen-5": `Shining Force II took the tactical RPG foundation of its predecessor and expanded it into a sprawling open-world adventure. Unlike many strategy games that moved players strictly from battle to battle, this sequel allowed for free exploration of towns and dungeons, bridging the gap between traditional JRPGs and grid-based warfare.
+
+The game shines in its character progression and "Promotion" system, where a ragtag group of centaurs, birdmen, and mages evolve into powerhouse units with new sprites and weapons. With smarter enemy AI and larger battle maps than the original, it offers a deep, strategic challenge wrapped in a charming fantasy narrative that feels like a grand journey rather than just a series of skirmishes.`,
+
+"gen-6": `Originally intended as a single massive cartridge, the combination of Sonic 3 and Sonic & Knuckles via "Lock-On Technology" creates the true, complete vision of Sega's most ambitious platformer. This sprawling epic introduces a cohesive narrative told entirely through gameplay and stage transitions, chronicling the battle for the Floating Island against Dr. Robotnik and the then-antagonist Knuckles the Echidna.
+
+The gameplay introduces elemental shields—Fire, Water, and Lightning—that grant unique traversal moves, adding layers of physics-based exploration to the speed. With 14 massive zones, three playable characters with distinct routes, and the climactic Doomsday Zone deep space encounter, this combined experience represents the absolute peak of classic 2D Sonic design.`,
+
+"gen-7": `Castlevania: Bloodlines is a distinct, often overlooked entry in the vampire-hunting saga designed specifically for the Genesis hardware. Deviating from the Belmont clan, players control John Morris with his whip or Eric Lecarde with his spear, the latter offering a unique pole-vaulting mechanic that opens up verticality in level design rarely seen in the franchise.
+
+Konami utilized the Genesis's fast processor to create exclusive visual effects, including a dizzying segmented tower rotation and shimmering water reflections that defied the console’s color limitations. With a globe-trotting setting that moves from the ruins of Dracula's castle to the munitions factories of Germany, it offers a faster, more visceral take on the classic Castlevania formula.`,
+
+"gen-8": `Shinobi III: Return of the Ninja Master represents the zenith of Joe Musashi's adventures, trading the arcade stiffness of earlier titles for a fluid, acrobatic ninja simulator. The controls are razor-sharp, allowing players to dash, wall-jump, and perform flying kicks with a speed that matches the aggressive enemy placement, making you feel like a true master of stealth and combat.
+
+The variety of set pieces is staggering, ranging from horseback chases and surfing across futuristic waters to navigating a biological lab filled with pulsating monstrosities. It balances difficulty perfectly, offering a challenge that demands precision without feeling unfair, wrapped in a darker, more cinematic presentation than its predecessors.`,
+
+"gen-9": `Thunder Force IV (known as Lightening Force in North America) is widely regarded as the best horizontal shooter on the Genesis, and arguably of the entire 16-bit generation. Technosoft’s mastery of the hardware is on full display here, utilizing a massive vertical scrolling field that allows players to maneuver beyond the screen's edge, creating a sense of scale and battlefield awareness unique to the title.
+
+Accompanied by a relentless heavy metal soundtrack that is pure adrenaline, the game throws waves of enemies and screen-filling bosses at the player with zero slowdown. The weapon system, which allows on-the-fly switching between varied armaments like the Hunter and the Blade, is essential for survival in this beautiful, brutal, and technically flawless shmup.`,
+
+"gen-10": `Contra: Hard Corps is a blisteringly fast, boss-rush-heavy departure for the series that leans into the Genesis's "blast processing" reputation. Unlike the SNES counterpart, Hard Corps features four distinct playable characters—including a werewolf and a small robot—and introduces branching story paths that lead to multiple endings, adding significant replay value to the run-and-gun formula.
+
+The game is famous for its "slide" mechanic, which grants momentary invincibility, turning the gameplay into a high-speed dance of dodging and shooting. With massive multi-sprite bosses that rotate, transform, and explode in spectacular fashion, it is an intense, hardcore experience that prioritizes spectacle and speed above all else.`,
+
+"gen-11": `Dynamite Headdy is a theatrical masterpiece from Treasure that reimagines the platformer as a literal puppet show. The protagonist attacks by launching his head at enemies, but the core mechanic revolves around switching "heads" to gain various powers—from a hammer for damage to a vacuum for collecting items—solving puzzles and battling bosses in creative, non-standard ways.
+
+The game is a visual tour de force, featuring scaling and rotation effects that mimic 3D, all set against a backdrop of changing stage sets and backstage machinery. It is chaotic, colorful, and relentlessly inventive, throwing new mechanics at the player every few minutes in a way that prevents the gameplay from ever feeling stale.`,
+
+"gen-12": `Castle of Illusion Starring Mickey Mouse was an early showcase title that proved the Genesis could compete with Nintendo's dominance in character-driven platformers. The game captures the whimsy of Disney animation with lush, hand-drawn backgrounds and expressive sprite work, sending Mickey through surreal environments like a library of massive books and an enchanted candy land.
+
+While mechanically simple—relying on a bounce attack similar to DuckTales—the tight controls and imaginative level design make it a joy to play. It bridges the gap between 8-bit simplicity and 16-bit presentation, establishing a high bar for licensed games that Sega would continue to aim for throughout the console’s lifespan.`,
+
+"gen-13": `Released late in the console’s life, Vectorman was Sega’s answer to the pre-rendered graphics craze started by Donkey Kong Country. Using "vector piece" character models composed of rotating spheres, the developers achieved fluid animation and lighting effects that looked impossibly advanced for the aging hardware, all running at a buttery smooth frame rate.
+
+The gameplay matches the visual sheen with fast-paced run-and-gun action, emphasizing expansive levels and power-ups that transform Vectorman into different forms like a drill or a bomb. It remains a technical gem that showcases just how much power developers could squeeze out of the Genesis when they mastered its architecture.`,
+
+"gen-15": `Beyond Oasis (The Story of Thor) is an action-adventure RPG that stands as Sega's most competent answer to The Legend of Zelda. The game distinguishes itself with a combat system closer to a beat-’em-up, allowing Prince Ali to utilize daggers, swords, and bombs with fluid animation and precise hitboxes, alongside a magical Gold Armlet that summons four elemental spirits.
+
+These spirits—Water, Fire, Shadow, and Plant—are used not just for combat but for solving environmental puzzles, such as extinguishing fires or bridging gaps. Coupled with Yuzo Koshiro's sweeping orchestral score and large, detailed character sprites, it offers a grand adventure that feels distinctively more action-oriented than its Nintendo counterparts.`,
+
+"gen-16": `Ranger X is an innovative "mech shooter" that defies genre conventions with a unique control scheme: the D-pad moves your robot, while the shoulder buttons cycle weapon aim, allowing you to shoot in the opposite direction of movement. This independence of movement and fire, combined with a support motorcycle vehicle you can dock with, creates a tactical layer rarely seen in side-scrollers.
+
+Visually, the game is a stunner, employing wireframe 3D vector graphics for background elements and using an expanded color palette that breaks the Genesis's usual limits. It is a hidden gem that rewards mastery of its complex controls with one of the most satisfying and technically impressive combat experiences on the system.`,
+
+"gen-17": `Strider brings the arcade hit to the home console with remarkable fidelity, capturing the futuristic Soviet-bloc aesthetic and fast-paced acrobatic action of the original. Players control Strider Hiryu, whose "Cypher" plasma sword cuts through enemies with a satisfying "shwing" sound, while his ability to cling to walls and ceilings turns every level into a vertical playground.
+
+The game is defined by its massive set pieces, including the famous battle against a giant mechanical centipede in the Siberian legislative assembly. It moves at a breakneck pace, delivering a short but incredibly intense action experience that influenced the design of action platformers for years to come.`,
+
+"gen-18": `M.U.S.H.A. (Metallic Uniframe Super Hybrid Armor) is the finest entry in Compile’s legendary Aleste series and a holy grail for shooter fans. Set in a unique universe blending feudal Japanese aesthetics with sci-fi mecha, players pilot a flying samurai robot through vertically scrolling stages, utilizing a special weapon system where collecting "P-chips" upgrades your firepower to screen-clearing levels.
+
+The game is renowned for its "offensive defense" mechanic, where revolving option pods can be set to different formations to block incoming fire or focus attacks. With its blistering heavy metal soundtrack and no slowdown despite the on-screen chaos, it is a masterwork of coding and design that represents the pinnacle of the genre on the Genesis.`,
+
+"gen-19": `Street Fighter II': Special Champion Edition finally brought the fighting game phenomenon to the Genesis, answering the prayers of Sega fans who had watched SNES owners enjoy the original for a year. This version equates to the arcade's "Hyper Fighting" edition, offering faster gameplay speed and the ability to play as the four Grand Masters (Balrog, Vega, Sagat, M. Bison).
+
+Crucially, this release drove the adoption of the Sega 6-button controller, as playing with the standard 3-button pad required toggling between punches and kicks with the Start button. With the proper controller, it stands as a faithful, highly competitive conversion that proved the Genesis could handle the complex inputs and rapid-fire action of the world’s most popular fighter.`,
+
+"gen-20": `Golden Axe brings the high fantasy of Conan the Barbarian to the arcades and home, allowing up to two players to hack and slash through Death Adder’s forces. The game is iconic for its magic system, where collecting blue potions allows players to unleash screen-clearing spells—from Tyris Flare’s dragons to Gilius Thunderhead’s lightning—that look spectacular and turn the tide of battle.
+
+Beyond the standard combat, the ability to knock enemies off distinct rideable beasts (chicken-legs and dragons) and use them against their masters adds a fun tactical layer. While simple by modern standards, its weightiness, memorable campfire bonus stages, and cooperative gameplay make it a quintessential beat-’em-up classic.`,
+
+"gen-21": `NHL '94 is frequently cited not just as the best hockey game ever made, but as one of the greatest sports games of all time. It stripped away the fighting and simulator-heavy rules of previous years to focus on pure, fluid gameplay, introducing the "one-timer" shot which changed the offense from individual rushes to team-based passing plays.
+
+The game struck a perfect balance between realism and arcade speed, with vertical glass shattering, organ music, and crowd noise that reacted to the momentum of the match. It remains a title that is still played competitively today, beloved for its tight controls and the sheer joy of its multiplayer experience.`,
+
+"gen-22": `Road Rash II refined the series' signature blend of motorcycle racing and violent combat, adding nitro boosts and a split-screen two-player mode that the original lacked. The core loop involves racing across the US while punching, kicking, and chain-whipping opponents off their bikes, all while dodging traffic and outrunning the police.
+
+The game thrives on its chaotic energy and rock soundtrack, perfectly capturing the rebellious spirit of the 90s. The risk-reward of fighting opponents at 150 mph—knowing a crash sends you running back to your bike in shame—creates a hilarious and adrenaline-fueled experience that remains unique to the franchise.`,
+
+"gen-23": `ToeJam & Earl is a funky, surreal roguelike that stands as one of the most unique titles on the Genesis. Players control two aliens who have crash-landed on Earth, navigating randomly generated floating islands to find pieces of their ship while avoiding Earthlings like hula dancers, nerd herds, and hamsters in wheels.
+
+The game’s brilliance lies in its co-op mode and the mystery of the "presents" system—items that are unidentified until opened, meaning you might get a pair of rocket skates or accidentally summon a rain cloud over your head. Set to a distinctive hip-hop bass groove, it’s a slow-paced, humorous adventure that prioritizes exploration and vibes over twitch reflexes.`,
+
+"gen-24": `Dr. Robotnik's Mean Bean Machine is a western localization of the legendary puzzle game Puyo Puyo, rebranded with characters from the "Adventures of Sonic the Hedgehog" animated series. The gameplay revolves around matching four colored beans to clear them, but the real depth comes from setting up "chains"—delaying clears so that falling beans trigger subsequent matches.
+
+This chain system allows players to send "garbage beans" to their opponent's screen, burying them under colorless blocks. It is a fiercely competitive puzzle game that is easy to pick up but incredibly difficult to master, serving as the best introduction to the Puyo Puyo mechanic for western audiences.`,
+
+"gen-25": `Columns was Sega’s answer to Tetris, but it carved out its own identity with a match-three mechanic involving vertical jewels. Rather than rotating shapes, players cycle the order of the gems within the column to create diagonal, horizontal, or vertical matches, often triggering satisfying cascades as gravity pulls the remaining jewels down.
+
+The game is defined by its relaxed, mystical atmosphere, anchored by the soothing "Clotho" theme music and an ancient Greek aesthetic. While less frantic than its Russian competitor, Columns offers a more hypnotic, strategic puzzle experience that became a staple of the Sega library.`,
+
+"gen-26": `Sonic the Hedgehog 3 is the first half of the massive saga that concludes in Sonic & Knuckles, but it stands as a masterpiece on its own merits. It introduced the battery backup save system, allowing players to replay specific zones, and debuted Knuckles (as an antagonist) and the Carnival Night Zone, infamous for its "Barrel of Doom" puzzle.
+
+The game represented a leap forward in production values, with slightly pre-rendered sprites and new musical contributions (some famously linked to Michael Jackson's team). The introduction of unique character abilities—Tails' flight and Sonic's "insta-shield"—opened up the levels for vertical exploration, setting the stage for the definitive 2D Sonic experience.`,
+
+"gen-27": `Ecco the Dolphin is a haunting, atmospheric action-adventure that hides a terrifyingly difficult sci-fi epic behind its serene blue ocean cover art. Players control Ecco, who must travel through time and space to save his pod from an alien race called the Vortex, using sonar to communicate with other sea life and map out labyrinthine underwater caverns.
+
+The game is unique for its emphasis on resource management; players must constantly surface for air, creating a persistent tension as you explore the deep abyss. With its surreal story, H.R. Giger-inspired alien designs, and beautiful, melancholy soundtrack, Ecco offers an artistic and challenging experience unlike anything else on the system.`,
+
+"gen-28": `General Chaos is a satirical, isometric real-time tactics game that pits two armies of 5 soldiers against each other in cartoonish warfare. Developed by Game Refuge Inc. for EA, it allows players to command squads of specialized units—like the Machine Gunner, Launcher, and Scorcher—in quick, messy skirmishes where positioning and "hand-to-hand" brawls determine the victor.
+
+The game shines in its multiplayer mode, where the chaotic battlefield physics and humorous animations (like soldiers losing their pants) create a riotous party game atmosphere. It strips away the complexity of serious war games in favor of immediate, arcade-style fun that feels like playing with plastic army men come to life.`,
+
+"gen-29": `Micro Machines 2: Turbo Tournament is a top-down racer that features miniature vehicles speeding across domestic environments like billiard tables, kitchen counters, and toilet seats. The "Turbo Tournament" cartridge was unique for including two additional controller ports built directly into the game shell (the J-Cart), allowing for native 4-player action without an adapter.
+
+The game is frantic and unforgiving; falling off the edge of a breakfast table means instant elimination. Its "Head-to-Head" mode, where players score points by driving far enough ahead to push opponents off the screen, is a legendary friendship-tester that makes it one of the premier party games of the 16-bit era.`,
+
+"gen-30": `The Ooze is one of the most experimental titles on the Genesis, casting players as a scientist transformed into a puddle of toxic green liquid. The gameplay revolves around managing your liquid mass; you can squeeze through grates and attack enemies, but taking damage reduces your size, while absorbing green sludge grows you back.
+
+This "health bar as character size" mechanic was revolutionary, combined with a grim, industrial aesthetic and a top-down perspective. While difficult and somewhat clunky, it remains a cult classic for its daring originality and the sheer novelty of playing as an amorphous blob seeking revenge.`,
+
+"gen-31": `Wiz 'n' Liz is a frantic, high-speed platformer from Psygnosis that tasks players with collecting "wabbits" to add seconds to a ticking clock. The game moves at a blinding pace, requiring players to dash through short, colorful levels to gather ingredients which can then be mixed in a cauldron to unlock minigames, bonus points, or strange effects.
+
+The spell-mixing system is the highlight, encouraging trial and error to discover hundreds of combinations. With its cutesy graphics masking a hardcore test of reflexes and speed, it is a uniquely British take on the platforming genre that serves as a great "pick up and play" title.`,
+
+"gen-32": `Dragon's Fury (known as Devil's Crush on the TurboGrafx) is a pinball simulator that rejects realism in favor of a dark fantasy adventure. The table is a scrolling, three-screen-tall demon’s lair filled with wandering skeletons, monks, and dragons that players must destroy with the ball to trigger bonus stages and boss battles.
+
+The physics are excellent, but it’s the atmosphere—driven by a rocking soundtrack and macabre visuals—that sets it apart. It treats pinball as an action game where the ball is your weapon against the forces of evil, making it arguably the most engaging digital pinball experience of the era.`,
+
+"gen-33": `Psycho Pinball stands out by offering four distinct tables—Wild West, Trick or Treat, The Abyss, and the main Psycho table—linked together into a single massive game. By hitting specific targets, the ball can travel between tables, creating a multi-layered scoring challenge that offers immense depth and variety.
+
+Included minigames on the dot-matrix display break up the action, adding arcade flair to the pinball simulation. Developed by Codemasters, it features bright, colorful graphics and accessible physics, making it a comprehensive package that serves as a fitting swan song for the genre on the Genesis.`,
+
+/* PS1 (31 games) */
+"ps1-1": `Final Fantasy VII is the title that single-handedly popularized Japanese RPGs in the West, shifting the paradigm from 2D sprites to cinematic 3D storytelling. The journey of Cloud Strife and the eco-terrorist group AVALANCHE against the Shinra Corporation and the legendary soldier Sephiroth is told through seamless transitions between pre-rendered backgrounds, 3D battles, and groundbreaking Full Motion Video (FMV) cutscenes.
+
+Beyond its production values, the "Materia" system offered a flexible, addictive way to customize magic and abilities, while the emotional impact of the narrative left a permanent mark on pop culture. It wasn't just a game; it was a multimedia event that defined the PlayStation brand and expanded the scope of what video game narratives could achieve.`,
+
+"ps1-2": `Metal Gear Solid invented the "Tactical Espionage Action" genre, transforming video games from simple toys into cinematic experiences with Hollywood-level direction and voice acting. Hideo Kojima’s masterpiece forced players to unlearn the "shoot everything" instinct, rewarding patience, stealth, and observation as Solid Snake infiltrated the nuclear weapons disposal facility on Shadow Moses Island.
+
+The game is famous for breaking the fourth wall, with the villain Psycho Mantis reading the player’s memory card and vibrating the controller. These meta-narrative tricks, combined with a complex plot involving genetics and nuclear proliferation, created an immersive, intelligent experience that set the template for modern narrative gaming.`,
+
+"ps1-3": `Castlevania: Symphony of the Night boldly abandoned the series' linear roots to embrace an open-ended exploration structure inspired by Metroid, birthing the "Metroidvania" genre. Playing as Alucard, Dracula’s son, players explore a massive, interconnected castle filled with RPG elements, equipment drops, and a leveling system that added unprecedented depth to the platforming action.
+
+Visually, it is a 2D masterpiece in a 3D era, featuring fluid sprite animation and a gothic atmosphere enhanced by Michiru Yamane’s eclectic score. The reveal of the "Inverted Castle"—effectively doubling the game’s size just when players thought they had finished—remains one of the greatest secrets in gaming history.`,
+
+"ps1-4": `Chrono Cross had the impossible task of following Chrono Trigger, and it succeeded by forging its own distinct identity with a complex plot involving parallel dimensions and a massive cast of over 40 recruitable characters. The game features some of the most vibrant, tropical pre-rendered backgrounds on the system, creating a lush, melancholic atmosphere distinct from the usual sci-fi or medieval RPG tropes.
+
+The combat system innovated by removing random encounters and using a stamina-based element grid, discouraging button mashing in favor of strategic field manipulation. Accompanied by Yasunori Mitsuda’s legendary soundtrack—often cited as the best in video game history—it is a beautiful, philosophical journey about fate and consequence.`,
+
+"ps1-5": `Resident Evil 2 took the survival horror formula of the original and expanded it into a blockbuster experience, moving the action from a mansion to the zombie-infested Raccoon City. The game introduced the "Zapping System," where actions taken in the first scenario (playing as either Leon or Claire) affected the second playthrough, effectively offering four distinct storylines.
+
+With improved controls, terrifying enemy designs like the Licker and the relentless Tyrant (Mr. X), and a grander cinematic presentation, it perfected the fixed-camera horror experience. It struck the perfect balance between action, puzzle-solving, and resource scarcity, becoming the definitive entry in the classic era of the franchise.`,
+
+"ps1-6": `While Resident Evil focused on jump scares and B-movie camp, Silent Hill pioneered psychological horror, using the PS1’s hardware limitations to its advantage. The thick fog, originally used to hide a short draw distance, became a suffocating narrative device, isolating the protagonist Harry Mason in a town where reality shifts into a rusty, blood-soaked "Otherworld."
+
+The game’s terror comes from its sound design—radio static that rises when enemies are near and industrial, metallic screeching—rather than cheap shocks. It tells a disturbing, mature story about cults and trauma that proved video games could tackle darker, more abstract themes effectively.`,
+
+"ps1-7": `Suikoden II is widely regarded as one of the greatest RPGs ever made, despite a limited print run that made it a cult classic. The game’s scale is intimate yet epic, focusing on the tragic rift between two friends caught on opposite sides of a war, while tasking the player with recruiting the 108 Stars of Destiny to build an army and a headquarters castle.
+
+The gameplay blends traditional turn-based combat with large-scale strategic war battles and one-on-one duels. Its beautiful 2D sprite work has aged far better than early 3D titles, and the emotional weight of its story—where your choices determine which characters survive—delivers a narrative punch that few games have ever matched.`,
+
+"ps1-8": `Xenogears is a sprawling sci-fi epic that tackles heavy themes of religion, psychology (Freud and Jung), and the nature of existence, wrapped in a giant robot RPG. The story spans thousands of years and features a combat system that shifts between on-foot martial arts combos and massive "Gear" (mech) battles, each with their own fuel and energy management.
+
+Though the second disc is infamous for its rushed, text-heavy presentation due to budget constraints, the game’s ambition is undeniable. It presents a dense, intellectual narrative that treats the player with respect, supported by a unique anime-style presentation and a haunting soundtrack that remains a favorite among RPG purists.`,
+
+"ps1-9": `Vagrant Story is a technical and artistic masterpiece from Square that pushes the PS1 to its absolute limits with fully 3D character models and cinematic camera work that eliminated the need for FMV. Instead of a traditional party, players control a single "Riskbreaker," Ashley Riot, in a dungeon-crawling adventure that focuses on complex weapon crafting and a unique "Risk" system that balances offense with vulnerability.
+
+The game is set in the ruined city of Leá Monde, rendered with a distinctive, gritty art style and comic-book speech bubbles. It is a dense, difficult game for the hardcore enthusiast, offering a level of mechanical depth and atmospheric storytelling that feels distinct from the Final Fantasy mainline series.`,
+
+"ps1-10": `Final Fantasy Tactics brought the deep, grid-based strategy of the Tactics Ogre series into the Final Fantasy universe, creating a sophisticated war drama involving political intrigue, class warfare, and religious corruption. The "Job System" allows for near-infinite customization, letting players mix and match abilities—like a Knight who can use White Magic—to create broken, powerful unit combinations.
+
+The story, centered on Ramza Beoulve and his friend-turned-enemy Delita, is a mature, Shakespearean tragedy that contrasts sharply with the lighter tone of mainline entries. Its steep difficulty curve and permadeath mechanic demand strategic mastery, making it the benchmark by which all subsequent tactical RPGs are measured.`,
+
+"ps1-11": `Crash Bandicoot: Warped represents the peak of Naughty Dog’s PS1 trilogy, refining the "corridor runner" platforming formula to perfection. The addition of time travel allowed for diverse level themes—from prehistoric swamps to futuristic cities—and introduced vehicle levels, including motorcycles, jet skis, and airplanes, which broke up the platforming rhythm.
+
+New power-ups like the double jump and fruit bazooka gave players more control and combat options, while the time trial "Relic" system added massive replay value for speedrunners. It is a polished, colorful, and incredibly tight platformer that showed exactly what the PlayStation could do in the hands of capable developers.`,
+
+"ps1-12": `Spyro the Dragon proved that the PlayStation could handle massive, open 3D environments without the "fog" that plagued other titles. Insomniac Games developed a panoramic engine that allowed Spyro to glide from high peaks and see distant enemies clearly, creating a sense of freedom and exploration that defined the 3D platformer genre.
+
+The game’s charm lies in its collect-a-thon loop—rescuing crystallized dragons and hunting down gems—set to a rhythmic, progressive rock soundtrack by Stewart Copeland. With its expressive animation and intuitive controls, it remains an accessible and joyous adventure that stands alongside Mario 64 as a pioneer of 3D movement.`,
+
+"ps1-13": `Gran Turismo 2 was not just a racing game; it was an automotive encyclopedia that featured nearly 650 cars from actual manufacturers, a number unheard of at the time. The simulation mode allowed players to buy cheap used cars, tune them with authentic parts, and work their way up through license tests to professional racing leagues.
+
+The physics engine aimed for realism, forcing players to understand weight transfer and tire grip rather than just holding the accelerator. It legitimized the "driving simulator" genre on consoles, offering a depth of content and car culture appreciation that captivated even non-racing fans.`,
+
+"ps1-14": `WipEout 2097 (WipEout XL) is the epitome of "cool" in the 90s gaming scene, blending futuristic anti-gravity racing with designer club culture. With a licensed soundtrack featuring The Chemical Brothers, The Prodigy, and Underworld, and visual design by The Designers Republic, it positioned gaming as a stylish, adult hobby.
+
+The gameplay is faster and smoother than the original, introducing the "energy" mechanic where shield energy is shared with weapon usage, forcing split-second tactical decisions. The sensation of floating at breakneck speeds through neon-lit, industrial tracks remains visceral and exhilarating.`,
+
+"ps1-15": `Tekken 3 is widely considered one of the greatest fighting games of all time, marking the point where 3D fighters surpassed their 2D counterparts in popularity. It introduced true 3D movement via the sidestep mechanic, allowing players to dodge into the background or foreground, adding a new dimension of strategy to the combat.
+
+With a massive roster including debut icons like Jin Kazama, Eddy Gordo, and Ling Xiaoyu, the animation was shockingly fluid for the PS1. Packed with extra modes like "Tekken Force" (a beat-’em-up) and "Tekken Ball," it offered a complete package that was visually stunning and mechanically deep.`,
+
+"ps1-16": `Tony Hawk's Pro Skater 2 is a cultural touchstone that perfected the extreme sports genre. The introduction of the "manual" move was a game-changer, allowing players to link vert tricks with street tricks into single, massive combos that could span the entire level.
+
+The level design is legendary, from the Hangar to the School II, filled with secrets and hidden gaps. Combined with a robust "Create-a-Park" feature and a soundtrack featuring Rage Against the Machine and Anthrax, it captured the zeitgeist of early 2000s skate culture and remains purely addictive to play.`,
+
+"ps1-17": `Tomb Raider pioneered the 3D action-adventure genre, introducing the world to Lara Croft and a gameplay style that prioritized exploration and puzzle-solving over constant combat. The grid-based movement system, while stiff by modern standards, allowed for precise platforming across massive, vertical environments like the St. Francis Folly.
+
+The atmosphere of isolation is palpable; there is little music, only the sound of footsteps and animal growls, making the discovery of ancient ruins feel genuine. It was a groundbreaking title that combined cinematic ambition with intricate level design, defining the third-person perspective for years to come.`,
+
+"ps1-18": `Before modern stealth games dominated the market, Tenchu: Stealth Assassins delivered an authentic ninja simulator that emphasized staying unseen. Players utilize a grappling hook to traverse rooftops and items like poisoned rice balls to distract guards, rewarding "Grand Master" rankings for completing missions without being detected.
+
+The game is famous for its visceral "stealth kill" animations and its feudal Japanese atmosphere. While the controls are tank-like, the freedom to approach assassinations from multiple angles—vertical or horizontal—created a sandbox of shadows that felt revolutionary at the time.`,
+
+"ps1-19": `Oddworld: Abe's Oddysee is a cinematic puzzle-platformer that combines dark humor, anti-capitalist satire, and a unique "GameSpeak" mechanic. Players control Abe, a Mudokon slave, who must escape a meat processing plant; lacking weapons, Abe must use telepathy to possess enemies and verbal commands (Hello, Follow Me, Wait) to guide fellow slaves to safety.
+
+The game is punishingly difficult, relying on trial-and-error death traps, but the stunning pre-rendered backgrounds and seamless transitions create a captivating world. It is a thoughtful, artistic game where empathy and communication are your primary tools for survival.`,
+
+"ps1-20": `PaRappa the Rapper is the charming, paper-thin title that effectively birthed the rhythm game genre. With catchy, original songs composed by Masaya Matsuura and iconic character designs by Rodney Greenblat, players guide the rapping dog PaRappa through musical dojos and driving tests to win the heart of Sunny Funny.
+
+The gameplay is simple—press buttons in time with the on-screen prompts—but the "Cool" rating system allows players to freestyle for higher scores. Its mantra "I Gotta Believe!" and its positive, bizarre energy make it a unique, unforgettable experience that prioritized style and creativity over complexity.`,
+
+"ps1-21": `Ape Escape holds the distinction of being the first PlayStation game to require the DualShock controller, building its entire gameplay loop around the twin analog sticks. The left stick moves the character, while the right stick controls gadgets like the Stun Club and Time Net in 360 degrees, allowing for intuitive, independent action.
+
+The goal is to capture escaped monkeys, each with unique stats and AI personalities (some wear sunglasses, others use machine guns). The gadget variety, including the Sky Flyer and RC Car, turns each level into a playground of physics and puzzles, proving that analog controls could fundamentally change game design.`,
+
+"ps1-22": `Twisted Metal 2 took the vehicular combat concept and injected it with a global scale and a darker, comic-book narrative. Players choose from a roster of demented drivers—including the iconic clown Sweet Tooth—to battle in destructible arenas set in Paris, Antarctica, and New York, vying for a wish granted by the sinister Calypso.
+
+The combat is fast and chaotic, requiring players to master special moves (entered via fighting game-style inputs) and map knowledge to survive. With its destructible Eiffel Tower and Statue of Liberty, it offered a multiplayer catharsis that defined the "couch co-op" era of the PlayStation.`,
+
+"ps1-23": `Ridge Racer Type 4 is the most stylish arcade racer on the PS1, trading gritty realism for a sleek, acid-jazz infused aesthetic. The game utilizes Gouraud shading to create smooth vehicle models and lighting that looked generations ahead of its competitors, all running at a solid frame rate.
+
+The "drift" mechanic is the core of the gameplay, allowing players to slide through corners at impossible speeds with satisfying ease. With a unique story mode for each racing team and 321 unlockable cars (including a Pac-Man car), it is a masterpiece of visual design and arcade handling.`,
+
+"ps1-24": `Street Fighter Alpha 3 is a miracle port that managed to cram the massive arcade game onto the PS1 with almost zero compromises. It features a gigantic roster of over 30 characters and introduces the "ISM" system (A-ISM, V-ISM, X-ISM), allowing players to choose their fighting style and super meter mechanics.
+
+The home console exclusive "World Tour" mode adds RPG elements, letting players level up a character with special perks like auto-guard or infinite gauge. It stands as one of the most content-rich 2D fighters ever released, serving as a comprehensive celebration of the Street Fighter legacy.`,
+
+"ps1-25": `Driver fulfilled the fantasy of playing through a 70s car chase movie, casting players as undercover cop Tanner. The game pioneered realistic driving physics in an open-world 3D city, featuring working suspension, hubcaps that flew off during hard turns, and a "Director Mode" to edit replays of your chaotic pursuits.
+
+The opening tutorial—a brutal checklist of stunts in a parking garage—is infamous for its difficulty, acting as a gatekeeper to the main game. Once passed, however, the thrill of outrunning cop cars through Miami and San Francisco established the template for open-world driving games that followed.`,
+
+"ps1-26": `Parasite Eve describes itself as a "Cinematic RPG," blending the pre-rendered backgrounds of Final Fantasy with the survival horror of Resident Evil. Set in modern-day New York City during Christmas, the story follows NYPD officer Aya Brea as she battles mitochondria-mutated creatures, offering a unique scientific twist on the horror genre.
+
+The combat uses a hybrid "active time" system where players run around in real-time to dodge attacks but pause the action to aim their weapons within a geometric dome. With a short, focused runtime and a "New Game+" mode centered on the massive Chrysler Building dungeon, it is a polished, unique gem in Square’s library.`,
+
+"ps1-27": `Dino Crisis answers the question "What if Resident Evil had velociraptors?" Created by Shinji Mikami, it replaces slow-moving zombies with fast, intelligent dinosaurs that can open doors and hunt the player down, creating a faster, more panic-inducing form of survival horror.
+
+The game utilizes fully 3D environments rather than pre-rendered backgrounds, allowing for dynamic camera angles and more fluid exploration. The "bleeding" mechanic, which slows movement and attracts predators, adds a layer of tension to resource management, making every encounter with a T-Rex a heart-stopping event.`,
+
+"ps1-28": `Tomba! is a vibrant 2.5D platformer that incorporates an RPG-style quest system into a side-scrolling world. Players control a pink-haired feral child who attacks enemies by jumping on them and biting them, exploring a nonlinear world to retrieve his grandfather’s golden bracelet from the Evil Pigs.
+
+The game is renowned for its "Event" system, tracking over 100 disparate side quests that require backtracking and item usage to solve. Its fluid controls, unique perspective changes between background and foreground, and joyous, quirky atmosphere make it a cult classic platformer that defies easy categorization.`,
+
+"ps1-29": `Einhänder is a side-scrolling shooter developed by Square, a company known almost exclusively for RPGs, and the result is a stylish, cinematic shmup with a distinct German cyberpunk aesthetic. The game features 2.5D visuals with camera angles that swoop and dive, giving the action a dynamic, heavy feel.
+
+The core mechanic involves the "Gunpod" system; players capture weapons from destroyed enemies and can mount them above or below their ship, altering the firing angle. It is a challenging, meticulously crafted shooter with a pumping techno soundtrack that remains one of the genre’s hidden masterpieces.`,
+
+"ps1-30": `Alundra is often described as the best 2D Zelda game not made by Nintendo, but it distinguishes itself with a significantly darker, more mature storyline. Players take on the role of a Dreamwalker who must enter the nightmares of villagers to save them, dealing with heavy themes of depression, religion, and fate.
+
+The game is notorious for its challenging, intricate puzzles that require genuine thought and spatial reasoning. With beautiful pixel art that rivals the late SNES era and a sweeping orchestral score, Alundra is a long, demanding, and deeply rewarding action-adventure.`,
+
+"ps1-31": `Brave Fencer Musashi is an action-RPG that infuses the genre with humor, voice acting, and a day-night cycle that affects the world and NPCs. Playing as a summoned, pint-sized samurai, players must collect the Five Scrolls, using a unique ability to absorb enemy skills—like shooting bullets or bowling—to solve puzzles and defeat bosses.
+
+The game features a "tiredness" mechanic, forcing Musashi to sleep, and a food system that requires managing hunger. Its charming, blocky 3D visuals and lighthearted tone mask a surprisingly deep and well-designed adventure that stands as one of Square’s most creative PS1 outings.`,
+
+/* NES (20 games) */
+"nes-1": `Super Mario Bros. 3 is widely considered the apex of 8-bit game design, expanding the Mario formula into a vast, theatrical adventure. It introduced the world map, allowing non-linear path choices, and a massive inventory of power-ups, including the Tanooki Suit, Frog Suit, and the flight-enabling Super Leaf, which added verticality to the levels.
+
+The game is aesthetically framed as a stage play, with hanging props and curtain drops, a theme matched by the creative density of its eight worlds. From the Giants Land to the Sky Land, every stage introduced a new mechanic or enemy, perfecting the platforming genre and pushing the NES hardware to its absolute limit.`,
+
+"nes-2": `The Legend of Zelda dropped players into a hostile open world with zero instruction, handing them a sword and the immortal advice: "It's dangerous to go alone." This non-linear freedom was revolutionary; players could tackle dungeons in different orders, burn bushes to find secrets, and bomb walls to uncover caves, fostering a sense of genuine discovery.
+
+It established the blueprint for the action-adventure genre, combining top-down combat with puzzle-solving and resource management. The battery backup save system was a crucial innovation, allowing the journey to be an epic undertaking that could be paused and resumed, changing how games were played in the living room.`,
+
+"nes-3": `Mega Man 2 refined the "jump and shoot" formula of the original into a perfect action platformer. It introduced the Metal Blade—arguably the best weapon in the series—and solidified the rock-paper-scissors weakness system among the eight Robot Masters, allowing players to choose their own path through the game.
+
+With a soundtrack that includes the legendary "Dr. Wily's Castle" theme and a difficulty curve that was challenging but fair (unlike the first game), it set the gold standard for the franchise. The precise controls and vibrant boss designs make it a timeless example of tight, responsive 8-bit action.`,
+
+"nes-4": `Metroid was a game of isolation and atmosphere, dropping the bounty hunter Samus Aran onto the alien planet Zebes with no map and no direction. It pioneered non-linear exploration in a side-scrolling format, requiring players to find power-ups like the Morph Ball and Ice Beam to backtrack and unlock previously inaccessible areas.
+
+The game’s dark, alien aesthetic, contrasted with the eventual reveal of Samus as a woman, was groundbreaking for 1986. While it lacks the map features of later entries, the sense of getting lost in a hostile, labyrinthine underworld created a unique mood that defined the "Metroidvania" structure.`,
+
+"nes-5": `Super Mario Bros. is the game that saved the American video game industry, establishing the side-scrolling platformer as the dominant genre for a decade. It introduced the concept of momentum-based physics, where Mario’s speed and jump height were controlled by the player’s input, creating a "feel" that was miles ahead of the stiff arcade games of the time.
+
+The level design is a tutorial in itself, teaching players through play—the first Goomba, the first mushroom, the first warp pipe. It remains the common language of video games, a title so fundamental that its sound effects and imagery are instantly customizable by virtually anyone on the planet.`,
+
+"nes-6": `Castlevania brought Gothic horror to the NES, putting players in control of Simon Belmont and his vampire-killing whip. The gameplay is deliberate and methodical; attacks have a delay, and jumps are committed to once pressed, forcing players to learn enemy patterns and time their strikes perfectly against Medusa Heads and Axe Knights.
+
+The game’s atmosphere is heavy, supported by a classic soundtrack that drives the action forward. It established the "classic" Castlevania difficulty, where survival depends on patience and precision rather than speed, setting the stage for one of gaming’s most enduring franchises.`,
+
+"nes-7": `Contra is the quintessential run-and-gun shooter, famous for popularizing the Konami Code (Up, Up, Down, Down...) to grant 30 lives—a necessity given its brutal difficulty. The game features two-player simultaneous co-op, allowing friends to blast through alien jungles and bases together, creating a chaotic bond of survival.
+
+The weapon system, particularly the screen-clearing Spread Gun, gives players a sense of immense power. With its mix of side-scrolling and "3D" base stages, along with tight controls and relentless action, it defined the hardcore co-op experience for the 8-bit era.`,
+
+"nes-8": `Ninja Gaiden introduced a cinematic flair to NES action games, using "Tecmo Theater" cutscenes to tell a dramatic story of revenge and demons involving Ryu Hayabusa. The game is known for its incredible speed and wall-jumping mechanics, allowing Ryu to cling to surfaces and traverse levels with a ninja-like agility.
+
+It is also infamous for its punishing difficulty, particularly in the later stages where enemy respawns are relentless. However, the tight controls mean that every death feels like a failure of execution rather than design, making the eventual victory incredibly satisfying for dedicated players.`,
+
+"nes-9": `Released late in the NES lifecycle, Kirby's Adventure is a technical marvel that features parallax scrolling, rotating towers, and graphical fidelity that rivals early 16-bit titles. It introduced Kirby’s signature copy ability, allowing him to swallow enemies and steal their powers (Sword, Laser, UFO), which changed how players approached combat and puzzles.
+
+The game is designed to be accessible, with Kirby’s ability to fly indefinitely allowing younger players to bypass platforming challenges. Yet, it is packed with secrets and hidden switches, offering a depth and charm that makes it one of the most polished games on the system.`,
+
+"nes-10": `DuckTales by Capcom is a shining example of a licensed game done right, combining the tight platforming of Mega Man with the whimsical world of Disney. Players control Scrooge McDuck, using his cane to pogo-jump on enemies and traverse hazardous terrain, a mechanic that feels rhythmically satisfying and unique.
+
+The game features non-linear level selection, allowing players to visit the Moon, the Amazon, or Transylvania in any order. With the iconic "Moon Theme" music and multiple endings based on wealth collected, it is a short but perfect platforming treasure hunt.`,
+
+"nes-11": `Dragon Quest III is the definitive 8-bit JRPG, introducing a class system that allowed players to create their own party members—Mages, Fighters, Dealers, and Gadabouts—at the local tavern. The game features a massive world with a day-night cycle, where different monsters and events appear depending on the time.
+
+The narrative twist, revealing the game as a prequel to the first Dragon Quest, was a mind-blowing moment for fans. Its balance, scope, and sense of adventure set the template for the genre, influencing virtually every console RPG that followed.`,
+
+"nes-12": `Final Fantasy was Square’s "final" attempt at a hit game, and it launched a juggernaut franchise. It allowed players to choose a party of four Light Warriors from six different classes, offering replay value and strategic variety. The introduction of vehicles like the canoe and airship gave a sense of progression and scale to the world map.
+
+While rough around the edges by modern standards, it introduced many staples of the genre, such as the battle screen perspective and elemental weaknesses. It is a historic artifact that shows the roots of the complex storytelling and systems that would define the series.`,
+
+"nes-13": `Punch-Out!! is not a sports game, but a rhythm and puzzle game disguised as boxing. Playing as the tiny Little Mac, players must defeat a colorful roster of oversized opponents—from Glass Joe to King Hippo—by memorizing their attack patterns and reacting to subtle visual cues, like a wink or a flash.
+
+The game is all about timing and observation; button mashing leads to instant defeat. The final bout against Mike Tyson (or Mr. Dream in later versions) remains one of the most legendary difficulty spikes in gaming, requiring near-perfect reflexes to survive.`,
+
+"nes-14": `Tetris on the NES is the definitive console version of Alexey Pajitnov’s puzzle masterpiece. The simple concept of rotating falling "tetrominoes" to clear lines is perfectly executed, with tight controls and a difficulty curve that ramps up the speed to heart-pounding levels.
+
+Whether playing "Type A" for a high score or "Type B" to clear lines at specific heights, the gameplay loops into a "flow state" that is purely addictive. Accompanied by the iconic Russian folk music "Korobeiniki," it is a game of pure logic and reflex that never ages.`,
+
+"nes-15": `Bionic Commando is a platformer that daringly removed the ability to jump, replacing it with a bionic grappling arm. Players must swing across gaps, climb to higher platforms, and collect bullets to stop enemies, creating a unique traversal rhythm that requires physics-based thinking.
+
+The game features a map screen with moving enemy trucks that trigger top-down encounters, adding a tactical layer to level selection. The localized version is famous for its ending, which—despite censorship attempts—still clearly depicts the resurrection and gruesome explosion of a Hitler-like figure, making it a memorable piece of NES history.`,
+
+"nes-16": `River City Ransom combines the brawling of Double Dragon with the stat-building of an RPG. Players run through an open city beating up gangs, but they also visit shopping malls to buy sushi, books, and spa treatments that permanently upgrade their punch, kick, and agility stats.
+
+The game oozes personality, with enemies crying out "BARF!" upon defeat and a co-op mode that allows for friendly fire (and accidental weapon throwing). This blend of beat-’em-up action and character progression was ahead of its time, influencing modern titles like Scott Pilgrim vs. The World.`,
+
+"nes-17": `Crystalis is a post-apocalyptic action RPG that offers a faster, more combat-focused alternative to Zelda. Players wake from cryogenic sleep to find a world where technology has been replaced by magic, wielding four elemental swords that can be charged up to unleash powerful projectiles.
+
+The game is notable for its fluid 8-way movement and a story that blends sci-fi and fantasy elements. With distinct enemies that are immune to certain elements, it forces players to constantly switch weapons and strategies, keeping the action dynamic throughout the adventure.`,
+
+"nes-18": `Bubble Bobble is an arcade port that captures the frantic, cooperative fun of the original. Players control dinosaurs Bub and Bob, who trap enemies in bubbles and then pop them to turn them into fruit. The goal is to clear 100 single-screen levels, necessitating teamwork and strategy to reach the true ending.
+
+The game is deceptively deep, with hidden mechanics involving letter collection and power-ups. Its jaunty, repetitive music and cute graphics hide a challenging game that emphasizes coordination and greed for points.`,
+
+"nes-19": `Tecmo Super Bowl is the first sports game to feature both real NFL team names and real players, changing the landscape of sports gaming forever. It offered season modes, stat tracking, and cinematic cutscenes for touchdowns and injuries, providing a level of immersion previously unseen.
+
+The gameplay is fast and arcade-like, famous for the unstoppable Bo Jackson and the ability to call plays from a simple playbook. It remains so beloved that a dedicated community still updates the rosters annually, proving its gameplay loop is timeless.`,
+
+"nes-20": `Blaster Master is a hybrid game that blends side-scrolling vehicle platforming with top-down on-foot exploration. Players pilot the tank SOPHIA III, jumping and shooting through massive cavernous environments, but must exit the vehicle to enter small dungeons and fight bosses as the pilot Jason.
+
+The contrast between the tank's mobility and the pilot's vulnerability creates a compelling dynamic. With its catchy music and large, interconnected world, it is a unique "Metroidvania" predecessor that rewards exploration and mastery of its two distinct playstyles.`,
+
+/* GB/GBC (16 games) */
+"gb-1": `Pokémon Crystal is the definitive version of the second generation, enhancing the Johto journey with animated Pokémon sprites and the choice to play as a female character for the first time. It introduced the Battle Tower, a dedicated facility for competitive play, and expanded the lore of the legendary Suicune, weaving it into the main narrative.
+
+The game perfected the day/night cycle and real-time clock mechanics, with specific events and Pokémon appearing only at certain times. It stands as the peak of the Game Boy Color era, offering a massive adventure that spans two regions (Johto and Kanto) and sixteen gym badges.`,
+
+"gb-2": `The Legend of Zelda: Link's Awakening DX brings the surreal, dreamlike adventure to full color. Shipwrecked on Koholint Island, Link must wake the Wind Fish to escape, a quest that eschews Zelda conventions (no Ganon, no Zelda) for a strange world filled with Mario cameos, telephone booths, and side-scrolling tunnels.
+
+Despite the hardware limitations, the dungeon design is intricate and the overworld is packed with secrets. The "DX" version adds a color-exclusive dungeon and photography side quest, making it the best way to experience one of the most emotional and unique entries in the franchise.`,
+
+"gb-3": `The Legend of Zelda: Oracle of Seasons is one half of a dual-release experiment by Capcom, focusing heavily on action and combat. Armed with the Rod of Seasons, Link can change the world from winter to summer, freezing lakes or growing vines to solve environmental puzzles and traverse the land of Holodrum.
+
+The game is known for its "Link System," where finishing one game provides a password to continue the story in the other (Oracle of Ages), unlocking the true ending and final boss. It is a vibrant, challenging action-adventure that stands toe-to-toe with Nintendo’s internal developments.`,
+
+"gb-4": `The Legend of Zelda: Oracle of Ages complements its sibling title by focusing on brain-teasing puzzles and a time-travel mechanic. Using the Harp of Ages, players shift between the Past and Present of Labrynna, where actions in the past ripple forward to alter the landscape of the future.
+
+The dungeon design here is some of the most complex in 2D Zelda history, requiring rigorous logic and spatial awareness. It offers a deeper, more cerebral challenge than Seasons, proving that the Game Boy Color could host adventures as grand as any home console.`,
+
+"gb-5": `Metal Gear Solid (known as Ghost Babel in Japan) is not a port of the PS1 game, but a standalone canon entry designed specifically for the Game Boy Color. It miraculously translates the stealth gameplay to 2D, featuring vision cones, wall-tapping, and a complex cover system that feels faithful to the console experience.
+
+The game features a deep, mature storyline and a surprising amount of content, including a rigorous VR Missions mode. It is a technical masterpiece that proves stealth action can work on an 8-bit handheld without sacrificing depth or tension.`,
+
+"gb-6": `Super Mario Land 2: 6 Golden Coins is a massive leap over the first Game Boy Mario, featuring huge, detailed sprites and a non-linear world map. It introduced Wario, Mario's greedy rival, who has taken over Mario's castle, forcing players to collect coins from six themed zones—including a giant mechanical Mario and a space zone—to reclaim it.
+
+The inclusion of the Rabbit Ear power-up allowed for slower, floating descents, making the platforming more accessible on the blurry Game Boy screen. It is a weird, creative, and beautiful platformer that established Wario as a permanent fixture in the Nintendo universe.`,
+
+"gb-7": `Wario Land 3 flips platforming conventions by making Wario invincible; enemies don't kill him, but rather transform him into different states (Zombie Wario, Fire Wario, Spring Wario). These transformations are the keys to solving puzzles, requiring players to intentionally get hit to access new areas or break blocks.
+
+The game features a "Metroidvania" structure with a day/night cycle, where treasure chests collected in one level permanently alter the world in others. It is a brilliant puzzle-platformer that uses Wario’s indestructibility to create a unique, exploration-heavy loop.`,
+
+"gb-8": `Donkey Kong (Game Boy) starts as a remake of the 1981 arcade original, but after the first four levels, it reveals itself to be a massive puzzle-platformer spanning nearly 100 stages. Mario gains new moves like the handstand, backflip, and wire spin, adding a layer of acrobatic depth needed to navigate the complex levels.
+
+The game, which introduced the modern design of Donkey Kong (red tie), is a masterclass in expanding a simple concept. It bridges the gap between arcade action and cerebral puzzle solving, standing as one of the best handheld games ever made.`,
+
+"gb-9": `Shantae is a technical marvel released at the very end of the Game Boy Color's life, developed by WayForward. Players control a half-genie who whips enemies with her hair and performs belly dances to transform into animals like a monkey or elephant, each with abilities to traverse the nonlinear world.
+
+The animation is staggeringly fluid, and the world is vibrant and colorful, featuring day/night cycles and catchy music. It is a high-quality "Metroidvania" that was overlooked at launch but has since been recognized as a foundational cult classic.`,
+
+"gb-10": `Kirby's Dream Land 2 expands the pink puffball's repertoire by introducing three animal friends: Rick the Hamster, Coo the Owl, and Kine the Ocean Sunfish. Combining Kirby’s copy abilities with these animals creates unique power-up variations—for example, the Spark ability with Rick becomes a beam whip, while with Coo it becomes a lightning strike from above.
+
+The game requires players to collect hidden Rainbow Drops to unlock the true final boss, Dark Matter, adding a layer of exploration to the gentle platforming. It retains the charm of the original while adding the depth and variety needed for a longer adventure.`,
+
+"gb-11": `Tetris DX is the definitive portable version of the puzzle classic, adding color, new modes, and crucially, a battery save feature to record high scores. It retains the perfect physics of the monochrome original while adding a "vs CPU" mode and a profile system that tracks your playstyle.
+
+The game’s bright aesthetic and smooth performance make it the best way to play Tetris on the go. It’s a timeless "forever game" that improved on perfection without losing the simplicity that made it a phenomenon.`,
+
+"gb-12": `Pokémon Puzzle Challenge brings the addictive gameplay of Panel de Pon (Tetris Attack) to the Pokémon universe. Players match blocks to clear screens and battle Johto gym leaders, with the unique twist that your Pokémon’s health bar acts as the fail condition, and successful chains launch attacks at the opponent.
+
+The presentation is top-notch, featuring recognizable music tracks from the RPGs and polished visuals. It is a frantic, high-speed puzzle game that is arguably more intense and skill-based than the RPGs it is based on.`,
+
+"gb-13": `Mario Tennis on the Game Boy Color is a full-fledged RPG disguised as a sports game. Players enroll in the Royal Tennis Academy as a rookie, leveling up stats and customizing their playstyle (power, spin, speed) as they climb the ranks to eventually challenge Mario himself.
+
+The tennis gameplay is simple yet deep, using two buttons to execute lobs, slices, and smashes. The story mode’s sense of progression is incredibly satisfying, making it a compelling experience even for those who don't care about the sport.`,
+
+"gb-14": `Like its tennis counterpart, Mario Golf features a robust RPG story mode developed by Camelot. Players create a character and journey through country clubs, earning experience points to improve driving distance and accuracy, all while accounting for wind and terrain physics.
+
+The game translates the complexity of golf into an intuitive 2D interface. The blend of relaxing gameplay with the addictive loop of leveling up makes it a standout title that offers dozens of hours of content.`,
+
+"gb-15": `Metroid II: Return of Samus sends players to the home world of the Metroids, SR388, with the mission to exterminate the entire species. The game introduces a counter on the screen indicating how many Metroids remain, creating a tense hunt through claustrophobic, monochrome caverns.
+
+It introduced key series staples like the Spider Ball and different Metroid evolutionary stages (Alpha, Gamma, Zeta, Omega). While the lack of a map makes it challenging, the atmospheric isolation and the unique structure of hunting down a finite number of enemies make it a vital chapter in the saga.`,
+
+"gb-16": `Cannon Fodder is a war game with a dark sense of humor, putting players in command of a small squad of soldiers with the tagline "War has never been so much fun." Using a mouse-style cursor control on the D-pad, players guide their troops through jungle and snow missions, destroying enemy buildings and vehicles.
+
+The game is unique for remembering the names of your dead soldiers, displaying them on a tombstone hill that grows as you fail. It balances arcade shooting with squad tactics, offering a surprisingly poignant, if satirical, look at the expendability of foot soldiers.`,
+
+/* N64 (15 games) */
+"n64-1": `The Legend of Zelda: Ocarina of Time is widely cited as one of the most important games ever created, effectively writing the textbook for 3D action-adventure design. It introduced "Z-Targeting," a lock-on mechanic that solved the problem of 3D combat, allowing players to circle enemies and fight with cinematic precision while exploring the vast Hyrule Field.
+
+The narrative, spanning two time periods (Young Link and Adult Link), delivers an epic emotional arc, with gameplay puzzles revolving around the passage of time. From the layout of its dungeons to the implementation of context-sensitive buttons, it established a standard of quality and immersion that defined the medium for decades.`,
+
+"n64-2": `Super Mario 64 is the Big Bang of 3D platforming, translating the joy of movement into a three-dimensional space with the revolutionary analog stick. Mario controls with acrobatic fluidity—triple jumping, long jumping, and wall kicking—making the simple act of moving through the castle grounds a delight.
+
+The game’s structure, which encourages exploring open "sandbox" worlds to collect Power Stars in any order, liberated players from the linear "left-to-right" design of the past. It remains a masterclass in intuition and design, teaching players how to navigate 3D space purely through play.`,
+
+"n64-3": `Banjo-Kazooie took the Mario 64 formula and refined it into the ultimate "collect-a-thon." Developed by Rare, the game features the bear Banjo and the bird Kazooie, whose combined moveset—like the Talon Trot and Beak Buster—evolves throughout the game, allowing for intricate exploration of massive, fairytale worlds.
+
+The game is bursting with British wit, vibrant textures, and dynamic music that shifts seamlessly as you move between areas. It stands as a high-water mark for the genre, offering a polished, humorous, and challenging adventure that rivals Nintendo’s own output.`,
+
+"n64-4": `Paper Mario reimagined the Mushroom Kingdom as a pop-up storybook, utilizing a unique 2D-in-3D aesthetic that has aged beautifully. The game simplifies RPG mechanics into an accessible but deep system, introducing "Action Commands" where timed button presses increase damage or block attacks, keeping combat engaging.
+
+The writing is the star, full of humor and charm, fleshing out the world with memorable partners like a Paratroopa mailman and a posh Bow. It proved that Mario could carry a narrative-heavy game, blending platforming whimsy with genuine role-playing depth.`,
+
+"n64-5": `Mario Kart 64 transformed the flat, Mode-7 racing of the SNES into a true 3D multiplayer phenomenon. It introduced elevation changes, 4-player split-screen support, and the infamous Blue Shell, creating a chaotic racing experience that was accessible to everyone but deep enough for competitive rivalries.
+
+The tracks are legendary, from the highway traffic of Toad's Turnpike to the marathon length of Rainbow Road. Its Battle Mode, particularly in the Block Fort arena, became a staple of dorm rooms and basements, defining the N64 as the ultimate local multiplayer machine.`,
+
+"n64-6": `Star Fox 64 is a cinematic rail shooter that feels like playing through a summer blockbuster movie. It introduced the Rumble Pak, adding tactile feedback to explosions and hits, and featured full voice acting with iconic lines ("Do a barrel roll!") that gave the Star Fox team genuine personality.
+
+The game’s brilliance lies in its branching path system; player performance and secret objectives determine which route is taken to the final planet, Venom. This high replay value, combined with tight controls and spectacular boss fights, makes it one of the most polished and replayable games on the system.`,
+
+"n64-7": `F-Zero X trades graphical detail for raw, unadulterated speed, running at a buttery smooth 60 frames per second even with 30 racers on screen. The tracks are twisting, gravity-defying ribbons of pipe and steel where one mistake means flying off into the abyss.
+
+The "death race" mechanic, where players can attack and destroy rivals, adds a layer of aggression to the racing. With a heavy metal soundtrack and a sense of speed that makes your eyes water, it is the purest, most intense racing experience on the console.`,
+
+"n64-8": `Perfect Dark is the spiritual successor to GoldenEye 007, improving on it in every conceivable way. Utilizing the Expansion Pak, it delivered better graphics, smarter AI, and a staggering array of weapons, including the laptop gun that doubles as a sentry turret and the X-ray railgun.
+
+The multiplayer is unmatched in its customization, allowing players to add "Simulants" (bots) with different personalities, such as "PeaceSims" or "VengeSims." With a sci-fi campaign involving alien conspiracies and a counter-operative mode, it is the definitive first-person shooter of the generation.`,
+
+"n64-9": `Super Smash Bros. sounded like a playground rumor—a fighting game where Mario beats up Link—but it launched a competitive empire. Unlike traditional fighters with health bars, the goal is to knock opponents off the stage, with damage percentage increasing how far they fly.
+
+The physics-based combat, combined with items like Hammers and Poké Balls, creates a party game that is instantly fun for beginners but possesses infinite depth for pros. It is a celebration of Nintendo’s history that captured the chaotic joy of toy-box battles perfectly.`,
+
+"n64-10": `Wave Race 64 was a launch window showcase for the N64’s water physics, which remain impressive even today. The waves are dynamic, affecting the handling of the jet ski, requiring players to read the water and rhythmically bounce over chop to maintain speed.
+
+The game captures the feeling of summer with its bright visuals and announcer enthusiasm. Whether racing through the twilight of Drake Lake or the stormy seas of Twilight City, the controls feel tactile and heavy, offering a unique racing experience distinct from cars or karts.`,
+
+"n64-11": `Pokémon Snap is a rail shooter where the weapon is a camera and the goal is to take the perfect photograph. Players travel through various habitats on the ZERO-ONE buggy, using items like apples and pester balls to provoke unique Pokémon behaviors—like making a Charizard use a flamethrower or a Pikachu ride a surfboard.
+
+The game encourages experimentation and observation, rewarding players for centering, size, and pose. It is a relaxing, pacifist spin-off that perfectly captured the "gotta catch 'em all" appeal through the lens of wildlife photography.`,
+
+"n64-12": `International Superstar Soccer '98 (ISS '98) is widely regarded as the best football (soccer) game of the 64-bit era. Konami delivered a simulation that felt fluid and responsive, with smooth animations and ball physics that outclassed FIFA at the time.
+
+The game featured distinct player styles and a depth of tactical options that allowed for realistic playmaking. With its iconic commentary and satisfying long shots, it remains a high point for arcade-style sports simulations.`,
+
+"n64-13": `Mischief Makers is a frantic 2.5D side-scroller from Treasure that stands out as one of the N64's weirdest and best hidden gems. Players control the robotic maid Marina, whose primary mechanic is grabbing, shaking, and throwing enemies and objects to solve puzzles and deal damage.
+
+The "Shake! Shake!" mechanic is central to everything, from mixing clanpot items to catching missiles mid-air. With its unique pre-rendered sprite art style, bizarre humor, and intense boss battles, it offers a distinct break from the N64’s library of 3D collect-a-thons.`,
+
+"n64-14": `Blast Corps is a uniquely stressful puzzle-action game where players must clear a path for a runaway nuclear missile carrier that explodes on impact. You pilot a variety of vehicles—from bulldozers to flying mechs—to level buildings, fill gaps, and destroy obstacles before the carrier arrives.
+
+The game demands quick thinking and mastery of different vehicle physics, particularly the difficult-to-control "Backlash" dump truck. It is a pure arcade concept expanded into a campaign of destruction that is as satisfying as it is panic-inducing.`,
+
+"n64-15": `Pilotwings 64 is the ultimate "chill-out" game, designed to showcase the vast distances and open skies of the N64 hardware. Players complete flight tests using a gyrocopter, jetpack, and hang glider, ranging from flying through rings to taking photos of landmarks in a miniature United States.
+
+The "Birdman" mode, which allows for free flight without time limits or objectives, offers a meditative experience rare in gaming. It focuses on the simple joy of flight and control, serving as a serene counterpoint to the action-heavy library of the console.`,
 };
