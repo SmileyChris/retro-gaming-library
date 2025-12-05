@@ -368,7 +368,7 @@
           />
         </div>
       {/each}
-      {#if otherMatchesCount > 0}
+      {#if otherMatchesCount > 0 && filteredAndSortedGames.length > 0}
         <button
           onclick={() => navigate('/platform/All')}
           class="bg-gray-800 rounded-xl border border-gray-700 hover:border-purple-500 hover:bg-gray-700 transition flex flex-col items-center justify-center text-center p-4 cursor-pointer"
