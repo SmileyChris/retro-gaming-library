@@ -65,19 +65,30 @@
 
   // Filtered and sorted games using $derived (sorted once, not re-sorted on fav change)
   let filteredAndSortedGames = $derived.by(() => {
+    const query = search.query.toLowerCase();
     let games = allGames.filter(game => {
       const matchesPlatform = platform === 'All' || game.platform === platform;
       const matchesGenre = !initialGenre || game.genres.includes(initialGenre);
       const matchesGems = !initialGems || game.gem;
       const matchesFavorites = !initialFavourites || favoritesSet.has(game.id);
-      const matchesSearch = search.query === '' ||
-        game.name.toLowerCase().includes(search.query.toLowerCase()) ||
-        game.notes.toLowerCase().includes(search.query.toLowerCase());
+      const matchesSearch = query === '' ||
+        game.name.toLowerCase().includes(query) ||
+        game.notes.toLowerCase().includes(query);
       return matchesPlatform && matchesGenre && matchesGems && matchesFavorites && matchesSearch;
     });
 
-    // Sort alphabetically only (favorites use CSS order)
-    games.sort((a, b) => a.name.localeCompare(b.name));
+    // Sort: name matches first, then alphabetically within each group
+    if (query) {
+      games.sort((a, b) => {
+        const aNameMatch = a.name.toLowerCase().includes(query);
+        const bNameMatch = b.name.toLowerCase().includes(query);
+        if (aNameMatch && !bNameMatch) return -1;
+        if (!aNameMatch && bNameMatch) return 1;
+        return a.name.localeCompare(b.name);
+      });
+    } else {
+      games.sort((a, b) => a.name.localeCompare(b.name));
+    }
     return games;
   });
 
@@ -122,13 +133,35 @@
     return null;
   });
 
-  // Get matches across all games when current category has no results
-  let allGamesMatches = $derived.by(() => {
-    if (filteredAndSortedGames.length > 0 || !search.query || !categoryName) return [];
+  // Get matches across all games (for "other matches" feature)
+  let allSearchMatches = $derived.by(() => {
+    if (!search.query) return [];
+    const query = search.query.toLowerCase();
     return allGames.filter(game =>
-      game.name.toLowerCase().includes(search.query.toLowerCase()) ||
-      game.notes.toLowerCase().includes(search.query.toLowerCase())
-    ).sort((a, b) => a.name.localeCompare(b.name));
+      game.name.toLowerCase().includes(query) ||
+      game.notes.toLowerCase().includes(query)
+    ).sort((a, b) => {
+      const aNameMatch = a.name.toLowerCase().includes(query);
+      const bNameMatch = b.name.toLowerCase().includes(query);
+      if (aNameMatch && !bNameMatch) return -1;
+      if (!aNameMatch && bNameMatch) return 1;
+      return a.name.localeCompare(b.name);
+    });
+  });
+
+  // Matches outside current category
+  let otherCategoryMatches = $derived.by(() => {
+    if (!search.query || !categoryName) return [];
+    const currentIds = new Set(filteredAndSortedGames.map(g => g.id));
+    return allSearchMatches.filter(g => !currentIds.has(g.id));
+  });
+
+  let otherMatchesCount = $derived(otherCategoryMatches.length);
+
+  // Get other matches for display when no results in current category
+  let otherMatches = $derived.by(() => {
+    if (filteredAndSortedGames.length > 0 || !categoryName) return [];
+    return allSearchMatches;
   });
 
   // Count favorites that match current filters including search
@@ -328,9 +361,30 @@
             isHighlighted={highlightedGameId === game.id}
             highlightAnimation={highlightedGameId === game.id && isAnimating}
             lazyImage={index >= 18}
+            searchQuery={search.query}
           />
         </div>
       {/each}
+      {#if otherMatchesCount > 0}
+        <button
+          onclick={() => navigate('/platform/All')}
+          class="bg-gray-800 rounded-xl border border-gray-700 hover:border-purple-500 hover:bg-gray-700 transition flex flex-col items-center justify-center text-center p-4 cursor-pointer"
+          style="order: 2; max-width: 250px"
+        >
+          <div class="relative h-28 w-32 mb-2">
+            {#each otherCategoryMatches.slice(0, 3) as game, i}
+              {@const filename = game.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.png'}
+              <img
+                src="/boxart/{game.platform}/{filename}"
+                alt=""
+                class="absolute w-20 h-24 object-cover rounded shadow-lg border border-gray-600"
+                style="left: {i * 20}px; top: {i * 4}px; transform: rotate({(i - 1) * 8}deg); z-index: {3 - i}"
+              />
+            {/each}
+          </div>
+          <span class="text-white font-medium text-sm">{otherMatchesCount} {otherMatchesCount === 1 ? 'match' : 'matches'} outside {categoryName}</span>
+        </button>
+      {/if}
     </div>
 
     {#if filteredAndSortedGames.length === 0}
@@ -347,17 +401,18 @@
         {/if}
       </div>
 
-      {#if allGamesMatches.length > 0}
+      {#if otherMatches.length > 0}
         <div class="mt-8 pt-8 border-t border-gray-700">
-          <p class="text-gray-400 text-center mb-6 retro-font">Other matches ({allGamesMatches.length})</p>
+          <p class="text-gray-400 text-center mb-6 retro-font">Other matches ({otherMatches.length})</p>
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {#each allGamesMatches as game (game.id)}
+            {#each otherMatches as game (game.id)}
               <div style="max-width: 250px">
                 <GameCard
                   {game}
                   isFavorite={favoritesSet.has(game.id)}
                   onToggleFavorite={toggleFavorite}
                   lazyImage={false}
+                  searchQuery={search.query}
                 />
               </div>
             {/each}

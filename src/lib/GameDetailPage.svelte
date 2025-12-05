@@ -2,6 +2,7 @@
   import { untrack, tick } from 'svelte';
   import { navigate, transitioningGame } from './router.svelte.js';
   import { platformConfig, allGames } from './data.js';
+  import { gameDescriptions } from './descriptions.js';
 
   let { gameId } = $props();
 
@@ -46,6 +47,22 @@
 
   // Box art path
   let boxArtUrl = $derived(game ? `/boxart/${game.platform}/${game.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png` : '');
+
+  // Screenshot path
+  let screenshotUrl = $derived(game ? `/screenshots/${game.platform}/${game.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png` : '');
+  let hasScreenshot = $state(false);
+
+  // Check if screenshot exists
+  $effect(() => {
+    if (screenshotUrl) {
+      fetch(screenshotUrl, { method: 'HEAD' })
+        .then(res => { hasScreenshot = res.ok; })
+        .catch(() => { hasScreenshot = false; });
+    }
+  });
+
+  // Description (from separate descriptions file)
+  let description = $derived(game ? gameDescriptions[game.id] : null);
 
   // External links
   let retrosticUrl = $derived(game && config?.retrostic ? `https://www.retrostic.com/roms/${config.retrostic}` : null);
@@ -134,7 +151,10 @@
             >
               {game.name}
             </h2>
-            <p class="text-gray-300 text-lg leading-relaxed">{game.notes}</p>
+            <p class="text-purple-300 text-sm font-medium mb-3">{game.notes}</p>
+            {#if description}
+              <p class="text-gray-300 leading-relaxed">{description}</p>
+            {/if}
           </div>
 
           <!-- Genres -->
@@ -159,6 +179,20 @@
               {/if}
             </div>
           </div>
+
+          <!-- Screenshot -->
+          {#if hasScreenshot}
+            <div>
+              <h3 class="text-gray-400 text-sm mb-2">Screenshot</h3>
+              <div class="rounded-lg overflow-hidden border border-gray-700">
+                <img
+                  src={screenshotUrl}
+                  alt="{game.name} screenshot"
+                  class="w-full h-auto"
+                />
+              </div>
+            </div>
+          {/if}
 
           <!-- External Links -->
           {#if retrosticUrl || romspediaUrl}

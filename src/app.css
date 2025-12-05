@@ -147,3 +147,9 @@
 .vt-search-box {
   view-transition-name: search-box;
 }
+
+/* Search match highlighting */
+.search-match {
+  background-color: rgba(168, 85, 247, 0.4);
+  color: inherit;
+}

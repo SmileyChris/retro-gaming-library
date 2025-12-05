@@ -14,6 +14,9 @@ const args = process.argv.slice(2);
 const FAIL_FAST = args.includes('--fail-fast') || args.includes('-f');
 const DEBUG = args.includes('--debug') || args.includes('-d');
 const REFETCH = args.includes('--refetch') || args.includes('-r');
+const SCREENSHOTS = args.includes('--screenshots') || args.includes('-s');
+const SCREENSHOTS_ONLY = args.includes('--screenshots-only');
+const PLATFORM_FILTER = args.find(a => a.startsWith('--platform='))?.split('=')[1];
 
 // Check if pngquant is available
 let hasPngquant = false;
@@ -56,10 +59,14 @@ const compressImage = async (filepath) => {
     }
 };
 
-const PUBLIC_DIR = path.join(__dirname, '../public/boxart');
+const BOXART_DIR = path.join(__dirname, '../public/boxart');
+const SCREENSHOTS_DIR = path.join(__dirname, '../public/screenshots');
 
-if (!fs.existsSync(PUBLIC_DIR)) {
-    fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+if (!fs.existsSync(BOXART_DIR)) {
+    fs.mkdirSync(BOXART_DIR, { recursive: true });
+}
+if (!fs.existsSync(SCREENSHOTS_DIR)) {
+    fs.mkdirSync(SCREENSHOTS_DIR, { recursive: true });
 }
 
 // Cache for GitHub directory listings
@@ -89,10 +96,12 @@ const fetchJson = (url) => {
     });
 };
 
-// Get list of boxart files for a system from GitHub using Git Trees API (handles >1000 files)
-const getBoxartList = async (systemName) => {
-    if (dirListingCache.has(systemName)) {
-        return dirListingCache.get(systemName);
+// Get list of image files for a system from GitHub using Git Trees API (handles >1000 files)
+// folder can be 'Named_Boxarts' or 'Named_Snaps'
+const getImageList = async (systemName, folder = 'Named_Boxarts') => {
+    const cacheKey = `${systemName}:${folder}`;
+    if (dirListingCache.has(cacheKey)) {
+        return dirListingCache.get(cacheKey);
     }
 
     const repoName = systemName.replace(/ /g, '_');
@@ -112,17 +121,17 @@ const getBoxartList = async (systemName) => {
 
         const tree = await fetchJson(treeUrl);
 
-        // Filter for Named_Boxarts/*.png files
+        // Filter for folder/*.png files
         const names = tree.tree
-            .filter(f => f.path.startsWith('Named_Boxarts/') && f.path.endsWith('.png'))
-            .map(f => f.path.replace('Named_Boxarts/', '').replace(/\.png$/i, ''));
+            .filter(f => f.path.startsWith(`${folder}/`) && f.path.endsWith('.png'))
+            .map(f => f.path.replace(`${folder}/`, '').replace(/\.png$/i, ''));
 
-        if (DEBUG) console.log(`  Found ${names.length} boxart files`);
-        dirListingCache.set(systemName, names);
+        if (DEBUG) console.log(`  Found ${names.length} ${folder} files`);
+        dirListingCache.set(cacheKey, names);
         return names;
     } catch (error) {
-        console.error(`  Failed to fetch file list for ${systemName}: ${error.message}`);
-        dirListingCache.set(systemName, []);
+        console.error(`  Failed to fetch file list for ${systemName}/${folder}: ${error.message}`);
+        dirListingCache.set(cacheKey, []);
         return [];
     }
 };
@@ -193,13 +202,106 @@ const downloadImage = (url, filepath) => {
     });
 };
 
+// Download a single image type for a game
+const downloadGameImage = async (game, config, type = 'boxart') => {
+    const isBoxart = type === 'boxart';
+    const folder = isBoxart ? 'Named_Boxarts' : 'Named_Snaps';
+    const baseDir = isBoxart ? BOXART_DIR : SCREENSHOTS_DIR;
+
+    // Create platform directory
+    const platformDir = path.join(baseDir, game.platform);
+    if (!fs.existsSync(platformDir)) {
+        fs.mkdirSync(platformDir, { recursive: true });
+    }
+
+    const filename = `${game.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
+    const filepath = path.join(platformDir, filename);
+
+    if (fs.existsSync(filepath) && !REFETCH) {
+        if (DEBUG) console.log(`Exists (${type}): ${game.name}`);
+        return true;
+    }
+
+    try {
+        // Get list of available images for this system
+        const fileList = await getImageList(config.libretro, folder);
+
+        // Find best match
+        const searchName = game.libretroName || game.name;
+        let matchedName = findBestMatch(searchName, fileList);
+
+        if (!matchedName && game.libretroName) {
+            matchedName = findBestMatch(game.name, fileList);
+        }
+
+        if (!matchedName) {
+            throw new Error(`No matching ${type} found`);
+        }
+
+        if (DEBUG) {
+            console.log(`  Search: ${searchName}`);
+            console.log(`  Match:  ${matchedName}`);
+        }
+
+        // Construct download URL
+        const repoName = config.libretro.replace(/ /g, '_');
+        const encodedName = encodeURIComponent(matchedName);
+        const url = `https://raw.githubusercontent.com/libretro-thumbnails/${repoName}/master/${folder}/${encodedName}.png`;
+        const baseUrl = `https://raw.githubusercontent.com/libretro-thumbnails/${repoName}/master/${folder}/`;
+
+        if (DEBUG) console.log(`  URL: ${url}`);
+
+        console.log(`Downloading ${type}: ${game.name}...`);
+        await downloadImage(url, filepath);
+
+        // Handle redirects (text files pointing to another file)
+        if (!isValidPng(filepath)) {
+            const redirect = fs.readFileSync(filepath, 'utf8').trim();
+            fs.unlinkSync(filepath);
+            if (!redirect.endsWith('.png')) {
+                throw new Error('Downloaded file is not a valid PNG');
+            }
+            if (DEBUG) console.log(`  Redirect -> ${redirect}`);
+            await downloadImage(baseUrl + encodeURIComponent(redirect), filepath);
+            if (!isValidPng(filepath)) {
+                fs.unlinkSync(filepath);
+                throw new Error('Redirected file is not a valid PNG');
+            }
+        }
+
+        // Compress with pngquant if available
+        compressImage(filepath);
+        if (DEBUG) console.log(`  Success!`);
+        return true;
+    } catch (error) {
+        console.error(`Failed to download ${type} for ${game.name}: ${error.message}`);
+        if (FAIL_FAST) {
+            console.error('Exiting due to --fail-fast');
+            process.exit(1);
+        }
+        return false;
+    }
+};
+
 const processGames = async () => {
-    console.log('Starting box art download...');
+    const doBoxart = !SCREENSHOTS_ONLY;
+    const doScreenshots = SCREENSHOTS || SCREENSHOTS_ONLY;
+
+    console.log('Starting image download...');
+    if (doBoxart) console.log('  - Box art enabled');
+    if (doScreenshots) console.log('  - Screenshots enabled');
+    if (PLATFORM_FILTER) console.log(`  - Platform filter: ${PLATFORM_FILTER}`);
     if (DEBUG) console.log('Debug mode enabled');
     if (FAIL_FAST) console.log('Fail-fast mode enabled');
     if (REFETCH) console.log('Refetch mode enabled - will re-download existing images');
 
-    for (const game of allGames) {
+    const gamesToProcess = PLATFORM_FILTER
+        ? allGames.filter(g => g.platform === PLATFORM_FILTER)
+        : allGames;
+
+    console.log(`Processing ${gamesToProcess.length} games...\n`);
+
+    for (const game of gamesToProcess) {
         const config = platformConfig[game.platform];
 
         if (!config.libretro) {
@@ -207,83 +309,16 @@ const processGames = async () => {
             continue;
         }
 
-        // Create platform directory
-        const platformDir = path.join(PUBLIC_DIR, game.platform);
-        if (!fs.existsSync(platformDir)) {
-            fs.mkdirSync(platformDir, { recursive: true });
-        }
-
-        const filename = `${game.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
-        const filepath = path.join(platformDir, filename);
-
-        if (fs.existsSync(filepath) && !REFETCH) {
-            if (DEBUG) console.log(`Exists: ${game.name}`);
-            continue;
-        }
-
         if (DEBUG) {
             console.log(`\n--- ${game.name} ---`);
         }
 
-        try {
-            // Get list of available boxarts for this system
-            const fileList = await getBoxartList(config.libretro);
+        if (doBoxart) {
+            await downloadGameImage(game, config, 'boxart');
+        }
 
-            // Find best match
-            const searchName = game.libretroName || game.name;
-            let matchedName = findBestMatch(searchName, fileList);
-
-            if (!matchedName) {
-                // Try with just the game name if libretroName didn't match
-                if (game.libretroName) {
-                    matchedName = findBestMatch(game.name, fileList);
-                }
-            }
-
-            if (!matchedName) {
-                throw new Error('No matching boxart found');
-            }
-
-            if (DEBUG) {
-                console.log(`  Search: ${searchName}`);
-                console.log(`  Match:  ${matchedName}`);
-            }
-
-            // Construct download URL using matched name
-            const repoName = config.libretro.replace(/ /g, '_');
-            const encodedName = encodeURIComponent(matchedName);
-            const url = `https://raw.githubusercontent.com/libretro-thumbnails/${repoName}/master/Named_Boxarts/${encodedName}.png`;
-
-            if (DEBUG) console.log(`  URL: ${url}`);
-
-            console.log(`Downloading: ${game.name}...`);
-            const baseUrl = `https://raw.githubusercontent.com/libretro-thumbnails/${repoName}/master/Named_Boxarts/`;
-            await downloadImage(url, filepath);
-
-            // Handle redirects (text files pointing to another file in the same directory)
-            if (!isValidPng(filepath)) {
-                const redirect = fs.readFileSync(filepath, 'utf8').trim();
-                fs.unlinkSync(filepath);
-                if (!redirect.endsWith('.png')) {
-                    throw new Error('Downloaded file is not a valid PNG');
-                }
-                if (DEBUG) console.log(`  Redirect -> ${redirect}`);
-                await downloadImage(baseUrl + encodeURIComponent(redirect), filepath);
-                if (!isValidPng(filepath)) {
-                    fs.unlinkSync(filepath);
-                    throw new Error('Redirected file is not a valid PNG');
-                }
-            }
-
-            // Compress image
-            await compressImage(filepath);
-            if (DEBUG) console.log(`  Success!`);
-        } catch (error) {
-            console.error(`Failed to download ${game.name}: ${error.message}`);
-            if (FAIL_FAST) {
-                console.error('Exiting due to --fail-fast');
-                process.exit(1);
-            }
+        if (doScreenshots) {
+            await downloadGameImage(game, config, 'screenshot');
         }
     }
     console.log('Download complete!');

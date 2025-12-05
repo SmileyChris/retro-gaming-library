@@ -4,11 +4,36 @@
   import { platformConfig } from './data.js';
   import { navigate, transitioningGame } from './router.svelte.js';
 
-  let { game, isFavorite, onToggleFavorite, isHighlighted = false, highlightAnimation = false, lazyImage = true } = $props();
+  let { game, isFavorite, onToggleFavorite, isHighlighted = false, highlightAnimation = false, lazyImage = true, searchQuery = '' } = $props();
 
   let config = $derived(platformConfig[game.platform]);
   let boxArtElement = null;
   let titleElement = null;
+
+  // Split text into parts for highlighting
+  function highlightParts(text, query) {
+    if (!query) return [{ text, highlight: false }];
+    const lowerText = text.toLowerCase();
+    const lowerQuery = query.toLowerCase();
+    const parts = [];
+    let lastIndex = 0;
+    let index = lowerText.indexOf(lowerQuery);
+    while (index !== -1) {
+      if (index > lastIndex) {
+        parts.push({ text: text.slice(lastIndex, index), highlight: false });
+      }
+      parts.push({ text: text.slice(index, index + query.length), highlight: true });
+      lastIndex = index + query.length;
+      index = lowerText.indexOf(lowerQuery, lastIndex);
+    }
+    if (lastIndex < text.length) {
+      parts.push({ text: text.slice(lastIndex), highlight: false });
+    }
+    return parts;
+  }
+
+  let nameParts = $derived(highlightParts(game.name, searchQuery));
+  let notesParts = $derived(highlightParts(game.notes, searchQuery));
 
   // Check if this card should have transition names (for back navigation)
   let isTransitioning = $derived(transitioningGame.id === game.id);
@@ -57,7 +82,7 @@
       class={`text-white font-semibold text-sm mb-1 line-clamp-2 leading-tight pr-6 ${isTransitioning ? 'vt-game-title' : ''}`}
       style={isTransitioning ? `--vt-title-name: game-${game.id}-title` : ''}
     >
-      {game.name}
+      {#each nameParts as part}{#if part.highlight}<mark class="search-match">{part.text}</mark>{:else}{part.text}{/if}{/each}
     </h3>
     <div class="flex flex-wrap gap-1 mb-2">
       {#each game.genres as genre}
@@ -77,6 +102,6 @@
         </button>
       {/if}
     </div>
-    <p class="text-gray-400 text-xs line-clamp-2">{game.notes}</p>
+    <p class="text-gray-400 text-xs line-clamp-2">{#each notesParts as part}{#if part.highlight}<mark class="search-match">{part.text}</mark>{:else}{part.text}{/if}{/each}</p>
   </div>
 </div>

@@ -16,6 +16,9 @@ npm run fetch-boxart:debug  # Debug mode with --debug --fail-fast flags
 - `--debug`, `-d`: Show libretroName, matched name, and URL for each download
 - `--fail-fast`, `-f`: Exit on first download failure
 - `--refetch`, `-r`: Re-download existing images
+- `--screenshots`, `-s`: Also download screenshots from Named_Snaps
+- `--screenshots-only`: Only download screenshots (skip boxart)
+- `--platform=NAME`: Filter to specific platform (e.g., `--platform=Saturn`)
 
 ## Architecture
 
@@ -41,6 +44,9 @@ The `navigate()` function uses View Transitions API when available.
 - `platformConfig`: Platform metadata (colors, gradients, LibRetro system names, external site mappings)
 - `allGames`: Array of 219 games with `{id, name, platform, genres[], notes, gem, libretroName}`
 
+`src/lib/descriptions.js` exports:
+- `gameDescriptions`: Extended curated descriptions keyed by game ID (currently Saturn games)
+
 ### Key Components
 - **Router.svelte**: Switches between HomePage and PlatformPage based on route
 - **HomePage.svelte**: Landing page with search and PlatformSelector
@@ -49,14 +55,16 @@ The `navigate()` function uses View Transitions API when available.
 - **GameCard.svelte**: Individual game display with favorite toggle and genre/gem links
 - **BoxArt.svelte**: Renders box art from `/public/boxart/{platform}/{filename}.png`
 
-### Box Art Pipeline
+### Image Pipeline
 The `scripts/fetch-boxart.js` script:
 1. Uses GitHub Trees API to get file listings from libretro-thumbnails repos
-2. Fuzzy matches game names to available boxart
+2. Fuzzy matches game names to available images
 3. Downloads and optionally compresses with pngquant
 4. Handles LibRetro's redirect files (text files pointing to other images)
 
-Box art path convention: `/boxart/{platform}/{game_name_snake_case}.png`
+Path conventions:
+- Box art: `/boxart/{platform}/{game_name_snake_case}.png`
+- Screenshots: `/screenshots/{platform}/{game_name_snake_case}.png`
 
 ### Styling
 - Tailwind CSS 4 with `@tailwindcss/vite` plugin
