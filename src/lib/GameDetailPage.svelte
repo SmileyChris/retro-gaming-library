@@ -66,10 +66,6 @@
   // Description (from separate descriptions file)
   let description = $derived(game ? gameDescriptions[game.id] : null);
 
-  // External links
-  let retrosticUrl = $derived(game && config?.retrostic ? `https://www.retrostic.com/roms/${config.retrostic}` : null);
-  let romspediaUrl = $derived(game && config?.romspedia ? `https://www.romspedia.com/roms/${config.romspedia}` : null);
-
   async function navigateAway(path) {
     transitioningGame.id = game.id;
     await tick();
@@ -153,83 +149,48 @@
             >
               {game.name}
             </h2>
-            <p class="text-purple-300 text-sm font-medium mb-3">{game.notes}</p>
-            {#if description}
-              <p class="text-gray-300 leading-relaxed">{description}</p>
-            {/if}
-          </div>
+            <p class="text-purple-300 text-sm font-medium mb-4">{game.notes}</p>
 
-          <!-- Genres -->
-          <div>
-            <h3 class="text-gray-400 text-sm mb-2">Genres</h3>
-            <div class="flex flex-wrap gap-2" style="view-transition-name: game-{game.id}-genres">
+            <!-- Genres -->
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-6 text-sm" style="view-transition-name: game-{game.id}-genres">
               {#each game.genres as genre}
                 <button
                   onclick={() => navigateAway(`/genre/${encodeURIComponent(genre)}`)}
-                  class="px-4 py-2 rounded-lg bg-gray-700 text-white hover:bg-purple-600 transition"
+                  class="inline-flex items-center gap-1.5 text-gray-400 hover:text-purple-400 transition cursor-pointer"
                 >
+                  <span style="filter: grayscale(1);">🏷️</span>
                   {genre}
                 </button>
               {/each}
               {#if game.gem}
                 <button
                   onclick={() => navigateAway('/gems')}
-                  class="px-4 py-2 rounded-lg bg-amber-900/50 text-amber-300 hover:bg-amber-600 hover:text-white transition"
+                  class="inline-flex items-center gap-1.5 text-gray-400 hover:text-purple-400 transition cursor-pointer"
                 >
-                  💎 Hidden Gem
+                  <span style="filter: grayscale(1);">💎</span>
+                  Hidden Gem
                 </button>
               {/if}
             </div>
+
+            {#if description}
+              {#each description.split('\n\n') as paragraph}
+                <p class="text-gray-300 leading-relaxed mb-4">{paragraph}</p>
+              {/each}
+            {/if}
           </div>
 
           <!-- Screenshot -->
           {#if hasScreenshot}
-            <div>
-              <h3 class="text-gray-400 text-sm mb-2">Screenshot</h3>
-              <div class="rounded-lg overflow-hidden border border-gray-700">
-                <img
-                  src={screenshotUrl}
-                  alt="{game.name} screenshot"
-                  class="w-full h-auto"
-                />
-              </div>
+            <div class="rounded-lg overflow-hidden border border-gray-700">
+              <img
+                src={screenshotUrl}
+                alt="{game.name} screenshot"
+                class="w-full h-auto"
+              />
             </div>
           {/if}
 
-          <!-- External Links -->
-          {#if retrosticUrl || romspediaUrl}
-            <div>
-              <h3 class="text-gray-400 text-sm mb-2">Find ROMs</h3>
-              <div class="flex flex-wrap gap-3">
-                {#if retrosticUrl}
-                  <a
-                    href={retrosticUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                    </svg>
-                    Retrostic
-                  </a>
-                {/if}
-                {#if romspediaUrl}
-                  <a
-                    href={romspediaUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                    </svg>
-                    Romspedia
-                  </a>
-                {/if}
-              </div>
-            </div>
-          {/if}
         </div>
       </div>
     </main>

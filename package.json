@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "fetch-boxart": "node scripts/fetch-boxart.js",
-    "fetch-boxart:debug": "node scripts/fetch-boxart.js --debug --fail-fast"
+    "fetch-screenshots": "node scripts/fetch-screenshots.js"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^6.2.1",

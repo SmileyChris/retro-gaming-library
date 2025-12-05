@@ -129,14 +129,21 @@
   async function pickRandomGame() {
     shouldTransition = true;
     await tick();
-    const randomIndex = Math.floor(Math.random() * allGames.length);
-    const randomGame = allGames[randomIndex];
 
     if (browse.mode === 'genres') {
-      // Pick a random genre from this game's genres
-      const randomGenre = randomGame.genres[Math.floor(Math.random() * randomGame.genres.length)];
-      navigate(`/genre/${encodeURIComponent(randomGenre)}?highlight=${randomGame.id}`);
+      // Pick a random genre first (including Hidden Gems), then a random game within
+      const genreOptions = ['Hidden Gems', ...regularGenres];
+      const randomGenre = genreOptions[Math.floor(Math.random() * genreOptions.length)];
+      const gamesInGenre = genreGames[randomGenre];
+      const randomGame = gamesInGenre[Math.floor(Math.random() * gamesInGenre.length)];
+      if (randomGenre === 'Hidden Gems') {
+        navigate(`/gems?highlight=${randomGame.id}`);
+      } else {
+        navigate(`/genre/${encodeURIComponent(randomGenre)}?highlight=${randomGame.id}`);
+      }
     } else {
+      const randomIndex = Math.floor(Math.random() * allGames.length);
+      const randomGame = allGames[randomIndex];
       navigate(`/platform/${encodeURIComponent(randomGame.platform)}?highlight=${randomGame.id}`);
     }
   }
