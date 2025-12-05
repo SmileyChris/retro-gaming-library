@@ -20,7 +20,6 @@
   let platformCounts = $derived.by(() => {
     const counts = {
       'All': allGames.length,
-      'Gems': allGames.filter(g => g.gem).length,
       'Favourites': favorites.length
     };
     allGames.forEach(g => {
@@ -29,11 +28,10 @@
     return counts;
   });
 
-  // Build platform list with "All" first, then Gems, then Favourites if any
+  // Build platform list with "All" first, then Favourites if any
   let platforms = $derived.by(() => {
     const list = [
-      { key: 'All', name: 'All Games', logo: '/logo.png', color: '#6366F1' },
-      { key: 'Gems', name: 'Hidden Gems', logo: null, icon: '💎', color: '#F59E0B' }
+      { key: 'All', name: 'All Games', logo: '/logo.png', color: '#6366F1' }
     ];
 
     if (favorites.length > 0) {
