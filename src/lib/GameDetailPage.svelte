@@ -52,12 +52,14 @@
   let screenshotUrl = $derived(game ? `/screenshots/${game.platform}/${game.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png` : '');
   let hasScreenshot = $state(false);
 
-  // Check if screenshot exists
+  // Check if screenshot exists by actually loading the image
   $effect(() => {
     if (screenshotUrl) {
-      fetch(screenshotUrl, { method: 'HEAD' })
-        .then(res => { hasScreenshot = res.ok; })
-        .catch(() => { hasScreenshot = false; });
+      hasScreenshot = false;
+      const img = new Image();
+      img.onload = () => { hasScreenshot = true; };
+      img.onerror = () => { hasScreenshot = false; };
+      img.src = screenshotUrl;
     }
   });
 
