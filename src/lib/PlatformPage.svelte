@@ -4,7 +4,6 @@
   import ViewToggle from "./ViewToggle.svelte";
   import { platformConfig, allGames } from "./data.js";
   import { navigate } from "./router.svelte.js";
-  import { search } from "./searchStore.svelte.js";
   import { getGenreColor } from "./utils.js";
 
   let {
@@ -13,13 +12,14 @@
     initialGems = false,
     initialFavourites = false,
     initialHighlight = null,
+    search = "",
   } = $props();
 
   // Element refs
   let searchInput = $state(null);
   let randomBtnSvg = $state(null);
   $effect(() => {
-    if (searchInput && untrack(() => search.query)) {
+    if (searchInput && untrack(() => search)) {
       searchInput.focus();
     }
   });
@@ -76,7 +76,7 @@
 
   // Filtered and sorted games using $derived (sorted once, not re-sorted on fav change)
   let filteredAndSortedGames = $derived.by(() => {
-    const query = search.query.toLowerCase();
+    const query = search.toLowerCase();
     let games = allGames.filter((game) => {
       const matchesPlatform = platform === "All" || game.platform === platform;
       const matchesGenre = !initialGenre || game.genres.includes(initialGenre);
@@ -153,8 +153,8 @@
 
   // Get matches across all games (for "other matches" feature)
   let allSearchMatches = $derived.by(() => {
-    if (!search.query) return [];
-    const query = search.query.toLowerCase();
+    if (!search) return [];
+    const query = search.toLowerCase();
     return allGames
       .filter(
         (game) =>
@@ -172,7 +172,7 @@
 
   // Matches outside current category
   let otherCategoryMatches = $derived.by(() => {
-    if (!search.query || !categoryName) return [];
+    if (!search || !categoryName) return [];
     const currentIds = new Set(filteredAndSortedGames.map((g) => g.id));
     return allSearchMatches.filter((g) => !currentIds.has(g.id));
   });
@@ -192,9 +192,9 @@
       const matchesGenre = !initialGenre || game.genres.includes(initialGenre);
       const matchesGems = !initialGems || game.gem;
       const matchesSearch =
-        search.query === "" ||
-        game.name.toLowerCase().includes(search.query.toLowerCase()) ||
-        game.notes.toLowerCase().includes(search.query.toLowerCase());
+        search === "" ||
+        game.name.toLowerCase().includes(search.toLowerCase()) ||
+        game.notes.toLowerCase().includes(search.toLowerCase());
       return (
         matchesPlatform &&
         matchesGenre &&
@@ -236,11 +236,15 @@
         isAnimating = true;
 
         // Update URL with highlight param
-        const basePath = window.location.hash.split("?")[0];
+        const currentHash = window.location.hash;
+        const [basePath, queryString] = currentHash.split("?");
+        const params = new URLSearchParams(queryString || "");
+        params.set("highlight", randomGame.id);
+
         window.history.replaceState(
           null,
           "",
-          `${basePath}?highlight=${randomGame.id}`,
+          `${basePath}?${params.toString()}`,
         );
 
         // Scroll to the game card
@@ -441,7 +445,6 @@
         <div class="flex items-center gap-4">
           <button
             onclick={() => {
-              search.query = "";
               navigate("/");
             }}
             class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition"
@@ -547,7 +550,30 @@
           <div class="md:w-48 lg:w-64 xl:w-80">
             <input
               bind:this={searchInput}
-              bind:value={search.query}
+              value={search}
+              oninput={(e) => {
+                const val = e.currentTarget.value;
+                const basePath = window.location.hash.split("?")[0].slice(1); // remove # and query
+                const params = new URLSearchParams(
+                  window.location.hash.split("?")[1] || "",
+                );
+
+                // Clear highlight when searching
+                params.delete("highlight");
+
+                if (val) {
+                  params.set("search", val);
+                } else {
+                  params.delete("search");
+                }
+
+                const newHash = params.toString()
+                  ? `${basePath}?${params.toString()}`
+                  : basePath;
+
+                // Update navigation without view transition for typing
+                navigate(newHash);
+              }}
               type="search"
               placeholder="Search games..."
               class="vt-search-box w-full px-4 py-2 rounded-full bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
@@ -578,14 +604,15 @@
             isHighlighted={highlightedGameId === game.id}
             highlightAnimation={highlightedGameId === game.id && isAnimating}
             lazyImage={index >= 18}
-            searchQuery={search.query}
+            searchQuery={search}
             isSparkling={sparklingGameId === game.id}
           />
         </div>
       {/each}
       {#if otherMatchesCount > 0 && filteredAndSortedGames.length > 0}
         <button
-          onclick={() => navigate("/platform/All")}
+          onclick={() =>
+            navigate(`/platform/All?search=${encodeURIComponent(search)}`)}
           class="bg-gray-800 rounded-xl border border-gray-700 hover:border-purple-500 hover:bg-gray-700 transition flex flex-col items-center justify-center text-center p-4 cursor-pointer"
           style="order: 2; max-width: 250px"
         >
@@ -622,9 +649,10 @@
         <p class="text-gray-400 text-lg retro-font">
           No matching {categoryName || ""} games
         </p>
-        {#if search.query}
+        {#if search}
           <button
-            onclick={() => (search.query = "")}
+            onclick={() =>
+              navigate(window.location.hash.split("?")[0].slice(1))}
             class="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
           >
             Clear Search
@@ -647,7 +675,7 @@
                   isFavorite={favoritesSet.has(game.id)}
                   onToggleFavorite={toggleFavorite}
                   lazyImage={false}
-                  searchQuery={search.query}
+                  searchQuery={search}
                   isSparkling={sparklingGameId === game.id}
                 />
               </div>

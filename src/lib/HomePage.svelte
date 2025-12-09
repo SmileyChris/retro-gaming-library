@@ -2,11 +2,12 @@
   import { tick } from "svelte";
   import { navigate } from "./router.svelte.js";
   import { allGames } from "./data.js";
-  import { search } from "./searchStore.svelte.js";
   import { browse } from "./browseStore.svelte.js";
   import PlatformSelector from "./PlatformSelector.svelte";
   import GenreSelector from "./GenreSelector.svelte";
   import ViewToggle from "./ViewToggle.svelte";
+
+  let { search = "" } = $props();
 
   let shouldTransition = $state(false);
 
@@ -24,17 +25,21 @@
   // Calculate total games
   const totalGames = allGames.length;
 
-  async function handleSearchInput() {
-    if (search.query.trim()) {
+  async function handleSearchInput(e) {
+    const val = e.currentTarget.value;
+    if (val.trim()) {
       shouldTransition = true;
       await tick();
-      navigate("/platform/All");
+      await tick();
+      navigate("/platform/All?search=" + encodeURIComponent(val));
     }
   }
 
   async function pickRandomGame() {
     shouldTransition = true;
     await tick();
+
+    const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
 
     if (browse.mode === "genres") {
       // Pick a random genre first (including Hidden Gems), then a random game within
@@ -45,17 +50,17 @@
       const randomGame =
         gamesInGenre[Math.floor(Math.random() * gamesInGenre.length)];
       if (randomGenre === "Hidden Gems") {
-        navigate(`/gems?highlight=${randomGame.id}`);
+        navigate(`/gems?highlight=${randomGame.id}${searchParam}`);
       } else {
         navigate(
-          `/genre/${encodeURIComponent(randomGenre)}?highlight=${randomGame.id}`
+          `/genre/${encodeURIComponent(randomGenre)}?highlight=${randomGame.id}${searchParam}`,
         );
       }
     } else {
       const randomIndex = Math.floor(Math.random() * allGames.length);
       const randomGame = allGames[randomIndex];
       navigate(
-        `/platform/${encodeURIComponent(randomGame.platform)}?highlight=${randomGame.id}`
+        `/platform/${encodeURIComponent(randomGame.platform)}?highlight=${randomGame.id}${searchParam}`,
       );
     }
   }
@@ -120,7 +125,7 @@
       <input
         type="search"
         placeholder="Search games..."
-        bind:value={search.query}
+        value={search}
         oninput={handleSearchInput}
         class={`w-full px-6 py-4 rounded-full bg-gray-800 border border-gray-600 text-white text-lg placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition ${shouldTransition ? "vt-search-box" : ""}`}
       />

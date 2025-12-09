@@ -154,9 +154,10 @@
           <!-- Platform Logo -->
           <div class="mt-8 flex justify-center">
             <button
-              onclick={() =>
-                navigateAway(`/platform/${encodeURIComponent(game.platform)}`)}
-              class="hover:opacity-80 transition"
+              onclick={() => {
+                navigateAway(`/platform/${encodeURIComponent(game.platform)}`);
+              }}
+              class="hover:opacity-80 transition cursor-pointer"
               title={game.platform}
             >
               <img
@@ -192,8 +193,9 @@
             >
               {#each game.genres as genre}
                 <button
-                  onclick={() =>
-                    navigateAway(`/genre/${encodeURIComponent(genre)}`)}
+                  onclick={() => {
+                    navigateAway(`/genre/${encodeURIComponent(genre)}`);
+                  }}
                   class="genre-link inline-flex items-center gap-1.5 text-gray-400 transition cursor-pointer"
                   style="--hover-color: {getGenreColor(genre)}"
                 >
@@ -214,7 +216,9 @@
               {/each}
               {#if game.gem}
                 <button
-                  onclick={() => navigateAway("/gems")}
+                  onclick={() => {
+                    navigateAway("/gems");
+                  }}
                   class="genre-link inline-flex items-center gap-1.5 text-gray-400 transition cursor-pointer"
                   style="--hover-color: {getGenreColor('Hidden Gems')}"
                 >

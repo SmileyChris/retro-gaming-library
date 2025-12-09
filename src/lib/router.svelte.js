@@ -8,7 +8,7 @@ function parseHash() {
 
   // Home page
   if (path === '/' || path === '/home' || path === '') {
-    return { page: 'home', platform: null, genre: null, gems: false, favourites: false, search: '' };
+    return { page: 'home', platform: null, genre: null, gems: false, favourites: false, search: params.get('search') || '' };
   }
 
   // Platform page: /platform/:name
@@ -34,7 +34,7 @@ function parseHash() {
       genre: decodeURIComponent(genreMatch[1]),
       gems: false,
       favourites: false,
-      search: '',
+      search: params.get('search') || '',
       highlight: params.get('highlight') || null
     };
   }
@@ -47,7 +47,7 @@ function parseHash() {
       genre: null,
       gems: true,
       favourites: false,
-      search: '',
+      search: params.get('search') || '',
       highlight: params.get('highlight') || null
     };
   }
@@ -60,7 +60,7 @@ function parseHash() {
       genre: null,
       gems: false,
       favourites: true,
-      search: '',
+      search: params.get('search') || '',
       highlight: params.get('highlight') || null
     };
   }
@@ -74,7 +74,7 @@ function parseHash() {
     };
   }
 
-  return { page: 'home', platform: null, genre: null, gems: false, favourites: false, search: '' };
+  return { page: 'home', platform: null, genre: null, gems: false, favourites: false, search: params.get('search') || '' };
 }
 
 let currentRoute = $state(parseHash());
