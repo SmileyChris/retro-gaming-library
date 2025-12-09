@@ -1,11 +1,18 @@
 <script>
-  import { untrack, tick } from 'svelte';
-  import GameCard from './GameCard.svelte';
-  import { platformConfig, allGames } from './data.js';
-  import { navigate } from './router.svelte.js';
-  import { search } from './searchStore.svelte.js';
+  import { untrack, tick } from "svelte";
+  import GameCard from "./GameCard.svelte";
+  import ViewToggle from "./ViewToggle.svelte";
+  import { platformConfig, allGames } from "./data.js";
+  import { navigate } from "./router.svelte.js";
+  import { search } from "./searchStore.svelte.js";
 
-  let { platform = 'All', initialGenre = null, initialGems = false, initialFavourites = false, initialHighlight = null } = $props();
+  let {
+    platform = "All",
+    initialGenre = null,
+    initialGems = false,
+    initialFavourites = false,
+    initialHighlight = null,
+  } = $props();
 
   // Element refs
   let searchInput = $state(null);
@@ -430,28 +437,20 @@
     <div class="max-w-7xl mx-auto px-4">
       <!-- Toggle -->
       <div class="flex justify-center mb-4">
-        <div class="inline-flex rounded-lg bg-gray-800 p-1">
-          <button
-            class="px-3 py-1.5 text-xs font-medium rounded-md transition {footerMode === 'platforms' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'}"
-            onclick={() => footerMode = 'platforms'}
-          >
-            Platforms
-          </button>
-          <button
-            class="px-3 py-1.5 text-xs font-medium rounded-md transition {footerMode === 'genres' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'}"
-            onclick={() => footerMode = 'genres'}
-          >
-            Genres
-          </button>
-        </div>
+        <ViewToggle bind:mode={footerMode} />
       </div>
 
-      {#if footerMode === 'genres'}
+      {#if footerMode === "genres"}
         <div class="flex flex-wrap justify-center gap-x-10 gap-y-4">
           {#each allGenres as genre}
-            {@const genreCount = allGames.filter(g => g.genres.includes(genre)).length}
+            {@const genreCount = allGames.filter((g) =>
+              g.genres.includes(genre)
+            ).length}
             <button
-              class="retro-font text-xs transition hover:scale-105 cursor-pointer {genre === initialGenre ? 'text-purple-400' : 'text-gray-300 opacity-60 hover:opacity-100'}"
+              class="retro-font text-xs transition hover:scale-105 cursor-pointer {genre ===
+              initialGenre
+                ? 'text-purple-400'
+                : 'text-gray-300 opacity-60 hover:opacity-100'}"
               onclick={() => navigate(`/genre/${encodeURIComponent(genre)}`)}
             >
               {genre} <span class="text-gray-500 text-xs">({genreCount})</span>
@@ -462,7 +461,10 @@
         <div class="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
           {#each Object.entries(platformConfig) as [plat, config]}
             <button
-              class="p-2 rounded-lg transition hover:scale-105 cursor-pointer {plat === platform ? '' : 'opacity-60 hover:opacity-100'}"
+              class="p-2 rounded-lg transition hover:scale-105 cursor-pointer {plat ===
+              platform
+                ? ''
+                : 'opacity-60 hover:opacity-100'}"
               onclick={() => navigate(`/platform/${encodeURIComponent(plat)}`)}
               title={plat}
             >
@@ -470,8 +472,14 @@
                 src={config.logo}
                 alt={plat}
                 class="h-8 object-contain transition"
-                style={plat === platform ? 'filter: brightness(0) saturate(100%) invert(67%) sepia(51%) saturate(654%) hue-rotate(213deg) brightness(101%) contrast(94%)' : ''}
-                onerror={(e) => { e.target.style.display = 'none'; }}
+                style={plat === platform
+                  ? "filter: brightness(0) saturate(100%) invert(67%) sepia(51%) saturate(654%) hue-rotate(213deg) brightness(101%) contrast(94%)"
+                  : ""}
+                onerror={(e) => {
+                  /** @type {HTMLImageElement} */ (
+                    e.currentTarget
+                  ).style.display = "none";
+                }}
               />
             </button>
           {/each}
