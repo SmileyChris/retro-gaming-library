@@ -3,6 +3,7 @@
   import BoxArt from "./BoxArt.svelte";
   import { platformConfig } from "./data.js";
   import { navigate, transitioningGame } from "./router.svelte.js";
+  import { getGenreColor } from "./utils.js";
 
   let {
     game,
@@ -105,7 +106,8 @@
       {#each game.genres as genre}
         <button
           onclick={(e) => handleGenreClick(e, genre)}
-          class="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-300 hover:bg-purple-600 hover:text-white transition-colors cursor-pointer"
+          class="dynamic-hover text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-300 transition-colors cursor-pointer"
+          style="--hover-color: {getGenreColor(genre)}"
         >
           {genre}
         </button>
@@ -113,7 +115,8 @@
       {#if game.gem}
         <button
           onclick={handleGemClick}
-          class="text-xs px-2 py-0.5 rounded-full bg-amber-900/50 text-amber-300 hover:bg-amber-600 hover:text-white transition-colors cursor-pointer"
+          class="dynamic-hover text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-300 transition-colors cursor-pointer"
+          style="--hover-color: {getGenreColor('Hidden Gems')}"
         >
           💎 Gem
         </button>
@@ -160,5 +163,30 @@
     100% {
       left: 200%;
     }
+  }
+
+  .dynamic-hover {
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    transition: color 0.7s ease;
+  }
+
+  .dynamic-hover::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(to bottom, #374151, var(--hover-color));
+    opacity: 0;
+    transition: opacity 0.7s ease;
+    z-index: -1;
+  }
+
+  .dynamic-hover:hover {
+    color: white !important;
+  }
+
+  .dynamic-hover:hover::before {
+    opacity: 1;
   }
 </style>

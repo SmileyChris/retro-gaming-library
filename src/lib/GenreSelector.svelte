@@ -3,6 +3,8 @@
   import { navigate } from "./router.svelte.js";
   import { allGames } from "./data.js";
 
+  import { getGenreColor } from "./utils.js";
+
   let { onSelect = null, showAllGames = true } = $props();
 
   // Get unique genres with their games, plus special categories
@@ -11,7 +13,7 @@
 
   // Filter displayed genres based on prop
   let displayedGenres = $derived(
-    showAllGames ? allGenres : allGenres.filter((g) => g !== "All Games")
+    showAllGames ? allGenres : allGenres.filter((g) => g !== "All Games"),
   );
 
   const genreGames = Object.fromEntries([
@@ -25,7 +27,7 @@
 
   // Track current image index for each genre
   let genreImageIndex = $state(
-    Object.fromEntries(allGenres.map((g) => [g, 0]))
+    Object.fromEntries(allGenres.map((g) => [g, 0])),
   );
 
   // Cycle images every 2 seconds with staggered starts
@@ -43,15 +45,6 @@
       if (intervalId) clearInterval(intervalId);
     };
   });
-
-  function getGenreColor(name) {
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const h = Math.abs(hash) % 360;
-    return `hsl(${h}, 80%, 65%)`;
-  }
 
   function getBoxArtUrl(game) {
     const filename =

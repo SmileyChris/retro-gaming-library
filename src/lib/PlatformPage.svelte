@@ -5,6 +5,7 @@
   import { platformConfig, allGames } from "./data.js";
   import { navigate } from "./router.svelte.js";
   import { search } from "./searchStore.svelte.js";
+  import { getGenreColor } from "./utils.js";
 
   let {
     platform = "All",
@@ -49,7 +50,7 @@
       try {
         localStorage.setItem(
           "retroLibraryFavorites",
-          JSON.stringify(currentFavorites)
+          JSON.stringify(currentFavorites),
         );
       } catch (e) {
         console.warn("Could not save favorites");
@@ -158,7 +159,7 @@
       .filter(
         (game) =>
           game.name.toLowerCase().includes(query) ||
-          game.notes.toLowerCase().includes(query)
+          game.notes.toLowerCase().includes(query),
       )
       .sort((a, b) => {
         const aNameMatch = a.name.toLowerCase().includes(query);
@@ -228,7 +229,7 @@
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         const randomIndex = Math.floor(
-          Math.random() * filteredAndSortedGames.length
+          Math.random() * filteredAndSortedGames.length,
         );
         const randomGame = filteredAndSortedGames[randomIndex];
         highlightedGameId = randomGame.id;
@@ -239,13 +240,13 @@
         window.history.replaceState(
           null,
           "",
-          `${basePath}?highlight=${randomGame.id}`
+          `${basePath}?highlight=${randomGame.id}`,
         );
 
         // Scroll to the game card
         tick().then(() => {
           const element = document.querySelector(
-            `[data-game-id="${randomGame.id}"]`
+            `[data-game-id="${randomGame.id}"]`,
           );
           if (element) {
             element.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -289,7 +290,7 @@
       setTimeout(() => {
         // Check if highlighted game is in the current filtered list
         const gameInList = filteredAndSortedGames.some(
-          (g) => g.id === initialHighlight
+          (g) => g.id === initialHighlight,
         );
         if (!gameInList) {
           // Redirect to All with highlight
@@ -307,7 +308,7 @@
 
         tick().then(() => {
           const element = document.querySelector(
-            `[data-game-id="${initialHighlight}"]`
+            `[data-game-id="${initialHighlight}"]`,
           );
           if (element) {
             element.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -349,7 +350,7 @@
           root: null,
           rootMargin: "0px",
           threshold: 0.1,
-        }
+        },
       );
     }
 
@@ -386,13 +387,13 @@
         () => {
           // Find all visible gems using the intersection observer set
           const visibleGems = filteredAndSortedGames.filter(
-            (g) => g.gem && visibleGameIds.has(g.id)
+            (g) => g.gem && visibleGameIds.has(g.id),
           );
 
           if (visibleGems.length > 0) {
             // Filter out the last sparkled game to avoid repetition
             const candidates = visibleGems.filter(
-              (g) => g.id !== lastSparkledGameId
+              (g) => g.id !== lastSparkledGameId,
             );
 
             if (candidates.length === 0) {
@@ -416,7 +417,7 @@
             }
           }
         },
-        5000 + Math.random() * 3000
+        5000 + Math.random() * 3000,
       ); // Random interval between 5-8 seconds
     }
 
@@ -466,14 +467,26 @@
             {:else if initialGems}
               <span class="text-3xl">💎</span>
             {:else if initialGenre}
-              <span class="text-3xl" style="filter: grayscale(1) brightness(2);"
-                >🏷️</span
-              >
+              <div class="w-8 h-8 flex items-center justify-center ml-1">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  class="w-8 h-8"
+                  style="color: {getGenreColor(initialGenre)}"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.25 2.25a3 3 0 00-3 3v4.318a3 3 0 00.879 2.121l9.58 9.581c.92.92 2.39 1.186 3.548.428a18.849 18.849 0 005.441-5.44c.758-1.16.492-2.629-.428-3.548l-9.58-9.581a3 3 0 00-2.122-.879H5.25zM6.375 7.5a1.125 1.125 0 100-2.25 1.125 1.125 0 000 2.25z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
             {:else if platform === "All"}
               <img
                 src="/logo.png"
                 alt="All Games"
-                class="h-8 w-8 object-contain"
+                class="h-8 w-8 object-contain ml-1"
               />
             {:else}
               <img
@@ -657,7 +670,7 @@
         <div class="flex flex-wrap justify-center gap-x-10 gap-y-4">
           {#each allGenres as genre}
             {@const genreCount = allGames.filter((g) =>
-              g.genres.includes(genre)
+              g.genres.includes(genre),
             ).length}
             <button
               class="retro-font text-xs transition hover:scale-105 cursor-pointer {genre ===

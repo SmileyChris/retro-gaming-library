@@ -3,6 +3,7 @@
   import { navigate, transitioningGame } from "./router.svelte.js";
   import { platformConfig, allGames } from "./data.js";
   import { gameDescriptions } from "./descriptions.js";
+  import { getGenreColor } from "./utils.js";
 
   let { gameId } = $props();
 
@@ -29,7 +30,7 @@
       try {
         localStorage.setItem(
           "retroLibraryFavorites",
-          JSON.stringify(currentFavorites)
+          JSON.stringify(currentFavorites),
         );
       } catch (e) {
         console.warn("Could not save favorites");
@@ -52,14 +53,14 @@
   let boxArtUrl = $derived(
     game
       ? `/boxart/${game.platform}/${game.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.png`
-      : ""
+      : "",
   );
 
   // Screenshot path
   let screenshotUrl = $derived(
     game
       ? `/screenshots/${game.platform}/${game.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.png`
-      : ""
+      : "",
   );
   let hasScreenshot = $state(false);
 
@@ -193,16 +194,29 @@
                 <button
                   onclick={() =>
                     navigateAway(`/genre/${encodeURIComponent(genre)}`)}
-                  class="inline-flex items-center gap-1.5 text-gray-400 hover:text-purple-400 transition cursor-pointer"
+                  class="genre-link inline-flex items-center gap-1.5 text-gray-400 transition cursor-pointer"
+                  style="--hover-color: {getGenreColor(genre)}"
                 >
-                  <span style="filter: grayscale(1);">🏷️</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    class="w-4 h-4"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M5.25 2.25a3 3 0 00-3 3v4.318a3 3 0 00.879 2.121l9.58 9.581c.92.92 2.39 1.186 3.548.428a18.849 18.849 0 005.441-5.44c.758-1.16.492-2.629-.428-3.548l-9.58-9.581a3 3 0 00-2.122-.879H5.25zM6.375 7.5a1.125 1.125 0 100-2.25 1.125 1.125 0 000 2.25z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
                   {genre}
                 </button>
               {/each}
               {#if game.gem}
                 <button
                   onclick={() => navigateAway("/gems")}
-                  class="inline-flex items-center gap-1.5 text-gray-400 hover:text-purple-400 transition cursor-pointer"
+                  class="genre-link inline-flex items-center gap-1.5 text-gray-400 transition cursor-pointer"
+                  style="--hover-color: {getGenreColor('Hidden Gems')}"
                 >
                   <span style="filter: grayscale(1);">💎</span>
                   Hidden Gem
@@ -246,3 +260,18 @@
     </div>
   </div>
 {/if}
+
+<style>
+  .genre-link {
+    transition: color 0.2s ease;
+  }
+
+  .genre-link:hover {
+    color: var(--hover-color) !important;
+  }
+
+  /* When hovering the gem button, remove grayscale from the diamond */
+  .genre-link:hover span {
+    filter: none !important;
+  }
+</style>
