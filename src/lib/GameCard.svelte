@@ -1,10 +1,19 @@
 <script>
-  import { tick } from 'svelte';
-  import BoxArt from './BoxArt.svelte';
-  import { platformConfig } from './data.js';
-  import { navigate, transitioningGame } from './router.svelte.js';
+  import { tick } from "svelte";
+  import BoxArt from "./BoxArt.svelte";
+  import { platformConfig } from "./data.js";
+  import { navigate, transitioningGame } from "./router.svelte.js";
 
-  let { game, isFavorite, onToggleFavorite, isHighlighted = false, highlightAnimation = false, lazyImage = true, searchQuery = '' } = $props();
+  let {
+    game,
+    isFavorite,
+    onToggleFavorite,
+    isHighlighted = false,
+    highlightAnimation = false,
+    lazyImage = true,
+    searchQuery = "",
+    isSparkling = false,
+  } = $props();
 
   let config = $derived(platformConfig[game.platform]);
   let boxArtElement = null;
@@ -22,7 +31,10 @@
       if (index > lastIndex) {
         parts.push({ text: text.slice(lastIndex, index), highlight: false });
       }
-      parts.push({ text: text.slice(index, index + query.length), highlight: true });
+      parts.push({
+        text: text.slice(index, index + query.length),
+        highlight: true,
+      });
       lastIndex = index + query.length;
       index = lowerText.indexOf(lowerQuery, lastIndex);
     }
@@ -50,7 +62,7 @@
 
   function handleGemClick(event) {
     event.stopPropagation();
-    navigate('/gems');
+    navigate("/gems");
   }
 
   async function handleCardClick() {
@@ -62,27 +74,40 @@
 </script>
 
 <div
-  class="game-card bg-gray-900 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-gray-500 relative cursor-pointer"
-  style={highlightAnimation ? 'animation: randomPickGlow 4s ease-out forwards' : (isHighlighted ? 'box-shadow: 0 0 15px 3px rgba(168, 85, 247, 0.5)' : '')}
+  class="game-card bg-gray-900 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-gray-500 relative cursor-pointer {isSparkling
+    ? 'sparkle-effect'
+    : ''}"
+  style={highlightAnimation
+    ? "animation: randomPickGlow 4s ease-out forwards"
+    : isHighlighted
+      ? "box-shadow: 0 0 15px 3px rgba(168, 85, 247, 0.5)"
+      : ""}
   onclick={handleCardClick}
   role="button"
   tabindex="0"
-  onkeydown={(e) => e.key === 'Enter' && handleCardClick()}
+  onkeydown={(e) => e.key === "Enter" && handleCardClick()}
 >
   <button
     onclick={toggleFavorite}
-    class={`fav-btn absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center rounded-full transition ${isFavorite ? 'bg-black/50 backdrop-blur-sm hover:opacity-75' : 'opacity-50 hover:opacity-100 bg-black/50 backdrop-blur-sm'}`}
+    class={`fav-btn absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center rounded-full transition ${isFavorite ? "bg-black/50 backdrop-blur-sm hover:opacity-75" : "opacity-50 hover:opacity-100 bg-black/50 backdrop-blur-sm"}`}
   >
-    <span class="text-lg">{isFavorite ? '❤️' : '🤍'}</span>
+    <span class="text-lg">{isFavorite ? "❤️" : "🤍"}</span>
   </button>
-  <BoxArt {game} bind:element={boxArtElement} {isTransitioning} lazy={lazyImage} />
+  <BoxArt
+    {game}
+    bind:element={boxArtElement}
+    {isTransitioning}
+    lazy={lazyImage}
+  />
   <div class="p-3">
     <h3
       bind:this={titleElement}
-      class={`text-white font-semibold text-sm mb-1 line-clamp-2 leading-tight pr-6 ${isTransitioning ? 'vt-game-title' : ''}`}
-      style={isTransitioning ? `--vt-title-name: game-${game.id}-title` : ''}
+      class={`text-white font-semibold text-sm mb-1 line-clamp-2 leading-tight pr-6 ${isTransitioning ? "vt-game-title" : ""}`}
+      style={isTransitioning ? `--vt-title-name: game-${game.id}-title` : ""}
     >
-      {#each nameParts as part}{#if part.highlight}<mark class="search-match">{part.text}</mark>{:else}{part.text}{/if}{/each}
+      {#each nameParts as part}{#if part.highlight}<mark class="search-match"
+            >{part.text}</mark
+          >{:else}{part.text}{/if}{/each}
     </h3>
     <div class="flex flex-wrap gap-1 mb-2">
       {#each game.genres as genre}
@@ -102,6 +127,46 @@
         </button>
       {/if}
     </div>
-    <p class="text-gray-400 text-xs line-clamp-2">{#each notesParts as part}{#if part.highlight}<mark class="search-match">{part.text}</mark>{:else}{part.text}{/if}{/each}</p>
+    <p class="text-gray-400 text-xs line-clamp-2">
+      {#each notesParts as part}{#if part.highlight}<mark class="search-match"
+            >{part.text}</mark
+          >{:else}{part.text}{/if}{/each}
+    </p>
   </div>
 </div>
+
+<style>
+  /* Sparkle/Shine Effect */
+  .sparkle-effect {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .sparkle-effect::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.3) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    transform: skewX(-25deg);
+    animation: shimmer 2s infinite;
+    pointer-events: none; /* Ensure clicks pass through */
+    z-index: 20; /* Above content but below favorite button if z-index is managed right, or adjust as needed */
+  }
+
+  @keyframes shimmer {
+    0% {
+      left: -100%;
+    }
+    100% {
+      left: 200%;
+    }
+  }
+</style>
