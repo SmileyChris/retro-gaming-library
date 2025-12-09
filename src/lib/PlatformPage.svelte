@@ -378,6 +378,8 @@
     // Clear any existing interval
     if (sparkleInterval) clearInterval(sparkleInterval);
 
+    let lastSparkledGameId = null;
+
     // Only run if we have games
     if (filteredAndSortedGames.length > 0) {
       sparkleInterval = setInterval(
@@ -388,17 +390,30 @@
           );
 
           if (visibleGems.length > 0) {
-            // Pick a random gem
-            const randomGem =
-              visibleGems[Math.floor(Math.random() * visibleGems.length)];
-            sparklingGameId = randomGem.id;
+            // Filter out the last sparkled game to avoid repetition
+            const candidates = visibleGems.filter(
+              (g) => g.id !== lastSparkledGameId
+            );
 
-            // Clear sparkle after animation duration (2s)
-            setTimeout(() => {
-              if (sparklingGameId === randomGem.id) {
-                sparklingGameId = null;
-              }
-            }, 2000);
+            if (candidates.length === 0) {
+              // If the only visible gem is the one that just sparkled:
+              // 1. Sparkle nothing this time
+              // 2. Reset lastSparkledGameId so it can sparkle again next time
+              lastSparkledGameId = null;
+            } else {
+              // Pick a random gem from candidates
+              const randomGem =
+                candidates[Math.floor(Math.random() * candidates.length)];
+              sparklingGameId = randomGem.id;
+              lastSparkledGameId = randomGem.id;
+
+              // Clear sparkle after animation duration (2s)
+              setTimeout(() => {
+                if (sparklingGameId === randomGem.id) {
+                  sparklingGameId = null;
+                }
+              }, 2000);
+            }
           }
         },
         5000 + Math.random() * 3000
