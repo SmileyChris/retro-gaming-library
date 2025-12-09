@@ -16,8 +16,6 @@
   } = $props();
 
   let config = $derived(platformConfig[game.platform]);
-  let boxArtElement = null;
-  let titleElement = null;
 
   // Split text into parts for highlighting
   function highlightParts(text, query) {
@@ -93,15 +91,9 @@
   >
     <span class="text-lg">{isFavorite ? "❤️" : "🤍"}</span>
   </button>
-  <BoxArt
-    {game}
-    bind:element={boxArtElement}
-    {isTransitioning}
-    lazy={lazyImage}
-  />
+  <BoxArt {game} {isTransitioning} lazy={lazyImage} />
   <div class="p-3">
     <h3
-      bind:this={titleElement}
       class={`text-white font-semibold text-sm mb-1 line-clamp-2 leading-tight pr-6 ${isTransitioning ? "vt-game-title" : ""}`}
       style={isTransitioning ? `--vt-title-name: game-${game.id}-title` : ""}
     >

@@ -1,11 +1,16 @@
 <script>
-  import { platformConfig } from './data.js';
-  import { navigate } from './router.svelte.js';
+  import { platformConfig } from "./data.js";
+  import { navigate } from "./router.svelte.js";
 
-  let { game, element = $bindable(null), isTransitioning = false, lazy = true } = $props();
+  let {
+    game,
+    element = $bindable(null),
+    isTransitioning = false,
+    lazy = true,
+  } = $props();
 
   const config = platformConfig[game.platform];
-  const filename = game.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.png';
+  const filename = game.name.replace(/[^a-z0-9]/gi, "_").toLowerCase() + ".png";
   const localUrl = `/boxart/${game.platform}/${filename}`;
 
   function handlePlatformClick(event) {
@@ -16,8 +21,8 @@
 
 <div
   bind:this={element}
-  class={`box-art relative bg-gradient-to-br ${config.gradient} rounded-lg overflow-hidden shadow-lg ${isTransitioning ? 'vt-game-image' : ''}`}
-  style={isTransitioning ? `--vt-image-name: game-${game.id}-image` : ''}
+  class={`box-art relative bg-linear-to-br ${config.gradient} rounded-lg overflow-hidden shadow-lg ${isTransitioning ? "vt-game-image" : ""}`}
+  style={isTransitioning ? `--vt-image-name: game-${game.id}-image` : ""}
 >
   <img
     src={localUrl}
