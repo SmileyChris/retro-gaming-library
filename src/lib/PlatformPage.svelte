@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { untrack, tick } from "svelte";
   import GameCard from "./GameCard.svelte";
   import ViewToggle from "./ViewToggle.svelte";
@@ -333,7 +333,7 @@
       observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
-            const gameId = entry.target.dataset.gameId;
+            const gameId = (entry.target as HTMLElement).dataset.gameId;
             if (gameId) {
               if (entry.isIntersecting) {
                 visibleGameIds.add(gameId);
@@ -466,9 +466,7 @@
                 alt={platform}
                 class="h-8 object-contain"
                 onerror={(e) => {
-                  /** @type {HTMLImageElement} */ (
-                    e.currentTarget
-                  ).style.display = "none";
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
                 }}
               />
             {/if}
@@ -506,7 +504,8 @@
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                onanimationend={(e) => e.target.classList.remove("spin-once")}
+                onanimationend={(e) =>
+                  e.currentTarget.classList.remove("spin-once")}
               >
                 <path
                   stroke-linecap="round"
@@ -675,9 +674,7 @@
                   ? "filter: brightness(0) saturate(100%) invert(67%) sepia(51%) saturate(654%) hue-rotate(213deg) brightness(101%) contrast(94%)"
                   : ""}
                 onerror={(e) => {
-                  /** @type {HTMLImageElement} */ (
-                    e.currentTarget
-                  ).style.display = "none";
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
                 }}
               />
             </button>
