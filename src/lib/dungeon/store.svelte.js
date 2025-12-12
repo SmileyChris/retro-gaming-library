@@ -9,6 +9,7 @@ export const dungeon = $state({
   quests: [], // { id, status: 'active'|'completed' }
   realm: null, // { active: boolean, id: string, state: object }
   isProcessing: false,
+  flags: new Set(), // Feature flags / Tutorial tips seen
 });
 
 /**
