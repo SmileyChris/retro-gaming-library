@@ -25,7 +25,8 @@
 
 - [x] **State Machine**: Implement the `GameObject` class with `currentState` logic. (Handled via Items array)
 - [x] **Inventory**: Build the inventory UI (`inventory` command) and backend logic.
-- [x] **Puzzle Logic**: Implement `use [tool]` mechanics (Broom, Token).
+- [x] **Puzzle Logic**: Implement `use [tool]` mechanics (Broom, Token, Dusty Cartridge).
+- [ ] **Refactoring**: Split `engine.js` into modular command handlers (`commands/`) to manage growth.
 - [ ] **Zone 2 Content**: Populate "Platformer Peaks" with "Retro Rob" and the Console quest.
 
 ## Phase 4: Game Realms (Alpha)
