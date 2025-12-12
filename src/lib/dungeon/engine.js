@@ -37,6 +37,10 @@ function initNewGame(forceSeed = null) {
   setTimeout(() => {
     writeLog(forceSeed ? "SYSTEM REBOOTED." : "UNIVERSE REGENERATED.", "info");
     handleLook();
+
+    // Auto-Greet / Room Triggers
+    checkRoomTriggers();
+
     saveGame();
   }, 100);
 }
@@ -155,8 +159,6 @@ async function executeCommand(cmd) {
       return handleDrop(cmd.target);
     case "PLAY":
       return handlePlay(cmd.target);
-    case "USE":
-      return handleUse(cmd.target);
     case "USE":
       return handleUse(cmd.target);
     default:
@@ -327,10 +329,30 @@ function listRoomContents(room) {
   if (room.items && room.items.length > 0) {
     room.items.forEach((item) => {
       if (item.type === "GAME") {
-        const suffix = item.metadata?.platform
-          ? ` (${item.metadata.platform})`
-          : "";
-        writeLog(`You spot a cartridge for ${item.name}${suffix}.`, "response");
+        if (item.requires && item.requires.tool === "tool_broom") {
+          writeLog(
+            `A game cartridge is sitting on a high shelf, out of reach.`,
+            "response"
+          );
+        } else if (item.requires && item.requires.tool === "tool_token") {
+          writeLog(
+            `A game cartridge is locked inside a display cabinet.`,
+            "response"
+          );
+        } else if (item.isDusty) {
+          writeLog(
+            `A cartridge is lying in the dust. It looks filthy.`,
+            "response"
+          );
+        } else {
+          const suffix = item.metadata?.platform
+            ? ` (${item.metadata.platform})`
+            : "";
+          writeLog(
+            `You spot a cartridge for ${item.name}${suffix}.`,
+            "response"
+          );
+        }
       } else if (item.type === "KEY") {
         writeLog(`A ${item.name} is shining on the ground.`, "response");
       } else {
@@ -394,6 +416,9 @@ function handleGo(target) {
   if (nextRoomId) {
     dungeon.currentRoom = nextRoomId;
     handleLook(null, false); // Auto-look (short if visited)
+
+    // Check for NPC triggers (auto-talk)
+    checkRoomTriggers();
   } else {
     writeLog(`You cannot go '${target}' from here.`);
   }
@@ -418,9 +443,15 @@ function handleInventory() {
           i.id === "backpack_starter" ||
           i.name.toLowerCase().includes("backpack")
       );
-      const containerName = hasBackpack ? "Backpack" : "Bundle";
-      writeLog(`- [${games.length} Cartridges in ${containerName}]`, "dim");
-      writeLog(`  (Type 'use backpack' to view list)`, "dim");
+
+      if (hasBackpack) {
+        writeLog(`- [${games.length} Cartridges in Backpack]`, "dim");
+        writeLog(`  (Type 'use backpack' to view list)`, "dim");
+      } else {
+        games.forEach((g) => {
+          writeLog(`- ${g.name} (Cartridge)`);
+        });
+      }
     }
   }
 }
@@ -438,9 +469,9 @@ function handleTake(target) {
   let itemsToTake = [];
 
   if (lowerTarget === "all" || lowerTarget === "everything") {
-    itemsToTake = [...room.items];
+    itemsToTake = room.items.filter((i) => !i.requires);
   } else if (lowerTarget === "games" || lowerTarget === "all games") {
-    itemsToTake = room.items.filter((i) => i.type === "GAME");
+    itemsToTake = room.items.filter((i) => i.type === "GAME" && !i.requires);
   } else if (lowerTarget.endsWith(" games")) {
     // e.g. "snes games"
     const query = lowerTarget.replace(" games", "").trim();
@@ -460,9 +491,11 @@ function handleTake(target) {
     // Actually simpler: remove them from room.items in one go, add to inventory
 
     const newRoomItems = room.items.filter((i) => !itemsToTake.includes(i));
-    // Verify bag exists? (Assuming yes if they are here)
-    const hasBackpack =
-      dungeon.world.flags && dungeon.world.flags.receivedStarterGear;
+
+    // Check inventory for backpack
+    const hasBackpack = dungeon.inventory.some(
+      (i) => i.id === "backpack_starter" || i.type === "PACK"
+    );
 
     itemsToTake.forEach((item) => {
       dungeon.inventory.push(item);
@@ -471,8 +504,7 @@ function handleTake(target) {
         if (hasBackpack) {
           writeLog(`You stash ${item.name} in your backpack.`);
         } else {
-          // Should be unreachable if north is blocked, but fallback
-          writeLog(`You take ${item.name}.`);
+          writeLog(`You carry ${item.name}.`);
         }
       } else {
         writeLog(`You take the ${item.name}.`);
@@ -490,9 +522,16 @@ function handleTake(target) {
   }
 
   // SINGULAR TAKE LOGIC (Fallthrough)
-  const itemIndex = room.items.findIndex((i) =>
-    i.name.toLowerCase().includes(lowerTarget)
+  // Fix: Prioritize exact matches over includes for better precision
+  let itemIndex = room.items.findIndex(
+    (i) => i.name.toLowerCase() === lowerTarget
   );
+
+  if (itemIndex === -1) {
+    itemIndex = room.items.findIndex((i) =>
+      i.name.toLowerCase().includes(lowerTarget)
+    );
+  }
 
   if (itemIndex > -1) {
     const item = room.items[itemIndex];
@@ -505,25 +544,37 @@ function handleTake(target) {
         return;
       }
 
-      // Just take it into inventory (Backpack)
+      // Just take it into inventory (Backpack NOT required for pickup, only for Elevator)
       room.items.splice(itemIndex, 1);
       dungeon.inventory.push(item);
 
+      // Check if we actually have the backpack item yet
+      const hasBackpack = dungeon.inventory.some(
+        (i) => i.id === "backpack_starter" || i.type === "PACK"
+      );
+
       const platform = item.metadata?.platform || "Unknown";
-      writeLog(`You stash the ${item.name} (${platform}) in your backpack.`);
+
+      if (hasBackpack) {
+        writeLog(`You stash the ${item.name} (${platform}) in your backpack.`);
+      } else {
+        writeLog(`You pick up the ${item.name} (${platform}).`);
+      }
 
       // Hint if console exists
       const hasConsole = dungeon.inventory.find(
         (inv) =>
           inv.type === "CONSOLE" &&
           inv.supported &&
+          inv.metadata && // Safety check
           inv.supported.some((s) => platform.toLowerCase().includes(s))
       );
 
       if (hasConsole) {
         writeLog(`(Compatible with your ${hasConsole.name})`, "dim");
       } else {
-        writeLog("(You need a compatible console to play this.)", "dim");
+        // Only show hint if we have no matches
+        // writeLog("(You need a compatible console to play this.)", "dim");
       }
       return;
     }
@@ -552,19 +603,84 @@ function handleUse(target) {
     return;
   }
 
-  // PARSE: "use [item] on [target]" or just "use [item]"
-  // Simple heuristic: "use broom" -> find item requiring broom.
+  const lowerTarget = target.toLowerCase();
 
-  const toolName = target.toLowerCase().replace("use ", "").trim();
+  // 1. BACKPACK STORAGE INTERFACE (Pagination)
+  if (
+    lowerTarget.startsWith("backpack") ||
+    lowerTarget.startsWith("pack") ||
+    lowerTarget.startsWith("bag") ||
+    lowerTarget.startsWith("pocket")
+  ) {
+    let page = 1;
+    const parts = lowerTarget.split(" ");
+    if (parts[1] && !isNaN(parts[1])) page = parseInt(parts[1]);
 
-  // 1. Check Player Inventory for Tool
+    writeLog(`[ BACKPACK ] - STORAGE INTERFACE`, "info");
+
+    const games = dungeon.inventory.filter((i) => i.type === "GAME");
+    const pageSize = 15;
+    const totalPages = Math.ceil(games.length / pageSize);
+
+    // Clamp page
+    if (page < 1) page = 1;
+    if (page > totalPages && totalPages > 0) page = totalPages;
+
+    if (games.length === 0) {
+      writeLog("No cartridges found.", "dim");
+    } else {
+      writeLog(`Capacity: ${games.length} Cartridges detected.`);
+      if (totalPages > 1) {
+        writeLog(`Viewing Pocket ${page}/${totalPages}`, "info-dim");
+      }
+      writeLog("----------------------------------------", "dim");
+
+      const start = (page - 1) * pageSize;
+      const end = start + pageSize;
+      const slice = games.slice(start, end);
+
+      slice.forEach((game) => {
+        const platform = game.metadata?.platform || "Unknown";
+        let pShort = platform.split(" ")[0].substring(0, 8);
+        // Shorten platform names
+        if (platform.includes("Nintendo Entertainment")) pShort = "NES";
+        if (platform.includes("Super")) pShort = "SNES";
+        if (platform.includes("Genesis")) pShort = "GEN";
+        if (platform.includes("Boy")) pShort = "GB";
+        writeLog(`[${pShort.padEnd(5)}] ${game.name}`);
+      });
+      writeLog("----------------------------------------", "dim");
+
+      if (page < totalPages) {
+        writeLog(
+          `(Type 'use backpack ${page + 1}' to check next pocket)`,
+          "dim"
+        );
+      }
+    }
+
+    // Side Pockets
+    if (page === 1) {
+      const others = dungeon.inventory.filter((i) => i.type !== "GAME");
+      if (others.length > 0) {
+        writeLog(
+          `\nSide Pockets: ${others.map((i) => i.name).join(", ")}`,
+          "dim"
+        );
+      }
+    }
+    return;
+  }
+
+  // 2. PUZZLE / TOOL LOGIC
+  // Simple heuristic: "use broom" -> find item requiring broom in room.
+  const toolName = lowerTarget.replace("use ", "").trim();
   const tool = dungeon.inventory.find((i) =>
     i.name.toLowerCase().includes(toolName)
   );
-  const room = dungeon.world.rooms[dungeon.currentRoom];
 
   if (tool) {
-    // We have the tool. Check room for puzzle requirements matching this tool.
+    const room = dungeon.world.rooms[dungeon.currentRoom];
     const puzzleItem = room.items.find(
       (i) => i.requires && i.requires.tool === tool.id
     );
@@ -572,40 +688,111 @@ function handleUse(target) {
     if (puzzleItem) {
       writeLog(`You use the ${tool.name}...`);
       writeLog("Success!", "success");
-
-      // Resolve Puzzle
       delete puzzleItem.requires;
-      // Optionally update description?
-      // puzzleItem.description = puzzleItem.description.replace(...)
 
       if (tool.id === "tool_broom") {
         writeLog(
           "You knock the cartridge off the high shelf. It clatters to the floor."
         );
+        if (puzzleItem._realName) puzzleItem.name = puzzleItem._realName;
       } else if (tool.id === "tool_token") {
         writeLog("You insert the token. The cabinet unlocks with a click.");
+        if (puzzleItem._realName) puzzleItem.name = puzzleItem._realName;
         // Consume token
         const idx = dungeon.inventory.indexOf(tool);
         dungeon.inventory.splice(idx, 1);
       }
       return;
-    } else {
-      writeLog(`You can't find a use for the ${tool.name} here.`);
-      return;
     }
   }
 
-  // 2. Check if user is trying to "use/open" the puzzle source directly?
-  // e.g. "use cabinet" -> "You need a token."
-  // But our items are the games themselves effectively.
-  // Legacy Backpack logic
-  if (["backpack", "pack", "bag"].includes(toolName)) {
-    // ... exisiting backpack logic ...
-    // We can just call handleOpen for backpack specifically
-    return handleOpen("backpack");
+  // 3. ITEM INTERACTION (Console, Packs)
+  // Check if item is in inventory
+  let item = dungeon.inventory.find((i) =>
+    i.name.toLowerCase().includes(lowerTarget)
+  );
+
+  // Fallback: Check original name if not found (handy for Dusty Cartridge if user guesses)
+  if (!item) {
+    item = dungeon.inventory.find(
+      (i) =>
+        i._originalName && i._originalName.toLowerCase().includes(lowerTarget)
+    );
   }
 
-  writeLog(`You don't have a '${target}'.`);
+  if (!item && !tool) {
+    // Basic catch-all failure
+    if (lowerTarget.includes("cabinet") || lowerTarget.includes("shelf")) {
+      writeLog("You need the right tool for that.");
+      return;
+    }
+    writeLog(`You aren't carrying a '${target}'.`);
+    return;
+  }
+
+  // If we found a tool but it wasn't used for a puzzle, we continue here
+  // (e.g. "use console" provided we have it)
+  const targetItem = item || tool;
+
+  if (targetItem.type === "PACK" || targetItem.type === "DECK") {
+    writeLog(`You tear open the ${targetItem.name}...`);
+
+    if (targetItem.contents && targetItem.contents.length > 0) {
+      writeLog("A collection of cartridges spills out!", "info");
+      const room = dungeon.world.rooms[dungeon.currentRoom];
+      targetItem.contents.forEach((game) => {
+        room.items.push(game);
+        writeLog(`- ${game.name}`);
+      });
+      // Destroy
+      const idx = dungeon.inventory.indexOf(targetItem);
+      dungeon.inventory.splice(idx, 1);
+    } else {
+      writeLog("It was empty...");
+    }
+    return;
+  }
+
+  if (targetItem.type === "CONSOLE") {
+    writeLog(`[ ${targetItem.name.toUpperCase()} ] - SYSTEM MENU`, "info");
+    writeLog("Scanning backpack modules...", "dim");
+
+    const compatibleGames = dungeon.inventory.filter(
+      (g) =>
+        g.type === "GAME" &&
+        targetItem.supported &&
+        targetItem.supported.some((s) =>
+          g.metadata?.platform?.toLowerCase().includes(s)
+        )
+    );
+
+    if (compatibleGames.length === 0) {
+      writeLog("No compatible database records found.", "error");
+      return;
+    }
+
+    writeLog("SELECT TITLE TO LAUNCH:", "info");
+    compatibleGames.forEach((g) => {
+      writeLog(`> ${g.name}`);
+    });
+    writeLog("\n(Type 'play [name]' to start)", "dim");
+    return;
+  }
+
+  if (targetItem.isDusty) {
+    writeLog(`You blow into the open end of the cartridge. *Huff* *Huff*`);
+    writeLog(`A cloud of grey dust flies out! The label is revealed.`);
+
+    targetItem.name = targetItem._originalName;
+    targetItem.description =
+      targetItem.metadata?.description || "A classic game cartridge.";
+    delete targetItem.isDusty;
+
+    writeLog(`It's actually "${targetItem.name}"!`, "success");
+    return;
+  }
+
+  writeLog(`You fiddle with the ${targetItem.name}, but nothing happens.`);
 }
 
 function handleOpen(target) {
@@ -1014,6 +1201,7 @@ function handleHelp() {
   writeLog("- INVENTORY (or I): Check pockets");
   writeLog("- TALK [npc]: Chat with host");
   writeLog("- EXAMINE [game]: Read details");
+  writeLog("- USE [item]: Interact with object");
   writeLog("- PLAY [game]: Enter the game world");
 }
 
@@ -1086,158 +1274,16 @@ function handlePlay(target) {
   writeLog("You need to load that game into a compatible console first.");
 }
 
-function handleUse(target) {
-  if (!target) {
-    writeLog("Use what?");
-    return;
-  }
-
-  // Handle "Backpack" check implicitly via Inventory
-  // Check for "backpack <number>" or just "backpack"
-  // Target might be "backpack 2" or "pocket 2"
-  let page = 1;
-  let isBackpack = false;
-
-  if (
-    target.toLowerCase().startsWith("backpack") ||
-    target.toLowerCase().startsWith("pack") ||
-    target.toLowerCase().startsWith("bag")
-  ) {
-    isBackpack = true;
-    const parts = target.split(" ");
-    if (parts[1] && !isNaN(parts[1])) page = parseInt(parts[1]);
-  } else if (target.toLowerCase().startsWith("pocket")) {
-    isBackpack = true;
-    const parts = target.split(" ");
-    if (parts[1] && !isNaN(parts[1])) page = parseInt(parts[1]);
-  }
-
-  if (isBackpack) {
-    writeLog(`[ BACKPACK ] - STORAGE INTERFACE`, "info");
-
-    const games = dungeon.inventory.filter((i) => i.type === "GAME");
-    const pageSize = 15;
-    const totalPages = Math.ceil(games.length / pageSize);
-
-    // Clamp page
-    if (page < 1) page = 1;
-    if (page > totalPages && totalPages > 0) page = totalPages;
-
-    if (games.length === 0) {
-      writeLog("No cartridges found.", "dim");
-    } else {
-      writeLog(`Capacity: ${games.length} Cartridges detected.`);
-
-      if (totalPages > 1) {
-        writeLog(`Viewing Pocket ${page}/${totalPages}`, "info-dim");
+function checkRoomTriggers() {
+  const room = dungeon.world.rooms[dungeon.currentRoom];
+  if (room.npcs) {
+    room.npcs.forEach((npc) => {
+      // Logic from NPCs.js 'trigger' property
+      if (npc.trigger && typeof npc.trigger === "function") {
+        if (npc.trigger(dungeon)) {
+          setTimeout(() => handleTalk(npc.name || npc.id), 500);
+        }
       }
-
-      writeLog("----------------------------------------", "dim");
-
-      const start = (page - 1) * pageSize;
-      const end = start + pageSize;
-      const slice = games.slice(start, end);
-
-      slice.forEach((game) => {
-        const platform = game.metadata?.platform || "Unknown";
-        // Shorten platform for display
-        let pShort = platform.split(" ")[0].substring(0, 8);
-        if (platform.includes("Nintendo Entertainment")) pShort = "NES";
-        if (platform.includes("Super")) pShort = "SNES";
-        if (platform.includes("Genesis")) pShort = "GEN";
-        if (platform.includes("Boy")) pShort = "GB";
-
-        writeLog(`[${pShort.padEnd(5)}] ${game.name}`);
-      });
-      writeLog("----------------------------------------", "dim");
-
-      if (page < totalPages) {
-        writeLog(
-          `(Type 'use backpack ${page + 1}' to check next pocket)`,
-          "dim"
-        );
-      }
-    }
-
-    // Also show other items? Only on page 1
-    if (page === 1) {
-      const others = dungeon.inventory.filter((i) => i.type !== "GAME");
-      if (others.length > 0) {
-        writeLog(
-          `\nSide Pockets: ${others.map((i) => i.name).join(", ")}`,
-          "dim"
-        );
-      }
-    }
-    return;
-  }
-
-  // Check specific item usage (e.g. opening a specific pack item)
-  const item = dungeon.inventory.find((i) =>
-    i.name.toLowerCase().includes(target.toLowerCase())
-  );
-
-  if (!item) {
-    writeLog(`You aren't carrying a '${target}'.`);
-    return;
-  }
-
-  if (item.type === "PACK" || item.type === "DECK") {
-    // Legacy support for DECK type if existing
-    // ... existing pack opening logic ...
-    writeLog(`You unzip the ${item.name}...`);
-    // ...
-    // Reuse existing logic below but adapted
-  }
-
-  if (item.type === "PACK") {
-    // Re-implementing the existing logic fully to be safe since I replaced the block
-    writeLog(`You tear open the ${item.name}...`);
-
-    if (item.contents && item.contents.length > 0) {
-      writeLog("A collection of cartridges spills out!", "info");
-      const room = dungeon.world.rooms[dungeon.currentRoom];
-
-      item.contents.forEach((game) => {
-        room.items.push(game);
-        writeLog(`- ${game.name}`);
-      });
-
-      // Destroy the pack
-      const idx = dungeon.inventory.indexOf(item);
-      dungeon.inventory.splice(idx, 1);
-    } else {
-      writeLog("It was empty...");
-    }
-    return;
-  }
-
-  // CONSOLE INTERFACE
-  if (item.type === "CONSOLE") {
-    writeLog(`[ ${item.name.toUpperCase()} ] - SYSTEM MENU`, "info");
-    writeLog("Scanning backpack modules...", "dim");
-
-    const compatibleGames = dungeon.inventory.filter(
-      (g) =>
-        g.type === "GAME" &&
-        item.supported &&
-        item.supported.some((s) =>
-          g.metadata?.platform?.toLowerCase().includes(s)
-        )
-    );
-
-    if (compatibleGames.length === 0) {
-      writeLog("No compatible database records found.", "error");
-      return;
-    }
-
-    writeLog("SELECT TITLE TO LAUNCH:", "info");
-    compatibleGames.forEach((g) => {
-      writeLog(`> ${g.name}`);
     });
-    writeLog("\n(Type 'play [name]' to start)", "dim");
-    return;
   }
-
-  writeLog(`You fiddle with the ${item.name}, but nothing happens.`);
 }

@@ -280,6 +280,9 @@ function generateZoneCluster(world, zone, games, uniqueOffset, mode) {
         msg: "It's too high to reach. You need something long to knock it down.",
       };
       item.description += " It's perched precariously on a high shelf.";
+      // Rename so "take game" or "take shelf" works better or "use broom" is clear
+      item._realName = item.name;
+      item.name = "High Shelf Game";
       roomMap["north"].items.push(item);
     }
 
@@ -292,10 +295,29 @@ function generateZoneCluster(world, zone, games, uniqueOffset, mode) {
         msg: "It's locked inside the cabinet glass. The coin slot is blinking.",
       };
       item.description += " It's locked inside a display case.";
+      item._realName = item.name;
+      item.name = "Locked Game";
       roomMap["east"].items.push(item);
     }
 
-    // Game 3, 4, 5 (Easy) -> Distributed
+    // Game 3 (Dusty Cartridge) -> North
+    if (games.length > 0) {
+      const g = games.shift();
+      const item = createGameItem(g);
+      // It's technically "collectible" but needs cleaning to count for quest (or be usable)
+      // Actually, let's make it so you can't pick it up or Archivist rejects it?
+      // Let's go with: You pick it up, but it's "Dusty Cartridge" and needs "use" (blow) to identify.
+      // Modifying item state
+      item._originalName = item.name;
+      item.name = `Dusty Cartridge`;
+      item.description =
+        "It's caked in thick grey dust. You can barely see the label.";
+      item.isDusty = true;
+
+      roomMap["north"].items.push(item);
+    }
+
+    // Game 4, 5 (Easy) -> Distributed
     const locs = ["north", "east", "west"];
     let idx = 0;
     while (games.length > 0) {
