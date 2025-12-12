@@ -39,9 +39,8 @@ export const NPC_ROSTER = [
           "Splendid! These stable data structures will hold back the rot for now. Take this key to the elevator.",
         reward: { type: "KEY", id: "key_level_1", name: "Elevator Key" },
         condition: (inventory) => {
-          const games = inventory.filter(
-            (i) => i.type === "GAME" && !i.isDusty
-          );
+          // New Dusty Logic: Dusty Carts are type "MISC", so we only filter for "GAME".
+          const games = inventory.filter((i) => i.type === "GAME");
           return games.length >= 5 ? games.slice(0, 5) : null;
         },
       },

@@ -93,20 +93,30 @@ export function generateDungeon(seed = Date.now()) {
 
       let lockConfig = null;
       if (Math.random() < mode.lockChance) {
-        const keyId = `key_level_${i}`;
-        const keyName = `Level ${i + 1} Pass`;
-        const keyItem = {
-          id: keyId,
-          name: keyName,
-          type: "KEY",
-          description: `Access card for the ${zone.name} floor.`,
-          metadata: { gem: true },
-        };
-        // Place key in previous floor logic...
-        // Simple: Place in previous hub for now
-        previousHub.items.push(keyItem);
+        // Special Case: Level 2 Key (index 1) is given by Archivist quest in Arcade
+        // So we do NOT spawn it on the ground.
+        if (i === 1) {
+          const keyId = `key_level_1`;
+          // We still need the CONFIG for the lock, but we don't spawn the item.
+          // The item is reward from Archivist.
+          lockConfig = {
+            keyId,
+            msg: `Elevator Locked. Requires 'Elevator Key' from the Archivist.`,
+          };
+        } else {
+          const keyId = `key_level_${i}`;
+          const keyName = `Level ${i + 1} Pass`;
+          const keyItem = {
+            id: keyId,
+            name: keyName,
+            type: "KEY",
+            description: `Access card for the ${zone.name} floor.`,
+            metadata: { gem: true },
+          };
+          previousHub.items.push(keyItem);
 
-        lockConfig = { keyId, msg: `Elevator Locked. Insert '${keyName}'.` };
+          lockConfig = { keyId, msg: `Elevator Locked. Insert '${keyName}'.` };
+        }
       }
 
       connectRooms(world, previousHub, hub, "up", "down", lockConfig);
@@ -275,13 +285,51 @@ function generateZoneCluster(world, zone, games, uniqueOffset, mode) {
     if (games.length > 0) {
       const g = games.shift();
       const item = createGameItem(g);
-      item.requires = {
-        tool: "tool_broom",
-        msg: "It's too high to reach. You need something long to knock it down.",
+      item.interactions = {
+        TAKE: [
+          {
+            // Block taking initially
+            actions: [
+              {
+                type: "block",
+                msg: "It's too high to reach. You need something long to knock it down.",
+              },
+            ],
+          },
+        ],
+        USE: [
+          {
+            // Use Broom on Shelf
+            tests: [{ type: "item", id: "tool_broom", context: "tool" }],
+            actions: [
+              {
+                type: "message",
+                content:
+                  "You reach up with the broom and knock the cartridge loose. It falls into your hands!",
+              },
+              {
+                type: "modify",
+                target: "self",
+                updates: { interactions: {}, name: item.name },
+              }, // Clear blockers, restore name
+              { type: "spawn", location: "inventory", item: item }, // Simulate catching it? Or just put in room?
+              // Actually, if we modify 'self', 'self' is in the room.
+              // The message says "balls into your hands". Let's put it in inventory.
+              // So we need to move 'self' to inventory.
+              // 'spawn' creates a copy. We want 'move'?
+              // Or 'destroy' self, 'spawn' copy in inventory.
+              { type: "destroy", target: "self" },
+              {
+                type: "spawn",
+                location: "inventory",
+                item: { ...item, interactions: {} },
+              },
+            ],
+          },
+        ],
       };
+
       item.description += " It's perched precariously on a high shelf.";
-      // Rename so "take game" or "take shelf" works better or "use broom" is clear
-      item._realName = item.name;
       item.name = "High Shelf Game";
       roomMap["north"].items.push(item);
     }
@@ -290,31 +338,105 @@ function generateZoneCluster(world, zone, games, uniqueOffset, mode) {
     if (games.length > 0) {
       const g = games.shift();
       const item = createGameItem(g);
-      item.requires = {
-        tool: "tool_token",
-        msg: "It's locked inside the cabinet glass. The coin slot is blinking.",
+
+      // Locked Game Interactions
+      item.interactions = {
+        TAKE: [
+          {
+            actions: [
+              {
+                type: "block",
+                msg: "It's locked inside the cabinet glass. The coin slot is blinking.",
+              },
+            ],
+          },
+        ],
+        OPEN: [
+          // If player has token in inventory, auto-trigger usage?
+          // Or just say "Locked. Requires Token."
+          // Plan said: "Check for token, if fail error."
+          {
+            tests: [{ type: "item", id: "tool_token", context: "inventory" }],
+            actions: [
+              {
+                type: "message",
+                content:
+                  "You mistakenly try to open it, then realize you have the token. You insert it...",
+              },
+              {
+                type: "trigger",
+                verb: "USE",
+                target: "cabinet",
+                tool: "tool_token",
+              },
+            ],
+          },
+          {
+            actions: [
+              {
+                type: "block",
+                msg: "It's locked. The coin slot blinks explicitly.",
+              },
+            ],
+          },
+        ],
+        USE: [
+          {
+            tests: [{ type: "item", id: "tool_token", context: "tool" }],
+            actions: [
+              {
+                type: "message",
+                content: "You insert the token. *KA-CHUNK* The case pops open.",
+              },
+              { type: "destroy", target: "tool" }, // Consume token
+              {
+                type: "modify",
+                target: "self",
+                updates: { interactions: {}, name: item.name },
+              }, // Unlocks (removes TAKE block)
+              { type: "message", content: "The game is now accessible." },
+            ],
+          },
+        ],
       };
+
       item.description += " It's locked inside a display case.";
-      item._realName = item.name;
       item.name = "Locked Game";
+      item.aliases = ["cabinet", "display case", "lock", "case"];
       roomMap["east"].items.push(item);
     }
 
     // Game 3 (Dusty Cartridge) -> North
     if (games.length > 0) {
       const g = games.shift();
-      const item = createGameItem(g);
-      // It's technically "collectible" but needs cleaning to count for quest (or be usable)
-      // Actually, let's make it so you can't pick it up or Archivist rejects it?
-      // Let's go with: You pick it up, but it's "Dusty Cartridge" and needs "use" (blow) to identify.
-      // Modifying item state
-      item._originalName = item.name;
-      item.name = `Dusty Cartridge`;
-      item.description =
-        "It's caked in thick grey dust. You can barely see the label.";
-      item.isDusty = true;
+      const gameItem = createGameItem(g);
 
-      roomMap["north"].items.push(item);
+      // Wrapper Item
+      const dustyItem = {
+        id: `dusty_${g.id}`,
+        name: "Dusty Cartridge",
+        type: "MISC", // Not a GAME yet
+        description:
+          "It's caked in thick grey dust. You can barely see the label. Maybe you could 'use' it to clean it off?",
+        interactions: {
+          USE: [
+            {
+              // Direct usage (no tool needed)
+              actions: [
+                {
+                  type: "message",
+                  content:
+                    "You blow into the open end of the cartridge. *Huff* *Huff*\nA cloud of grey dust flies out! The label is revealed.",
+                },
+                { type: "spawn", location: "inventory", item: gameItem },
+                { type: "destroy", target: "self" },
+              ],
+            },
+          ],
+        },
+      };
+
+      roomMap["north"].items.push(dustyItem);
     }
 
     // Game 4, 5 (Easy) -> Distributed

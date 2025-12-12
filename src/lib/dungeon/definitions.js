@@ -7,9 +7,11 @@ export const COMMANDS = {
   INVENTORY: ["inventory", "i", "inv", "items", "bag"],
   TALK: ["talk", "chat", "speak", "ask"],
   RESET: ["reset", "restart", "respawn", "sudo"],
-  OPEN: ["open", "unpack", "use"],
+  OPEN: ["open", "unpack"],
+  USE: ["use", "interact", "operate"],
   JOURNAL: ["journal", "j", "log", "quests", "tasks"],
   DROP: ["drop", "throw", "discard"],
+  PLAY: ["play", "run", "boot"],
 };
 
 export const DIRECTION_ALIASES = {
