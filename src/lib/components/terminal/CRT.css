@@ -1,0 +1,152 @@
+/* Base Terminal Style */
+.terminal-overlay {
+  background-color: #0a0a0a;
+  font-family: "VT323", "Courier New", monospace;
+  color: #33ff33;
+  text-shadow: 0 0 2px #33ff33;
+  overflow: hidden;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scanline Effect */
+.scanline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0) 50%,
+    rgba(0, 0, 0, 0.2) 50%,
+    rgba(0, 0, 0, 0.2)
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Curve/Vignette Effect */
+.screen-curve {
+  animation: flicker 0.15s infinite;
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle,
+    rgba(18, 16, 16, 0) 60%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+  pointer-events: none;
+  z-index: 11;
+}
+
+/* Flicker Animation */
+@keyframes flicker {
+  0% {
+    opacity: 0.97;
+  }
+  5% {
+    opacity: 0.95;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  15% {
+    opacity: 0.95;
+  }
+  20% {
+    opacity: 0.99;
+  }
+  25% {
+    opacity: 0.95;
+  }
+  30% {
+    opacity: 0.9;
+  }
+  35% {
+    opacity: 0.96;
+  }
+  40% {
+    opacity: 0.98;
+  }
+  45% {
+    opacity: 0.95;
+  }
+  50% {
+    opacity: 0.99;
+  }
+  55% {
+    opacity: 0.93;
+  }
+  60% {
+    opacity: 0.9;
+  }
+  65% {
+    opacity: 0.96;
+  }
+  70% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0.97;
+  }
+  80% {
+    opacity: 0.95;
+  }
+  85% {
+    opacity: 0.92;
+  }
+  90% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 0.99;
+  }
+  100% {
+    opacity: 0.94;
+  }
+}
+
+/* Text Colors */
+.log-command {
+  color: #aaaaaa;
+}
+.log-error {
+  color: #ff3333;
+  text-shadow: 0 0 2px #ff3333;
+}
+.log-info {
+  color: #33ffff;
+  text-shadow: 0 0 2px #33ffff;
+}
+.log-response { color: #33ff33; }
+.log-dim, .dim { color: #66aa66; opacity: 0.8; }
+.log-info-dim { color: #33ffff; opacity: 0.7; font-style: italic; }
+.log-success { color: #ffff33; text-shadow: 0 0 2px #ffff33; }
+
+/* Input Line */
+.input-line {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: #001100;
+}
+
+.input-caret {
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
