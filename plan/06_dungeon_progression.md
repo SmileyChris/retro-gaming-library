@@ -43,16 +43,16 @@ The game follows a recursive loop of **Exploration -> Collection -> Unlocking ->
 ### Zone 2: Platformer Peaks
 
 - **Theme**: Floating islands, clouds, pipes.
-- **Structure**: Linear Strip or Branching Path.
+- **Structure**: **Skyway Topology** (Linear series of floating islands with risking jumps).
 - **Goal**: obtain a Console to play the Realm Game found in Zone 1.
-- **NPC**: **Retro Rob (Merchant)**.
+- **NPC**: **Retro Rob (Merchant)** (Spawns at the start of the zone).
 - **Step-by-Step**:
   1.  Arrive from Elevator.
   2.  Locate **Retro Rob**.
   3.  **Quest**: He lost a "Gem Quality" game in the Arcade (Zone 1).
   4.  **Action**: You should already have this from Zone 1. Talk to him again to hand it over.
   5.  **Reward**: **Sega Genesis Console** (Fixed).
-  6.  **Mechanic**: Now you can `play [Realm Game]` (e.g., `play sonic 2`).
+  6.  **Mechanic**: Now you can `play [Realm Game]` (e.g., _Sonic 2_).
   7.  **Realm**: Enter the _Sonic 2_ cartridge. Complete the "Chemical Plant" loop challenge.
   8.  **Reward**: `Elevator Key (Level 2)` (Found inside the Realm).
   9.  Go **Up**.
