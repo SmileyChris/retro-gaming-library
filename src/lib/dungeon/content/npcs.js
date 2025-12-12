@@ -24,6 +24,10 @@ export const NPC_ROSTER = [
         key: "Keys are often hidden in the code.",
       },
     },
+    // Trigger: Auto-talk if not yet met
+    trigger: (dungeon) => {
+      return !dungeon.relationships || !dungeon.relationships["archivist"];
+    },
     quests: [
       {
         id: "archivist_starter",
@@ -35,7 +39,9 @@ export const NPC_ROSTER = [
           "Splendid! These stable data structures will hold back the rot for now. Take this key to the elevator.",
         reward: { type: "KEY", id: "key_level_1", name: "Elevator Key" },
         condition: (inventory) => {
-          const games = inventory.filter((i) => i.type === "GAME");
+          const games = inventory.filter(
+            (i) => i.type === "GAME" && !i.isDusty
+          );
           return games.length >= 5 ? games.slice(0, 5) : null;
         },
       },
