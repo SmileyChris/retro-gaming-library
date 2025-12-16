@@ -11,6 +11,7 @@ import { executeCommand } from "./engine.js";
  * @property {Object} [item] - Item to spawn
  * @property {'inventory'|'room'} [location] - safe spawn location
  * @property {'self'|'tool'} [target] - Target for modify/destroy
+ * @property {string} [targetId] - Specific item ID to target
  * @property {Object} [updates] - Properties to merge into target
  * @property {string} [verb] - trigger verb
  * @property {string} [msg] - block message
@@ -61,7 +62,9 @@ export async function executeInteraction(verb, targetName, toolName) {
   } else {
     // Implicit Target Inference
     // Find all visible items that have an interaction for this VERB
-    const visibleItems = [...dungeon.inventory, ...room.items];
+    const visibleItems = [...dungeon.inventory, ...room.items].filter(
+      (i) => !i.hidden
+    );
     const candidates = visibleItems.filter(
       (i) => i.interactions && i.interactions[verb]
     );
@@ -122,7 +125,7 @@ export async function executeInteraction(verb, targetName, toolName) {
     const inferredTool = targetItem;
     const room = dungeon.world.rooms[dungeon.currentRoom];
     const visibleItems = [...dungeon.inventory, ...room.items].filter(
-      (i) => i !== inferredTool
+      (i) => i !== inferredTool && !i.hidden
     );
 
     const candidates = visibleItems.filter(
@@ -161,6 +164,7 @@ export async function executeInteraction(verb, targetName, toolName) {
 }
 
 function matchItem(item, search) {
+  if (item.hidden) return false;
   if (item.name.toLowerCase().includes(search)) return true;
   if (
     item.aliases &&
@@ -211,7 +215,7 @@ function runTest(test, context) {
  * @param {Array} actions
  * @param {Object} context
  */
-async function processActions(actions, context) {
+export async function processActions(actions, context) {
   if (!actions) return;
 
   for (const action of actions) {
@@ -230,16 +234,45 @@ async function processActions(actions, context) {
         break;
 
       case "destroy":
-        const tgt = action.target === "self" ? context.target : context.tool;
+        let tgt = null;
+        if (action.targetId) {
+          tgt = findItemById(action.targetId);
+        } else {
+          tgt = action.target === "self" ? context.target : context.tool;
+        }
+
         if (tgt) {
           removeFromWorld(tgt);
         }
         break;
 
       case "modify":
-        const modTgt = action.target === "self" ? context.target : context.tool;
+        let modTgt = null;
+        if (action.targetId) {
+          modTgt = findItemById(action.targetId);
+        } else {
+          modTgt = action.target === "self" ? context.target : context.tool;
+        }
+
         if (modTgt && action.updates) {
           Object.assign(modTgt, action.updates);
+        }
+        break;
+
+      case "move":
+        const moveTgt = action.target === "self" ? context.target : context.tool;
+        // If we have targetId support, use it?
+        // Let's stick to standard target logic for now or add targetId support if consistent?
+        // But for 'move', usually we move self.
+        if (moveTgt) {
+          // Remove from source
+          removeFromWorld(moveTgt);
+          // Add to dest
+          if (action.location === "inventory") {
+            dungeon.inventory.push(moveTgt);
+          } else {
+            dungeon.world.rooms[dungeon.currentRoom].items.push(moveTgt);
+          }
         }
         break;
 
@@ -289,4 +322,19 @@ function removeFromWorld(item) {
   if (roomIdx !== -1) {
     room.items.splice(roomIdx, 1);
   }
+}
+
+function findItemById(id) {
+  // Check inventory
+  const invItem = dungeon.inventory.find((i) => i.id === id);
+  if (invItem) return invItem;
+
+  // Check current room
+  // Note: We only search current room primarily, but since dungeon has all rooms, 
+  // we could search globally if needed. For now, local scope is safer.
+  const room = dungeon.world.rooms[dungeon.currentRoom];
+  const roomItem = room.items.find((i) => i.id === id);
+  if (roomItem) return roomItem;
+
+  return null;
 }

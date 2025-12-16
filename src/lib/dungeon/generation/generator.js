@@ -284,22 +284,19 @@ function generateZoneCluster(world, zone, games, uniqueOffset, mode) {
     // Game 1 (High Shelf) -> North
     if (games.length > 0) {
       const g = games.shift();
-      const item = createGameItem(g);
-      item.interactions = {
+      const gameItem = createGameItem(g);
+
+      // Setup Game Item
+      gameItem.hidden = true; // Initially hidden
+      gameItem.interactions = {
         TAKE: [
           {
-            // Block taking initially
-            actions: [
-              {
-                type: "block",
-                msg: "It's too high to reach. You need something long to knock it down.",
-              },
-            ],
-          },
+            actions: [{ type: "block", msg: "It's too high to reach." }]
+          }
         ],
         USE: [
           {
-            // Use Broom on Shelf
+            // Use Broom on Game
             tests: [{ type: "item", id: "tool_broom", context: "tool" }],
             actions: [
               {
@@ -310,100 +307,224 @@ function generateZoneCluster(world, zone, games, uniqueOffset, mode) {
               {
                 type: "modify",
                 target: "self",
-                updates: { interactions: {}, name: item.name },
-              }, // Clear blockers, restore name
-              { type: "spawn", location: "inventory", item: item }, // Simulate catching it? Or just put in room?
-              // Actually, if we modify 'self', 'self' is in the room.
-              // The message says "balls into your hands". Let's put it in inventory.
-              // So we need to move 'self' to inventory.
-              // 'spawn' creates a copy. We want 'move'?
-              // Or 'destroy' self, 'spawn' copy in inventory.
-              { type: "destroy", target: "self" },
-              {
-                type: "spawn",
-                location: "inventory",
-                item: { ...item, interactions: {} },
+                updates: { interactions: {}, hidden: false }, // Clear interactions
               },
+              { type: "move", target: "self", location: "inventory" }
             ],
           },
-        ],
+        ]
+      };
+      // We need a custom move action or use spawn+destroy. 
+      // actions.js has 'spawn' and 'destroy'. It does NOT have 'move' yet?
+      // Let's check actions.js. It has 'modify', 'spawn', 'destroy'.
+      // createGameItem returns an object. references in JS are by value for primitives, but objects are ref.
+      // But spawning creates a copy in processActions (`const item = { ...action.item }`).
+      // So to "move", we should destroy self and spawn copy.
+      // BUT `gameItem` variable here is the template.
+      // Let's stick to destroy self + spawn copy for now.
+      gameItem.interactions.USE[0].actions = [
+        {
+          type: "message",
+          content: "You reach up with the broom and knock the cartridge loose. It falls into your hands!"
+        },
+        {
+          type: "spawn",
+          location: "inventory",
+          item: { ...gameItem, hidden: false, interactions: {} } // Clean copy
+        },
+        { type: "destroy", target: "self" }
+      ];
+
+      roomMap["north"].items.push(gameItem);
+
+      // Setup Shelf Item
+      const shelfItem = {
+        id: "prop_shelf_north",
+        name: "High Shelf",
+        type: "PROP",
+        description: "A dusty shelf mounted high on the wall.",
+        onLook: {
+          actions: [
+            {
+              type: "modify",
+              target: gameItem, // We can pass reference if we are careful, OR query by ID?
+              // processActions modify target accepts an object. 
+              // If we pass `gameItem` object here, it refers to the object in memory.
+              // Since everything is in `dungeon.world`, checking `modify` implementation:
+              // `Object.assign(modTgt, action.updates)`
+              // Yes, should work if gameItem ref is valid. 
+              // However, save/load cycles break references. 
+              // `processActions` uses `context.target` or `context.tool`.
+              // It DOES NOT support arbitrary target object passed in JSON unless resolved.
+              // The `action` object in `onLook` is stored in state.
+              // When loaded from JSON, `target: gameItem` will be `target: { ... }` (copy) or circular ref error.
+              // We must use `targetId` and resolve it in `processActions`, OR 
+              // use a special "find" action? 
+              // Wait, `processActions` has `modify` with `target` as "self" or "tool".
+              // It doesn't support "find by ID".
+              // I need to update `processActions` to support `targetId`.
+            }
+          ]
+          // Wait, simpler approach:
+          // Just use a flag. 
+          // `gameItem` has test: `type: 'flag', id: 'seen_shelf_game', value: true`.
+          // `shelfItem` onLook sets flag `seen_shelf_game`.
+          // And `gameItem` is only found if flag is set?
+          // No, `hidden` property is on the item.
+          // We need to change `hidden` to false. 
+          // OR `gameItem` isn't hidden, but has a "condition" to be seen?
+          // The engine doesn't support "condition to be seen" yet.
+          // It supports `hidden` boolean.
+
+          // Let's update `processActions` to support finding a target by ID.
+          // This is the robust solution.
+        }
       };
 
-      item.description += " It's perched precariously on a high shelf.";
-      item.name = "High Shelf Game";
-      roomMap["north"].items.push(item);
+      // Let's define the action properly assuming I will add support for `targetId` in action.
+      shelfItem.onLook = {
+        actions: [
+          {
+            type: "message",
+            content: "You squint at the darkness... Yes! There is a cartridge up there."
+          },
+          {
+            type: "modify",
+            targetId: gameItem.id,
+            updates: { hidden: false }
+          }
+        ]
+      };
+
+      // Shelf USE Broom
+      shelfItem.interactions = {
+        USE: [
+          {
+            tests: [{ type: "item", id: "tool_broom", context: "tool" }],
+            actions: [
+              {
+                type: "block",
+                msg: "Why would you need to use the broom with the shelf? (Maybe you should take a closer look at the shelf)"
+              }
+            ]
+          }
+        ]
+      };
+
+      roomMap["north"].items.push(shelfItem);
     }
 
     // Game 2 (Locked Cabinet) -> East
     if (games.length > 0) {
       const g = games.shift();
-      const item = createGameItem(g);
+      const gameItem = createGameItem(g);
+      gameItem.hidden = true;
 
-      // Locked Game Interactions
-      item.interactions = {
+      // Setup Game Interactions
+      gameItem.interactions = {
         TAKE: [
           {
             actions: [
-              {
-                type: "block",
-                msg: "It's locked inside the cabinet glass. The coin slot is blinking.",
-              },
-            ],
-          },
-        ],
-        OPEN: [
-          // If player has token in inventory, auto-trigger usage?
-          // Or just say "Locked. Requires Token."
-          // Plan said: "Check for token, if fail error."
-          {
-            tests: [{ type: "item", id: "tool_token", context: "inventory" }],
-            actions: [
-              {
-                type: "message",
-                content:
-                  "You mistakenly try to open it, then realize you have the token. You insert it...",
-              },
-              {
-                type: "trigger",
-                verb: "USE",
-                target: "cabinet",
-                tool: "tool_token",
-              },
-            ],
-          },
-          {
-            actions: [
-              {
-                type: "block",
-                msg: "It's locked. The coin slot blinks explicitly.",
-              },
-            ],
-          },
-        ],
-        USE: [
-          {
-            tests: [{ type: "item", id: "tool_token", context: "tool" }],
-            actions: [
-              {
-                type: "message",
-                content: "You insert the token. *KA-CHUNK* The case pops open.",
-              },
-              { type: "destroy", target: "tool" }, // Consume token
+              { type: "message", content: "You carefully remove the cartridge from the display case." },
+              { type: "move", target: "self", location: "inventory" },
+              { type: "modify", target: "self", updates: { interactions: {} } }, // Clear special TAKE
               {
                 type: "modify",
-                target: "self",
-                updates: { interactions: {}, name: item.name },
-              }, // Unlocks (removes TAKE block)
-              { type: "message", content: "The game is now accessible." },
-            ],
-          },
-        ],
+                targetId: "prop_cabinet_east",
+                updates: { description: "An open display cabinet. It is empty." }
+              }
+            ]
+          }
+        ]
       };
 
-      item.description += " It's locked inside a display case.";
-      item.name = "Locked Game";
-      item.aliases = ["cabinet", "display case", "lock", "case"];
-      roomMap["east"].items.push(item);
+      roomMap["east"].items.push(gameItem);
+
+      // Setup Cabinet Item
+      const cabinetItem = {
+        id: "prop_cabinet_east",
+        name: "Display Cabinet",
+        type: "PROP",
+        aliases: ["cabinet", "case", "display", "lock"],
+        description: "A glass display cabinet. Inside, a game cartridge sits on a velvet cushion. The door is locked and the coin slot is blinking.",
+        interactions: {
+          OPEN: [
+            {
+              // Fail if no token
+              tests: [{ type: "item", id: "tool_token", context: "inventory" }], // Just check existence? 
+              // No, usually OPEN fails unless unlocked. 
+              // But here we auto-use token if we have it? 
+              // Let's force explicit USE TOKEN or fail.
+              // But user might type "USE TOKEN ON CABINET".
+              actions: [
+                { type: "block", msg: "It's locked. The coin slot blinks red." }
+              ]
+            }
+          ],
+          USE: [
+            {
+              // Use Token
+              tests: [{ type: "item", id: "tool_token", context: "tool" }],
+              actions: [
+                { type: "message", content: "You insert the token. *KA-CHUNK* The door pops open!" },
+                { type: "destroy", target: "tool" }, // Remove Token
+                {
+                  type: "modify",
+                  target: "self",
+                  updates: {
+                    description: "A glass display cabinet. The door is open, revealing the cartridge inside.",
+                    interactions: {} // Remove locks
+                  }
+                },
+                {
+                  type: "modify",
+                  targetId: gameItem.id,
+                  updates: { hidden: false }
+                }
+              ]
+            }
+          ]
+        }
+      };
+
+      // Auto-use check for OPEN verb if they have token?
+      // User said: "It's a cabinet which you can unlock... Use broom with it... "
+      // User context: "The cabinet should be similar... unlock, which reveals game."
+      // Let's verify if I should allow "OPEN" to auto-unlock if token present.
+      // Original code did: "You mistakenly try to open it... realize you have token... insert it."
+      // Let's keep that friendly behavior.
+
+      cabinetItem.interactions.OPEN.unshift({
+        tests: [{ type: "item", id: "tool_token", context: "inventory" }],
+        actions: [
+          { type: "message", content: "You realize you have a token. You insert it into the slot..." },
+          { type: "trigger", verb: "USE", target: "display cabinet", tool: "arcade token" }
+          // Wait, trigger "USE" with tool "arcade token" might fail if parsing isn't perfect
+          // Better to just Copy-Paste the success actions? 
+          // Or recursively call actions. 
+          // Let's just inline the success actions for robustness.
+        ]
+      });
+      // Replace the inline actions:
+      cabinetItem.interactions.OPEN[0].actions = [
+        { type: "message", content: "You realize you have a token. You insert it into the slot... *KA-CHUNK* The door pops open!" },
+        { type: "destroy", targetId: "tool_token" }, // Destroy explicitly by ID since we don't have 'tool' context here
+        {
+          type: "modify",
+          target: "self",
+          updates: {
+            description: "A glass display cabinet. The door is open, revealing the cartridge inside.",
+            interactions: {}
+          }
+        },
+        {
+          type: "modify",
+          targetId: gameItem.id,
+          updates: { hidden: false }
+        }
+      ];
+
+      roomMap["east"].items.push(cabinetItem);
     }
 
     // Game 3 (Dusty Cartridge) -> North

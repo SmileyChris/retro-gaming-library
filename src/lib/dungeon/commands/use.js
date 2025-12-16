@@ -55,7 +55,7 @@ export async function handleUse(rawTarget) {
   let item =
     dungeon.inventory.find((i) => i.name.toLowerCase().includes(lowerTarget)) ||
     dungeon.world.rooms[dungeon.currentRoom].items.find((i) =>
-      i.name.toLowerCase().includes(lowerTarget)
+      !i.hidden && i.name.toLowerCase().includes(lowerTarget)
     );
 
   if (!item) {

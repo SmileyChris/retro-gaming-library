@@ -12,6 +12,7 @@ import { handleUse } from "./commands/use.js";
 import { handleTake } from "./commands/take.js";
 import { handleOpen } from "./commands/open.js";
 import { handleInventory } from "./commands/inventory.js";
+import { processActions } from "./actions.js";
 
 // Init World
 (async () => {
@@ -261,7 +262,7 @@ function handleJournal() {
   }
 }
 
-function handleLook(target, forceFull = false) {
+async function handleLook(target, forceFull = false) {
   const room = dungeon.world.rooms[dungeon.currentRoom];
 
   if (!target) {
@@ -307,10 +308,14 @@ function handleLook(target, forceFull = false) {
     const lower = target.toLowerCase();
     const item =
       dungeon.inventory.find((i) => i.name.toLowerCase().includes(lower)) ||
-      room.items.find((i) => i.name.toLowerCase().includes(lower));
+      room.items.find((i) => !i.hidden && i.name.toLowerCase().includes(lower));
 
     if (item && item.onLook) {
-      if (item.onLook.msg) writeLog(item.onLook.msg, "info");
+      if (item.onLook.actions) {
+        await processActions(item.onLook.actions, { target: item, verb: "LOOK" });
+      } else if (item.onLook.msg) {
+        writeLog(item.onLook.msg, "info");
+      }
       // Could add other triggers like 'trigger: (dungeon) => ...'
     }
   }
@@ -329,8 +334,8 @@ function listRoomContents(room) {
       const baseName = known
         ? npc.name
         : npc.shortDescription
-        ? npc.shortDescription
-        : "someone";
+          ? npc.shortDescription
+          : "someone";
 
       // Capitalize first letter
       const subject = baseName.charAt(0).toUpperCase() + baseName.slice(1);
@@ -348,6 +353,7 @@ function listRoomContents(room) {
   // List Items (Narrative)
   if (room.items && room.items.length > 0) {
     room.items.forEach((item) => {
+      if (item.hidden) return;
       if (item.type === "GAME") {
         if (item.requires && item.requires.tool === "tool_broom") {
           writeLog(
@@ -459,7 +465,7 @@ function handleExamine(target) {
 
   if (!item) {
     item = room.items.find((i) =>
-      i.name.toLowerCase().includes(target.toLowerCase())
+      !i.hidden && i.name.toLowerCase().includes(target.toLowerCase())
     );
   }
 
@@ -635,9 +641,19 @@ function handleTalk(target) {
           }
 
           // Consume Item? Usually yes for fetch quests.
-          const idx = dungeon.inventory.indexOf(item);
-          dungeon.inventory.splice(idx, 1);
-          writeLog(`You handed over ${item.name}.`, "dim");
+          // Note: item is an object from condition(), which might be from inventory or abstract.
+          if (item && item.name) {
+            const idx = dungeon.inventory.indexOf(item);
+            if (idx > -1) {
+              dungeon.inventory.splice(idx, 1);
+            }
+            writeLog(`You handed over ${item.name}.`, "dim");
+          } else {
+            // Fallback if item is not an inventory object (e.g. bundle or special)
+            // or if we shouldn't consume it?
+            // Assuming condition returns the item to consume.
+            writeLog(`You completed the request.`, "dim");
+          }
 
           return;
         } else {
