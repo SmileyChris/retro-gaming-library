@@ -113,7 +113,7 @@
         <div class="flex items-center gap-4">
           <button
             onclick={goBack}
-            class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition"
+            class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition shrink-0"
             title="Back"
           >
             <svg
@@ -131,7 +131,11 @@
             </svg>
           </button>
           <div class="flex items-center gap-8">
-            <h1 class="retro-font text-lg text-white truncate">{game.name}</h1>
+            <h1
+              class="retro-font text-base md:text-xl text-white leading-tight"
+            >
+              {game.name}
+            </h1>
           </div>
         </div>
       </div>
@@ -156,7 +160,7 @@
             </button>
           </div>
           <!-- Platform Cartridge -->
-          <div class="mt-8 flex justify-center">
+          <div class="mt-8 hidden md:flex justify-center">
             <Cartridge
               color={config ? config.color : "#6366F1"}
               count={platformCount}
@@ -170,9 +174,12 @@
                   alt={game.platform}
                   class="platform-logo"
                   onerror={(e) => {
-                    if (e.target instanceof HTMLImageElement) {
-                      e.target.style.display = "none";
-                      e.target.nextElementSibling.style.display = "flex";
+                    if (e.currentTarget instanceof HTMLImageElement) {
+                      e.currentTarget.style.display = "none";
+                      const next = e.currentTarget.nextElementSibling;
+                      if (next instanceof HTMLElement) {
+                        next.style.display = "flex";
+                      }
                     }
                   }}
                 />
@@ -233,6 +240,36 @@
                   Hidden Gem
                 </button>
               {/if}
+            </div>
+
+            <!-- Mobile Cartridge (Floated) -->
+            <div class="md:hidden float-right ml-4 mb-2">
+              <Cartridge
+                color={config ? config.color : "#6366F1"}
+                count={platformCount}
+                onclick={() => {
+                  navigateAway(
+                    `/platform/${encodeURIComponent(game.platform)}`
+                  );
+                }}
+              >
+                <div class="cartridge-content-wrapper">
+                  <img
+                    src={config ? config.logo : ""}
+                    alt={game.platform}
+                    class="platform-logo"
+                    onerror={(e) => {
+                      if (e.currentTarget instanceof HTMLImageElement) {
+                        e.currentTarget.style.display = "none";
+                        const next = e.currentTarget.nextElementSibling;
+                        if (next instanceof HTMLElement) {
+                          next.style.display = "flex";
+                        }
+                      }
+                    }}
+                  />
+                </div>
+              </Cartridge>
             </div>
 
             {#if description}

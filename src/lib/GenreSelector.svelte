@@ -6,7 +6,12 @@
 
   import { getGenreColor } from "./utils.js";
 
-  let { onSelect = null, showAllGames = true } = $props();
+  let {
+    onSelect = null,
+    onInteract,
+    externalFading = false,
+    showAllGames = true,
+  } = $props();
 
   // Get unique genres with their games, plus special categories
   const regularGenres = [...new Set(allGames.flatMap((g) => g.genres))].sort();
@@ -131,6 +136,8 @@
       return;
     }
 
+    if (onInteract) onInteract();
+
     insertingKey = genre;
     await new Promise((resolve) => setTimeout(resolve, 300));
 
@@ -167,7 +174,7 @@
         cycle={genre === "All Games"}
         count={getGenreCount(genre)}
         inserting={insertingKey === genre}
-        fading={insertingKey && insertingKey !== genre}
+        fading={externalFading || (insertingKey && insertingKey !== genre)}
         onclick={(e) => handleGenreClick(e, genre)}
       >
         {#if isSpecial}
@@ -206,6 +213,7 @@
 <style>
   .genre-scroll {
     overflow-x: auto;
+    overflow-y: visible;
     scroll-snap-type: x proximity;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;

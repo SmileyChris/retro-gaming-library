@@ -81,15 +81,11 @@
     lastTime = Date.now();
     scrollLeft = scrollContainer.scrollLeft;
     velocity = 0;
-    scrollContainer.style.cursor = "grabbing";
-    scrollContainer.classList.add("dragging");
   }
 
   function handleMouseUp() {
     isDragging = false;
     if (scrollContainer) {
-      scrollContainer.style.cursor = "grab";
-      scrollContainer.classList.remove("dragging");
       // Apply momentum
       if (Math.abs(velocity) > 0.5) {
         applyMomentum();
@@ -140,6 +136,7 @@
 
 <div
   class="platform-scroll"
+  class:dragging={isDragging}
   bind:this={scrollContainer}
   onmousedown={handleMouseDown}
   onmouseup={handleMouseUp}
@@ -206,6 +203,7 @@
   .platform-scroll.dragging {
     scroll-behavior: auto;
     scroll-snap-type: none;
+    cursor: grabbing;
   }
 
   .platform-scroll::-webkit-scrollbar {
@@ -277,9 +275,5 @@
     color: #e5e7eb;
     text-align: center;
     white-space: nowrap;
-  }
-
-  .platform-count {
-    /* Removed, replaced by label-header/label-count */
   }
 </style>

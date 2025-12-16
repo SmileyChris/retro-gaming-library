@@ -447,7 +447,7 @@
             onclick={() => {
               navigate("/");
             }}
-            class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition"
+            class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition shrink-0"
             title="Home"
           >
             <svg
@@ -464,7 +464,7 @@
               />
             </svg>
           </button>
-          <div class="flex items-center gap-3 lg:gap-5">
+          <div class="flex items-center gap-5">
             {#if initialFavourites}
               <span class="text-3xl">❤️</span>
             {:else if initialGems}
@@ -502,7 +502,7 @@
               />
             {/if}
             <div>
-              <h1 class="retro-font text-lg md:text-xl text-white">
+              <h1 class="retro-font text-base lg:text-xl text-white">
                 {pageTitle}
                 <span class="text-gray-400 font-normal">({gameCount})</span>
               </h1>

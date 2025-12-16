@@ -74,6 +74,16 @@
       navigate(`/platform/${encodeURIComponent(platform)}`);
     }
   }
+
+  // Track which selector is being interacted with (to fade the other one)
+  let interactionSelector = $state(null);
+  let fadeTimeout = null;
+
+  function handleInteraction(selector) {
+    if (fadeTimeout) clearTimeout(fadeTimeout);
+    interactionSelector = selector;
+    // No reset needed as navigation typically occurs, or user interacts again
+  }
 </script>
 
 <div
@@ -106,6 +116,7 @@
         }}
         class={`has-tooltip flex items-center justify-center w-14 h-14 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition shrink-0 ${shouldTransition ? "vt-random-btn" : ""}`}
         data-tooltip="Pick a random game"
+        aria-label="Pick a random game"
       >
         <svg
           class="w-6 h-6"
@@ -139,18 +150,26 @@
 
   <!-- Mobile: Show both platforms and genres -->
   <div class="lg:hidden w-full">
-    <PlatformSelector onSelect={handlePlatformClick} />
-    <GenreSelector showAllGames={false} />
+    <PlatformSelector
+      onSelect={handlePlatformClick}
+      onInteract={() => handleInteraction("platform")}
+      externalFading={interactionSelector === "genre"}
+    />
+    <GenreSelector
+      showAllGames={false}
+      onInteract={() => handleInteraction("genre")}
+      externalFading={interactionSelector === "platform"}
+    />
   </div>
 
   <!-- Desktop: Toggle between platforms and genres -->
   {#if browse.mode === "platforms"}
     <div class="hidden lg:block w-full">
-      <PlatformSelector onSelect={handlePlatformClick} />
+      <PlatformSelector onSelect={handlePlatformClick} onInteract={() => {}} />
     </div>
   {:else}
     <div class="hidden lg:block w-full">
-      <GenreSelector />
+      <GenreSelector onInteract={() => {}} />
     </div>
   {/if}
 </div>
