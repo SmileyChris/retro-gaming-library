@@ -1,28 +1,29 @@
 <script>
-  import { platformConfig, allGames } from './data.js';
+  import { platformConfig, allGames } from "./data.js";
+  import Cartridge from "./Cartridge.svelte";
 
   let { onSelect } = $props();
 
   // Load favorites from localStorage
   let favorites = $state([]);
-  if (typeof localStorage !== 'undefined') {
+  if (typeof localStorage !== "undefined") {
     try {
-      const saved = localStorage.getItem('retroLibraryFavorites');
+      const saved = localStorage.getItem("retroLibraryFavorites");
       if (saved) {
         favorites = JSON.parse(saved);
       }
     } catch (e) {
-      console.warn('Could not load favorites');
+      console.warn("Could not load favorites");
     }
   }
 
   // Calculate game counts per platform
   let platformCounts = $derived.by(() => {
     const counts = {
-      'All': allGames.length,
-      'Favourites': favorites.length
+      All: allGames.length,
+      Favourites: favorites.length,
     };
-    allGames.forEach(g => {
+    allGames.forEach((g) => {
       counts[g.platform] = (counts[g.platform] || 0) + 1;
     });
     return counts;
@@ -31,19 +32,30 @@
   // Build platform list with "All" first, then Favourites if any
   let platforms = $derived.by(() => {
     const list = [
-      { key: 'All', name: 'All Games', logo: '/logo.png', color: '#6366F1' }
+      { key: "All", name: "All Games", logo: "/logo.png", color: "#6366F1" },
     ];
 
     if (favorites.length > 0) {
-      list.push({ key: 'Favourites', name: 'Favourites', logo: null, icon: '🤍', color: '#EF4444' });
+      list.push({
+        key: "Favourites",
+        name: "Favourites",
+        logo: null,
+        icon: "🤍",
+        color: "#EF4444",
+      });
     }
 
-    list.push(...Object.entries(platformConfig).map(([key, config]) => ({
-      key,
-      name: key,
-      logo: config.logo || `/logos/${key.toLowerCase().replace('/', '-')}.svg`,
-      color: config.color
-    })));
+    list.push(
+      ...Object.entries(platformConfig)
+        .filter(([key]) => key !== "All")
+        .map(([key, config]) => ({
+          key,
+          name: key,
+          logo:
+            config.logo || `/logos/${key.toLowerCase().replace("/", "-")}.svg`,
+          color: config.color,
+        }))
+    );
 
     return list;
   });
@@ -58,6 +70,7 @@
   let lastX = $state(0);
   let lastTime = $state(0);
   let momentumId = $state(null);
+  let insertingKey = $state(null);
 
   function handleMouseDown(e) {
     if (momentumId) cancelAnimationFrame(momentumId);
@@ -68,15 +81,15 @@
     lastTime = Date.now();
     scrollLeft = scrollContainer.scrollLeft;
     velocity = 0;
-    scrollContainer.style.cursor = 'grabbing';
-    scrollContainer.classList.add('dragging');
+    scrollContainer.style.cursor = "grabbing";
+    scrollContainer.classList.add("dragging");
   }
 
   function handleMouseUp() {
     isDragging = false;
     if (scrollContainer) {
-      scrollContainer.style.cursor = 'grab';
-      scrollContainer.classList.remove('dragging');
+      scrollContainer.style.cursor = "grab";
+      scrollContainer.classList.remove("dragging");
       // Apply momentum
       if (Math.abs(velocity) > 0.5) {
         applyMomentum();
@@ -99,7 +112,7 @@
     const now = Date.now();
     const dt = now - lastTime;
     if (dt > 0) {
-      velocity = (x - lastX) / dt * 15;
+      velocity = ((x - lastX) / dt) * 15;
     }
     lastX = x;
     lastTime = now;
@@ -113,12 +126,14 @@
     }
   }
 
-  function handleClick(e, platform) {
+  async function handleClick(e, platform) {
     if (hasDragged) {
       e.preventDefault();
       hasDragged = false;
       return;
     }
+    insertingKey = platform.key;
+    await new Promise((resolve) => setTimeout(resolve, 300));
     onSelect(platform.key);
   }
 </script>
@@ -133,46 +148,46 @@
   role="list"
 >
   <div class="platform-scroll-inner">
-  {#each platforms as platform}
-    <button
-      onclick={(e) => handleClick(e, platform)}
-      class="platform-card group"
-      style="--platform-color: {platform.color}"
-    >
-      <div class="platform-card-inner">
+    {#each platforms as platform}
+      <Cartridge
+        color={platform.color}
+        headerBackground={platform.key === "All"
+          ? "linear-gradient(90deg, #c084fc, #ec4899, #ef4444, #c084fc)"
+          : undefined}
+        cycle={platform.key === "All"}
+        count={platformCounts[platform.key] || 0}
+        inserting={insertingKey === platform.key}
+        fading={insertingKey && insertingKey !== platform.key}
+        onclick={(e) => handleClick(e, platform)}
+      >
         <div class="platform-logo-container">
           {#if platform.logo}
             <img
               src={platform.logo}
               alt={platform.name}
               class="platform-logo"
-              style={platform.key === 'All' ? 'filter: grayscale(1) brightness(1.5) contrast(1.2);' : ''}
               draggable="false"
               onerror={(e) => {
                 // Fallback to emoji/text if logo fails to load
-                e.target.style.display = 'none';
-                e.target.nextElementSibling.style.display = 'flex';
+                e.target.style.display = "none";
+                e.target.nextElementSibling.style.display = "flex";
               }}
             />
-            <div class="platform-logo-fallback" style="display: none; background-color: {platform.color}">
-              {platformConfig[platform.key]?.icon || '🎮'}
+            <div
+              class="platform-logo-fallback"
+              style="display: none; background-color: {platform.color}"
+            >
+              {platformConfig[platform.key]?.icon || "🎮"}
             </div>
           {:else}
-            <div
-              class="platform-icon-only"
-              style={platform.key === 'Gems' ? 'filter: grayscale(1) brightness(1.5) contrast(1.2);' : ''}
-            >
-              {platform.icon || '🎮'}
+            <div class="platform-icon-only">
+              {platform.icon || "🎮"}
             </div>
           {/if}
         </div>
         <div class="platform-name">{platform.name}</div>
-        <div class="platform-count" style="color: {platform.color}">
-          {platformCounts[platform.key] || 0}
-        </div>
-      </div>
-    </button>
-  {/each}
+      </Cartridge>
+    {/each}
   </div>
 </div>
 
@@ -221,38 +236,7 @@
     }
   }
 
-  .platform-card {
-    flex-shrink: 0;
-    scroll-snap-align: center;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    background: transparent;
-    border: none;
-    padding: 0;
-  }
-
-  .platform-card:hover {
-    transform: translateY(-4px);
-  }
-
-  .platform-card:hover .platform-card-inner {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px color-mix(in srgb, var(--platform-color) 30%, transparent);
-    border-color: var(--platform-color);
-  }
-
-  .platform-card-inner {
-    width: 120px;
-    padding: 1rem;
-    background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
-    border: 2px solid #374151;
-    border-radius: 12px;
-    transition: all 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
+  /* New styles for content within Cartridge */
   .platform-logo-container {
     width: 80px;
     height: 60px;
@@ -265,24 +249,26 @@
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    filter: grayscale(1) brightness(1.2); /* Desaturated look */
+    opacity: 0.9;
+  }
+
+  .platform-icon-only {
+    font-size: 2.5rem;
+    filter: grayscale(1) brightness(1.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .platform-logo-fallback {
     width: 50px;
     height: 50px;
     border-radius: 10px;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-  }
-
-  .platform-icon-only {
-    font-size: 2.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 1.5rem;
   }
 
   .platform-name {
@@ -294,7 +280,6 @@
   }
 
   .platform-count {
-    font-size: 1.25rem;
-    font-weight: 700;
+    /* Removed, replaced by label-header/label-count */
   }
 </style>

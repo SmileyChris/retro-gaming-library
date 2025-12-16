@@ -4,12 +4,16 @@
   import { platformConfig, allGames } from "./data.js";
   import { gameDescriptions } from "./descriptions.js";
   import { getGenreColor } from "./utils.js";
+  import Cartridge from "./Cartridge.svelte";
 
   let { gameId } = $props();
 
   // Find the game
   let game = $derived(allGames.find((g) => g.id === gameId));
   let config = $derived(game ? platformConfig[game.platform] : null);
+  let platformCount = $derived(
+    game ? allGames.filter((g) => g.platform === game.platform).length : 0
+  );
 
   // Favorites management
   let favorites = $state([]);
@@ -30,7 +34,7 @@
       try {
         localStorage.setItem(
           "retroLibraryFavorites",
-          JSON.stringify(currentFavorites),
+          JSON.stringify(currentFavorites)
         );
       } catch (e) {
         console.warn("Could not save favorites");
@@ -53,14 +57,14 @@
   let boxArtUrl = $derived(
     game
       ? `/boxart/${game.platform}/${game.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.png`
-      : "",
+      : ""
   );
 
   // Screenshot path
   let screenshotUrl = $derived(
     game
       ? `/screenshots/${game.platform}/${game.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.png`
-      : "",
+      : ""
   );
   let hasScreenshot = $state(false);
 
@@ -151,26 +155,29 @@
               <span class="text-2xl">{isFavorite ? "❤️" : "🤍"}</span>
             </button>
           </div>
-          <!-- Platform Logo -->
+          <!-- Platform Cartridge -->
           <div class="mt-8 flex justify-center">
-            <button
+            <Cartridge
+              color={config ? config.color : "#6366F1"}
+              count={platformCount}
               onclick={() => {
                 navigateAway(`/platform/${encodeURIComponent(game.platform)}`);
               }}
-              class="hover:opacity-80 transition cursor-pointer"
-              title={game.platform}
             >
-              <img
-                src={config.logo}
-                alt={game.platform}
-                class="h-12 object-contain opacity-80"
-                onerror={(e) => {
-                  if (e.target instanceof HTMLImageElement) {
-                    e.target.style.display = "none";
-                  }
-                }}
-              />
-            </button>
+              <div class="cartridge-content-wrapper">
+                <img
+                  src={config ? config.logo : ""}
+                  alt={game.platform}
+                  class="platform-logo"
+                  onerror={(e) => {
+                    if (e.target instanceof HTMLImageElement) {
+                      e.target.style.display = "none";
+                      e.target.nextElementSibling.style.display = "flex";
+                    }
+                  }}
+                />
+              </div>
+            </Cartridge>
           </div>
         </div>
 
@@ -277,5 +284,14 @@
   /* When hovering the gem button, remove grayscale from the diamond */
   .genre-link:hover span {
     filter: none !important;
+  }
+
+  /* Cartridge content styling for detail page */
+  .cartridge-content-wrapper {
+    width: 80px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 </style>

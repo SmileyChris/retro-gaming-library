@@ -1,7 +1,8 @@
 <script>
   import { onDestroy } from "svelte";
   import { navigate } from "./router.svelte.js";
-  import { allGames } from "./data.js";
+  import { allGames, platformConfig } from "./data.js"; // Updated import
+  import Cartridge from "./Cartridge.svelte"; // New import
 
   import { getGenreColor } from "./utils.js";
 
@@ -13,7 +14,7 @@
 
   // Filter displayed genres based on prop
   let displayedGenres = $derived(
-    showAllGames ? allGenres : allGenres.filter((g) => g !== "All Games"),
+    showAllGames ? allGenres : allGenres.filter((g) => g !== "All Games")
   );
 
   const genreGames = Object.fromEntries([
@@ -27,7 +28,7 @@
 
   // Track current image index for each genre
   let genreImageIndex = $state(
-    Object.fromEntries(allGenres.map((g) => [g, 0])),
+    Object.fromEntries(allGenres.map((g) => [g, 0]))
   );
 
   // Cycle images every 2 seconds with staggered starts
@@ -46,10 +47,16 @@
     };
   });
 
-  function getBoxArtUrl(game) {
+  function getGameImage(game) {
+    // Renamed from getBoxArtUrl
     const filename =
       game.name.replace(/[^a-z0-9]/gi, "_").toLowerCase() + ".png";
     return `/boxart/${game.platform}/${filename}`;
+  }
+
+  function getGenreCount(genre) {
+    // New function
+    return genreGames[genre].length;
   }
 
   // Genre scroll with momentum
@@ -62,6 +69,7 @@
   let genreLastX = $state(0);
   let genreLastTime = $state(0);
   let genreMomentumId = $state(null);
+  let insertingKey = $state(null);
 
   function handleGenreMouseDown(e) {
     if (genreMomentumId) cancelAnimationFrame(genreMomentumId);
@@ -116,12 +124,16 @@
     }
   }
 
-  function handleGenreClick(e, genre) {
+  async function handleGenreClick(e, genre) {
     if (genreHasDragged) {
       e.preventDefault();
       genreHasDragged = false;
       return;
     }
+
+    insertingKey = genre;
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
     if (onSelect) {
       onSelect(genre);
     } else {
@@ -147,40 +159,46 @@
       {@const games = genreGames[genre]}
       {@const currentGame = games[genreImageIndex[genre]]}
       {@const isSpecial = genre === "All Games" || genre === "Hidden Gems"}
-      <button
-        class="genre-card group cursor-pointer flex-shrink-0"
+      <Cartridge
+        color={getGenreColor(genre)}
+        headerBackground={genre === "All Games"
+          ? "linear-gradient(90deg, #c084fc, #ec4899, #ef4444, #c084fc)"
+          : undefined}
+        cycle={genre === "All Games"}
+        count={getGenreCount(genre)}
+        inserting={insertingKey === genre}
+        fading={insertingKey && insertingKey !== genre}
         onclick={(e) => handleGenreClick(e, genre)}
-        style="--genre-color: {getGenreColor(genre)}"
       >
-        <div class="genre-card-inner">
-          <div class="genre-icon-container">
+        {#if isSpecial}
+          <div class="genre-image-container">
             {#if genre === "All Games"}
               <img
-                src="/logo.png"
-                alt=""
-                class="w-12 h-12"
-                style="filter: grayscale(1) brightness(1.5) contrast(1.2);"
+                src={platformConfig["All"].logo}
+                alt="All Games"
+                class="genre-image special-logo"
+                draggable="false"
               />
-            {:else if genre === "Hidden Gems"}
-              <span
-                class="text-4xl"
-                style="filter: grayscale(1) brightness(1.5);">💎</span
-              >
             {:else}
-              <img
-                src={getBoxArtUrl(currentGame)}
-                alt=""
-                class="w-full h-full object-cover rounded-lg"
-                style="filter: grayscale(1) brightness(1.5) contrast(1.2);"
-              />
+              <div class="genre-icon special">💎</div>
             {/if}
           </div>
-          <div class="text-xs font-semibold text-gray-200">{genre}</div>
-          <div class="text-xl font-bold" style="color: {getGenreColor(genre)}">
-            {games.length}
+        {:else if currentGame}
+          <div class="genre-image-container">
+            <img
+              src={getGameImage(currentGame)}
+              alt={genre}
+              class="genre-image"
+              loading="lazy"
+            />
           </div>
-        </div>
-      </button>
+        {:else}
+          <div class="genre-image-container">
+            <div class="genre-icon">🎮</div>
+          </div>
+        {/if}
+        <div class="genre-name">{genre}</div>
+      </Cartridge>
     {/each}
   </div>
 </div>
@@ -230,43 +248,46 @@
     }
   }
 
-  .genre-card {
-    transition:
-      transform 0.2s ease,
-      box-shadow 0.2s ease;
-  }
-
-  .genre-card:hover {
-    transform: translateY(-4px);
-  }
-
-  .genre-card-inner {
-    width: 120px;
-    padding: 1rem;
-    background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
-    border: 2px solid #374151;
-    border-radius: 12px;
-    transition: all 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .genre-card:hover .genre-card-inner {
-    box-shadow:
-      0 8px 24px rgba(0, 0, 0, 0.4),
-      0 0 20px color-mix(in srgb, var(--genre-color) 30%, transparent);
-    border-color: var(--genre-color);
-  }
-
-  .genre-icon-container {
+  /* New styles for content within Cartridge */
+  .genre-image-container {
     width: 80px;
     height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: 4px; /* Slightly tighter radius inside the black sticker */
+  }
+
+  .genre-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensure images fill the box */
+    filter: grayscale(0.8) brightness(1.2); /* Reduced saturation */
+  }
+
+  .genre-icon {
+    font-size: 2rem;
+  }
+
+  .genre-icon.special {
+    font-size: 2.5rem; /* Larger for emoji icons */
+    filter: grayscale(0.8) brightness(1.2); /* Reduced saturation */
+  }
+
+  .special-logo {
+    object-fit: contain;
+    filter: grayscale(0.8) brightness(1.2);
+    /* opacity: 0.9; removed to match platform request */
+    padding: 4px;
+  }
+
+  .genre-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #e5e7eb; /* gray-200 */
+    margin-top: 0.5rem;
+    text-align: center;
+    line-height: 1.1;
   }
 </style>
