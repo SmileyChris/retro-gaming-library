@@ -50,7 +50,7 @@
       try {
         localStorage.setItem(
           "retroLibraryFavorites",
-          JSON.stringify(currentFavorites),
+          JSON.stringify(currentFavorites)
         );
       } catch (e) {
         console.warn("Could not save favorites");
@@ -159,7 +159,7 @@
       .filter(
         (game) =>
           game.name.toLowerCase().includes(query) ||
-          game.notes.toLowerCase().includes(query),
+          game.notes.toLowerCase().includes(query)
       )
       .sort((a, b) => {
         const aNameMatch = a.name.toLowerCase().includes(query);
@@ -229,7 +229,7 @@
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         const randomIndex = Math.floor(
-          Math.random() * filteredAndSortedGames.length,
+          Math.random() * filteredAndSortedGames.length
         );
         const randomGame = filteredAndSortedGames[randomIndex];
         highlightedGameId = randomGame.id;
@@ -244,13 +244,13 @@
         window.history.replaceState(
           null,
           "",
-          `${basePath}?${params.toString()}`,
+          `${basePath}?${params.toString()}`
         );
 
         // Scroll to the game card
         tick().then(() => {
           const element = document.querySelector(
-            `[data-game-id="${randomGame.id}"]`,
+            `[data-game-id="${randomGame.id}"]`
           );
           if (element) {
             element.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -294,7 +294,7 @@
       setTimeout(() => {
         // Check if highlighted game is in the current filtered list
         const gameInList = filteredAndSortedGames.some(
-          (g) => g.id === initialHighlight,
+          (g) => g.id === initialHighlight
         );
         if (!gameInList) {
           // Redirect to All with highlight
@@ -312,7 +312,7 @@
 
         tick().then(() => {
           const element = document.querySelector(
-            `[data-game-id="${initialHighlight}"]`,
+            `[data-game-id="${initialHighlight}"]`
           );
           if (element) {
             element.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -354,7 +354,7 @@
           root: null,
           rootMargin: "0px",
           threshold: 0.1,
-        },
+        }
       );
     }
 
@@ -391,13 +391,13 @@
         () => {
           // Find all visible gems using the intersection observer set
           const visibleGems = filteredAndSortedGames.filter(
-            (g) => g.gem && visibleGameIds.has(g.id),
+            (g) => g.gem && visibleGameIds.has(g.id)
           );
 
           if (visibleGems.length > 0) {
             // Filter out the last sparkled game to avoid repetition
             const candidates = visibleGems.filter(
-              (g) => g.id !== lastSparkledGameId,
+              (g) => g.id !== lastSparkledGameId
             );
 
             if (candidates.length === 0) {
@@ -421,7 +421,7 @@
             }
           }
         },
-        5000 + Math.random() * 3000,
+        5000 + Math.random() * 3000
       ); // Random interval between 5-8 seconds
     }
 
@@ -526,8 +526,8 @@
                 randomBtnSvg?.classList.add("spin-once");
                 pickRandomGame();
               }}
-              class="vt-random-btn flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition shrink-0"
-              title="Random game"
+              class="vt-random-btn has-tooltip flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition shrink-0"
+              data-tooltip="Pick a random game"
             >
               <svg
                 bind:this={randomBtnSvg}
@@ -555,7 +555,7 @@
                 const val = e.currentTarget.value;
                 const basePath = window.location.hash.split("?")[0].slice(1); // remove # and query
                 const params = new URLSearchParams(
-                  window.location.hash.split("?")[1] || "",
+                  window.location.hash.split("?")[1] || ""
                 );
 
                 // Clear highlight when searching
@@ -698,7 +698,7 @@
         <div class="flex flex-wrap justify-center gap-x-10 gap-y-4">
           {#each allGenres as genre}
             {@const genreCount = allGames.filter((g) =>
-              g.genres.includes(genre),
+              g.genres.includes(genre)
             ).length}
             <button
               class="retro-font text-xs transition hover:scale-105 cursor-pointer {genre ===

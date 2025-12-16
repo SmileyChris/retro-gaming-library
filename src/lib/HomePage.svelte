@@ -53,14 +53,14 @@
         navigate(`/gems?highlight=${randomGame.id}${searchParam}`);
       } else {
         navigate(
-          `/genre/${encodeURIComponent(randomGenre)}?highlight=${randomGame.id}${searchParam}`,
+          `/genre/${encodeURIComponent(randomGenre)}?highlight=${randomGame.id}${searchParam}`
         );
       }
     } else {
       const randomIndex = Math.floor(Math.random() * allGames.length);
       const randomGame = allGames[randomIndex];
       navigate(
-        `/platform/${encodeURIComponent(randomGame.platform)}?highlight=${randomGame.id}${searchParam}`,
+        `/platform/${encodeURIComponent(randomGame.platform)}?highlight=${randomGame.id}${searchParam}`
       );
     }
   }
@@ -104,8 +104,8 @@
           e.currentTarget.querySelector("svg").classList.add("spin-once");
           pickRandomGame();
         }}
-        class={`flex items-center justify-center w-14 h-14 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition shrink-0 ${shouldTransition ? "vt-random-btn" : ""}`}
-        title="Random game"
+        class={`has-tooltip flex items-center justify-center w-14 h-14 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition shrink-0 ${shouldTransition ? "vt-random-btn" : ""}`}
+        data-tooltip="Pick a random game"
       >
         <svg
           class="w-6 h-6"
