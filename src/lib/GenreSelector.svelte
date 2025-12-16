@@ -197,6 +197,7 @@
               alt={genre}
               class="genre-image"
               loading="lazy"
+              draggable="false"
             />
           </div>
         {:else}
@@ -217,7 +218,7 @@
     scroll-snap-type: x proximity;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    padding: 1rem 2rem;
+    padding: 1rem 2rem 2rem;
     cursor: grab;
     user-select: none;
     scroll-behavior: smooth;

@@ -93,7 +93,7 @@
   <img
     src="/logo.png"
     alt="Retro Gaming Library"
-    class="w-32 h-32 md:w-40 md:h-40 mb-6 drop-shadow-2xl"
+    class="w-32 h-32 md:w-40 md:h-40 my-6 drop-shadow-2xl"
   />
 
   <!-- Title -->
@@ -144,7 +144,7 @@
   </div>
 
   <!-- Toggle (desktop only) -->
-  <div class="hidden lg:flex justify-center mb-6">
+  <div class="hidden lg:flex justify-center">
     <ViewToggle bind:mode={browse.mode} />
   </div>
 

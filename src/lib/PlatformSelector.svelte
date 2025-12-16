@@ -2,7 +2,7 @@
   import { platformConfig, allGames } from "./data.js";
   import Cartridge from "./Cartridge.svelte";
 
-  let { onSelect } = $props();
+  let { onSelect, onInteract, externalFading = false } = $props();
 
   // Load favorites from localStorage
   let favorites = $state([]);
@@ -128,6 +128,9 @@
       hasDragged = false;
       return;
     }
+
+    if (onInteract) onInteract();
+
     insertingKey = platform.key;
     await new Promise((resolve) => setTimeout(resolve, 300));
     onSelect(platform.key);
@@ -154,7 +157,8 @@
         cycle={platform.key === "All"}
         count={platformCounts[platform.key] || 0}
         inserting={insertingKey === platform.key}
-        fading={insertingKey && insertingKey !== platform.key}
+        fading={externalFading ||
+          (insertingKey && insertingKey !== platform.key)}
         onclick={(e) => handleClick(e, platform)}
       >
         <div class="platform-logo-container">
@@ -194,7 +198,7 @@
     scroll-snap-type: x proximity;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    padding: 1rem 2rem;
+    padding: 1rem 2rem 2rem;
     cursor: grab;
     user-select: none;
     scroll-behavior: smooth;

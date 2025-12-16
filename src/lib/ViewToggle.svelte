@@ -2,7 +2,7 @@
   let { mode = $bindable() } = $props();
 </script>
 
-<div class="inline-flex rounded-lg bg-gray-800 p-1">
+<div class="inline-flex rounded-lg bg-gray-800 p-1 mb-2">
   <button
     class="px-3 py-1.5 text-xs font-medium rounded-md transition {mode ===
     'platforms'
