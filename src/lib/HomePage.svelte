@@ -175,8 +175,8 @@
       <button
         onclick={toggleTerminal}
         class="has-tooltip flex items-center justify-center w-14 h-14 rounded-full bg-gray-800 border border-gray-600 text-green-500 hover:bg-gray-700 hover:text-green-400 hover:border-green-500 transition shrink-0"
-        data-tooltip="Enter the Dungeon"
-        aria-label="Enter the Dungeon"
+        data-tooltip="Boot Retro Realm OS"
+        aria-label="Boot Retro Realm OS"
       >
         <svg
           class="w-6 h-6"
