@@ -98,7 +98,9 @@ describe("Command Handlers - Talk", () => {
       // Not enough games
       dungeon.inventory = [];
       handleTalk(system, "Archivist");
-      expect(logs.find((l) => l.msg.includes("I need 5 games"))).toBeTruthy();
+      expect(
+        logs.find((l) => l.msg.includes("I need 5 stable Game Cartridges"))
+      ).toBeTruthy();
 
       // Enough games
       dungeon.inventory = [

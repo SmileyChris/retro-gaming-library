@@ -34,7 +34,7 @@ export const NPC_ROSTER = [
         title: "The Preservationist",
         req: { trust: 0 },
         startText:
-          "The digital entropy is consuming the library. We need to stabilize the core code. Go into the Atrium and retrieve 5 Game Cartridges to prove you can handle the data artifacts.",
+          "The digital entropy is consuming the library. We need to stabilize the core code. Go NORTH into the Atrium and retrieve 5 Game Cartridges to prove you can handle the data artifacts.",
         endText:
           "Splendid! These stable data structures will hold back the rot for now. Take this key to the elevator.",
         reward: { type: "KEY", id: "key_level_1", name: "Elevator Key" },

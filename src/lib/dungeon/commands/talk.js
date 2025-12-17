@@ -41,7 +41,7 @@ export function handleTalk(system, target) {
       );
 
       if (hasKey && !hasBackpack) {
-        writeLog(`"I see you have the elevator key," says the Archivist.`);
+        writeLog(`"I see you have the Level 2 Key," says the Archivist.`);
         writeLog(
           `"But you cannot travel the zones with your hands full. Take this."`,
           "info"
@@ -62,7 +62,11 @@ export function handleTalk(system, target) {
 
       if (!dungeon.world.flags.archivistMet) {
         dungeon.world.flags.archivistMet = true;
-        writeLog(`"Welcome to the constructs, user."`);
+        const threatName =
+          dungeon.world.narrative?.threat?.name || "The Bit Rot";
+        writeLog(
+          `"Welcome to the constructs, user. I fear ${threatName} is advancing."`
+        );
         return;
       }
 
@@ -93,13 +97,25 @@ export function handleTalk(system, target) {
         if (gameCount >= 5) {
           dungeon.world.flags.starterQuestComplete = true;
           writeLog(`"Splendid!"`);
+          writeLog(
+            `"These stable data structures will hold back the corruption for now."`
+          );
+          writeLog(
+            `"If you wish to ascend to the higher levels, you will need this key. But be warned, the path upwards is dangerous."`
+          );
           dungeon.inventory.push({
             id: "key_level_1",
-            name: "Key",
+            name: "Level 2 Key",
             type: "KEY",
           });
         } else {
-          writeLog(`"I need 5 games."`);
+          writeLog(
+            `"I need 5 stable Game Cartridges to patch the firewall. The Atrium to the NORTH should have plenty."`
+          );
+          writeLog(
+            `"Check your JOURNAL (type 'j') to track your progress."`,
+            "dim"
+          );
         }
         return;
       }
