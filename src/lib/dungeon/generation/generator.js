@@ -150,16 +150,15 @@ export function generateDungeon(seed = Date.now()) {
         keyId: `key_level_${i}`,
         msg: `Level ${i + 1} Access Required.`,
       };
-      // Give key in previous zone?
-      // Previous Logic: "Archivist gives Level 1 Key".
-      // We can put key in previous zone's loot.
-      // Or in starting inventory for tutorial?
-      // Let's stick to placing it in the previous hub for now.
+      // NOTE: Key distribution is now handled by Quests/NPCs (Archivist) or specific puzzles.
+      // We do NOT drop it on the floor of the previous hub anymore.
+      /*
       previousRoom.items.push({
         id: `key_level_${i}`,
         name: `Level ${i + 1} Pass`,
         type: "KEY",
       });
+      */
     }
 
     connectRooms(world, previousRoom, currentHub, "north", "south", lockConfig);
