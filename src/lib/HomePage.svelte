@@ -10,6 +10,10 @@
   let { search = "" } = $props();
 
   let shouldTransition = $state(false);
+  let spinTarget = $state(null);
+  let spinGenreTarget = $state(null);
+  let pendingRandomGame = $state(null);
+  let isSpinAnimating = $derived(spinTarget !== null || spinGenreTarget !== null);
 
   // Get unique genres with their games, plus special categories
   const regularGenres = [...new Set(allGames.flatMap((g) => g.genres))].sort();
@@ -36,32 +40,82 @@
   }
 
   async function pickRandomGame() {
-    shouldTransition = true;
-    await tick();
-
     const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
 
     if (browse.mode === "genres") {
-      // Pick a random genre first (including Hidden Gems), then a random game within
+      // Scroll to the visible genre selector
+      const el = [...document.querySelectorAll('[data-selector="genres"]')].find(e => e.offsetParent !== null);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Pick a random genre and trigger spin animation
       const genreOptions = ["Hidden Gems", ...regularGenres];
       const randomGenre =
         genreOptions[Math.floor(Math.random() * genreOptions.length)];
       const gamesInGenre = genreGames[randomGenre];
       const randomGame =
         gamesInGenre[Math.floor(Math.random() * gamesInGenre.length)];
-      if (randomGenre === "Hidden Gems") {
-        navigate(`/gems?highlight=${randomGame.id}${searchParam}`);
-      } else {
-        navigate(
-          `/genre/${encodeURIComponent(randomGenre)}?highlight=${randomGame.id}${searchParam}`
-        );
-      }
+
+      pendingRandomGame = {
+        genre: randomGenre,
+        id: randomGame.id,
+        searchParam,
+      };
+
+      spinGenreTarget = randomGenre;
     } else {
+      // Scroll to the visible platform selector
+      const el = [...document.querySelectorAll('[data-selector="platforms"]')].find(e => e.offsetParent !== null);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Pick a random game and trigger spin animation
       const randomIndex = Math.floor(Math.random() * allGames.length);
       const randomGame = allGames[randomIndex];
-      navigate(
-        `/platform/${encodeURIComponent(randomGame.platform)}?highlight=${randomGame.id}${searchParam}`
-      );
+
+      // Store the pending navigation info
+      pendingRandomGame = {
+        platform: randomGame.platform,
+        id: randomGame.id,
+        searchParam,
+      };
+
+      // Trigger the spin animation
+      spinTarget = randomGame.platform;
+    }
+  }
+
+  function handleSpinComplete(platform) {
+    // Reset spin state
+    spinTarget = null;
+
+    if (pendingRandomGame) {
+      const { id, searchParam } = pendingRandomGame;
+      pendingRandomGame = null;
+
+      // Now navigate with transition
+      shouldTransition = true;
+      tick().then(() => {
+        navigate(
+          `/platform/${encodeURIComponent(platform)}?highlight=${id}${searchParam}`
+        );
+      });
+    }
+  }
+
+  function handleGenreSpinComplete(genre) {
+    // Reset spin state
+    spinGenreTarget = null;
+
+    if (pendingRandomGame) {
+      const { id, searchParam } = pendingRandomGame;
+      pendingRandomGame = null;
+
+      // Now navigate with transition
+      shouldTransition = true;
+      tick().then(() => {
+        if (genre === "Hidden Gems") {
+          navigate(`/gems?highlight=${id}${searchParam}`);
+        } else {
+          navigate(`/genre/${encodeURIComponent(genre)}?highlight=${id}${searchParam}`);
+        }
+      });
     }
   }
 
@@ -110,16 +164,16 @@
   <div class="w-full max-w-md mb-12">
     <div class="flex items-center gap-3">
       <button
-        onclick={(e) => {
-          e.currentTarget.querySelector("svg").classList.add("spin-once");
-          pickRandomGame();
+        onclick={() => {
+          if (!isSpinAnimating) pickRandomGame();
         }}
-        class={`has-tooltip flex items-center justify-center w-14 h-14 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition shrink-0 ${shouldTransition ? "vt-random-btn" : ""}`}
+        disabled={isSpinAnimating}
+        class={`has-tooltip flex items-center justify-center w-14 h-14 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition shrink-0 ${shouldTransition ? "vt-random-btn" : ""} ${isSpinAnimating ? "cursor-not-allowed" : ""}`}
         data-tooltip="Pick a random game"
         aria-label="Pick a random game"
       >
         <svg
-          class="w-6 h-6"
+          class="w-6 h-6 {isSpinAnimating ? 'spin-continuous' : ''}"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -150,26 +204,43 @@
 
   <!-- Mobile: Show both platforms and genres -->
   <div class="lg:hidden w-full">
-    <PlatformSelector
-      onSelect={handlePlatformClick}
-      onInteract={() => handleInteraction("platform")}
-      externalFading={interactionSelector === "genre"}
-    />
-    <GenreSelector
-      showAllGames={false}
-      onInteract={() => handleInteraction("genre")}
-      externalFading={interactionSelector === "platform"}
-    />
+    <div data-selector="platforms">
+      <PlatformSelector
+        onSelect={handlePlatformClick}
+        onInteract={() => handleInteraction("platform")}
+        externalFading={interactionSelector === "genre"}
+        spinTo={spinTarget}
+        onSpinComplete={handleSpinComplete}
+      />
+    </div>
+    <div data-selector="genres">
+      <GenreSelector
+        showAllGames={false}
+        onInteract={() => handleInteraction("genre")}
+        externalFading={interactionSelector === "platform"}
+        spinTo={spinGenreTarget}
+        onSpinComplete={handleGenreSpinComplete}
+      />
+    </div>
   </div>
 
   <!-- Desktop: Toggle between platforms and genres -->
   {#if browse.mode === "platforms"}
-    <div class="hidden lg:block w-full">
-      <PlatformSelector onSelect={handlePlatformClick} onInteract={() => {}} />
+    <div class="hidden lg:block w-full" data-selector="platforms">
+      <PlatformSelector
+        onSelect={handlePlatformClick}
+        onInteract={() => {}}
+        spinTo={spinTarget}
+        onSpinComplete={handleSpinComplete}
+      />
     </div>
   {:else}
-    <div class="hidden lg:block w-full">
-      <GenreSelector onInteract={() => {}} />
+    <div class="hidden lg:block w-full" data-selector="genres">
+      <GenreSelector
+        onInteract={() => {}}
+        spinTo={spinGenreTarget}
+        onSpinComplete={handleGenreSpinComplete}
+      />
     </div>
   {/if}
 </div>

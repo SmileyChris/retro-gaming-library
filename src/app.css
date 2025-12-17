@@ -141,6 +141,10 @@
   animation: spin 0.5s ease-out;
 }
 
+.spin-continuous {
+  animation: spin 0.6s linear infinite;
+}
+
 /* View transition classes for game cards */
 ::view-transition-group(.game-card-transition) {
   animation-duration: 0.25s;
