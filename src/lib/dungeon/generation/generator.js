@@ -1,13 +1,15 @@
-import { ZONES, ROOM_TEMPLATES } from "./templates.js";
+import { ZONES } from "./templates.js";
 import { distributeGamesToZones } from "./distribution.js";
 import { validateConnectivity } from "./validator.js";
 import { DUNGEON_GAMES } from "../content/games.js";
 import { NPC_ROSTER } from "../content/npcs.js";
 import { pickDirectorMode } from "./director.js";
-import { applyTopology } from "./topology.js";
+import { generateZoneTopology } from "./topology.js";
+import { injectPuzzles } from "./puzzles.js";
+import { populateContent } from "./populator.js";
 
 export function generateDungeon(seed = Date.now()) {
-  console.log("Generating Dungeon with seed:", seed);
+  console.log("Generating Dungeon with seed (Pipeline):", seed);
 
   // 1. Director Setup
   const mode = pickDirectorMode(seed);
@@ -15,659 +17,131 @@ export function generateDungeon(seed = Date.now()) {
 
   // 2. Distribute Content
   const zoneContents = distributeGamesToZones(DUNGEON_GAMES, seed);
-  const zones = Object.values(ZONES);
+  const zoneList = Object.values(ZONES);
 
   // 3. Initialize World
   const world = {
     seed,
     mode: mode.name,
     rooms: {},
-    playerStart: "start_gate",
+    playerStart: "start_gate", // Will link to first hub
   };
 
-  // 4. Create Start Room
-  const startRoom = createRoom(
-    "start_gate",
-    ZONES.ARCADE_ATRIUM,
-    "The Grand Entrance"
-  );
-  startRoom.description =
-    "You stand before the towering gates of the Retro Library. The hum of a thousand consoles beckons you. You can hear someone muttering about 'data rot' to the NORTH.";
+  // 4. Create Start Gate
+  const startRoom = {
+    id: "start_gate",
+    name: "The Grand Entrance",
+    zoneId: "START",
+    description: "You stand before the towering gates of the Retro Library.",
+    exits: {},
+    items: [],
+  };
   world.rooms[startRoom.id] = startRoom;
 
-  // 5. Generate Zone Clusters (Vertical Tower Structure)
-  const clusters = [];
+  let previousHubId = "start_gate";
 
-  // START (Level 0) -> ARCADE (Level 1) -> OTHERS (Level 2+)
-
-  let previousHub = startRoom;
-
-  zones.forEach((zone, i) => {
+  // 5. Generate Each Zone
+  zoneList.forEach((zone, i) => {
     let games = zoneContents[zone.id] || [];
 
-    // CUSTOM LOGIC: Arcade Atrium (Level 1)
-    // "So have the arcade atrium as a small area with some simple puzzles to get these first 5 carts."
-    // "ensure one of teh first 5 carts is a realm game"
-    if (i === 0) {
-      // 1. Find Realm Game
-      const realmGame = DUNGEON_GAMES.find((g) => g.dungeonProps?.hasRealm);
+    // A. Topology
+    // Tutorial Zone (Arcade) uses clearer structure?
+    const algo = i === 0 ? "HUB" : "VINE"; // Alternating?
+    // Size proportional to games?
+    const size = Math.max(5, Math.ceil(games.length / 2));
 
-      // 2. Find Gem Game (for Retro Rob's quest in Zone 2)
-      const gemGame = games.find(
-        (g) => g.gem && g.id !== (realmGame ? realmGame.id : null)
-      );
+    const topology = generateZoneTopology(algo, size);
 
-      // 3. Filter others
-      let candidates = games.filter(
-        (g) =>
-          g.id !== (realmGame ? realmGame.id : null) &&
-          g.id !== (gemGame ? gemGame.id : null)
-      );
-
-      const selected = [];
-      if (realmGame) selected.push(realmGame);
-      if (gemGame) selected.push(gemGame);
-
-      // Fill rest to 5
-      while (selected.length < 5 && candidates.length > 0) {
-        selected.push(candidates.shift()); // Deterministic enough given input order
+    // Fix IDs to be unique per zone
+    const originalStart = topology.startNode;
+    topology.nodes.forEach((n) => {
+      if (n.id === originalStart) {
+        n.id = `hub_${zone.id.toLowerCase()}`;
+      } else {
+        n.id = `${zone.id.toLowerCase()}_${n.id}`;
       }
+    });
+    topology.edges.forEach((e) => {
+      e.from =
+        e.from === originalStart
+          ? `hub_${zone.id.toLowerCase()}`
+          : `${zone.id.toLowerCase()}_${e.from}`;
+      e.to =
+        e.to === originalStart
+          ? `hub_${zone.id.toLowerCase()}`
+          : `${zone.id.toLowerCase()}_${e.to}`;
+    });
+    topology.startNode = `hub_${zone.id.toLowerCase()}`;
 
-      games = selected;
+    // B. Puzzles
+    const difficulty = i + 1;
+    injectPuzzles(world, topology, difficulty);
+
+    // C. Populate
+    populateContent(world, topology, zone, games, mode);
+
+    // D. Connect to Previous Zone (Vertical Stacking)
+    const currentHub = world.rooms[topology.startNode];
+    const previousRoom = world.rooms[previousHubId];
+
+    // Connect UP/DOWN
+    // Lock check for zone transition
+    let lockConfig = null;
+    if (i > 0) {
+      // No lock on start gate -> Arcade
+      lockConfig = {
+        keyId: `key_level_${i}`,
+        msg: `Level ${i + 1} Access Required.`,
+      };
+      // Give key in previous zone?
+      // Previous Logic: "Archivist gives Level 1 Key".
+      // We can put key in previous zone's loot.
+      // Or in starting inventory for tutorial?
+      // Let's stick to placing it in the previous hub for now.
+      previousRoom.items.push({
+        id: `key_level_${i}`,
+        name: `Level ${i + 1} Pass`,
+        type: "KEY",
+      });
     }
 
-    // Director Logic Per Floor could go here
-    // For now, we apply global mode, but in future, 'mode' could be recalculated per floor.
-
-    const hub = generateZoneCluster(world, zone, games, i, mode);
-    clusters.push(hub);
-
-    // Connect Vertical "Elevator" / Stairs
-    if (i === 0) {
-      // First zone (Arcade) connects to Start Gate
-      connectRooms(world, startRoom, hub, "north", "south");
-    } else {
-      // Successive zones stack UP
-      // Previous Hub (UP) -> Current Hub
-      // Current Hub (DOWN) -> Previous HUB
-
-      let lockConfig = null;
-      if (Math.random() < mode.lockChance) {
-        // Special Case: Level 2 Key (index 1) is given by Archivist quest in Arcade
-        // So we do NOT spawn it on the ground.
-        if (i === 1) {
-          const keyId = `key_level_1`;
-          // We still need the CONFIG for the lock, but we don't spawn the item.
-          // The item is reward from Archivist.
-          lockConfig = {
-            keyId,
-            msg: `Elevator Locked. Requires 'Elevator Key' from the Archivist.`,
-          };
-        } else {
-          const keyId = `key_level_${i}`;
-          const keyName = `Level ${i + 1} Pass`;
-          const keyItem = {
-            id: keyId,
-            name: keyName,
-            type: "KEY",
-            description: `Access card for the ${zone.name} floor.`,
-            metadata: { gem: true },
-          };
-          previousHub.items.push(keyItem);
-
-          lockConfig = { keyId, msg: `Elevator Locked. Insert '${keyName}'.` };
-        }
-      }
-
-      connectRooms(world, previousHub, hub, "up", "down", lockConfig);
+    connectRooms(world, previousRoom, currentHub, "north", "south", lockConfig);
+    // Using North/South for "Vertical" metaphor in flat map,
+    // or actually use "up"/"down"?
+    // User liked "up"/"down".
+    if (i > 0) {
+      // Re-link using up/down
+      delete previousRoom.exits.north;
+      delete currentHub.exits.south;
+      connectRooms(world, previousRoom, currentHub, "up", "down", lockConfig);
     }
 
-    // Apply topology ONLY within the floor (horizontal expansion)
-    // We modify applyTopology to take a single cluster and expand it,
-    // rather than connecting multiple clusters together.
-    // Wait, applyTopology currently connects clusters *to each other*.
-    // We need to change that paradigm.
-    // ACTUALLY: generateZoneCluster ALREADY creates the internal room structure (linear strip).
-    // specific 'topology' logic usually implies how rooms *within* a zone connect.
-    // Let's rely on generateZoneCluster for internal structure for now,
-    // and just stack the HUBS vertically.
-
-    previousHub = hub;
+    previousHubId = currentHub.id;
   });
 
-  // 6. Internal Topology (Refining the strips into graphs)
-  // iterate all clusters and potentially scramble their internal connections?
-  // Current generateZoneCluster makes a straight line.
-  // Let's leave as is for this step: Vertical Hubs, Horizontal Strips.
-
-  // 7. Spawn NPCs
+  // 6. Spawn NPCs (Simple)
   NPC_ROSTER.forEach((npc) => {
-    const targetZone = zones.find((z) => z.id === npc.zoneId);
-    if (targetZone) {
-      const hubId = `hub_${targetZone.id.toLowerCase()}`;
-      const room = world.rooms[hubId];
-      if (room) {
-        if (!room.npcs) room.npcs = [];
-        room.npcs.push({ ...npc });
-      }
+    // Find a room in target zone
+    const rooms = Object.values(world.rooms).filter(
+      (r) => r.zoneId === npc.zoneId
+    );
+    if (rooms.length > 0) {
+      // Prefer Start Node/Hub?
+      const hub = rooms.find((r) => r.id.includes("node_0")); // node_0 is always start
+      const target = hub || rooms[0];
+      if (!target.npcs) target.npcs = [];
+      target.npcs.push(npc);
     }
   });
 
-  // 8. Bake Rich Descriptions (Dynamic directions)
-  bakeDescriptions(world);
-
+  // 7. Validate
   const isValid = validateConnectivity(world);
   console.log("Dungeon Connectivity Valid:", isValid);
 
   return world;
 }
 
-export function getConsoleForPlatform(platform) {
-  // Map raw platform strings to Console Items
-  // Examples in data: 'Nintendo Entertainment System', 'Super Nintendo', 'Game Boy Advance'
-  if (!platform) return null;
-  const p = platform.toLowerCase();
-
-  if (p.includes("nintendo entertainment") || p === "nes") {
-    return {
-      id: "console_nes",
-      name: "NES Classic",
-      type: "CONSOLE",
-      supported: ["nes", "nintendo entertainment system"],
-      games: [],
-    };
-  }
-  if (p.includes("super") || p === "snes") {
-    return {
-      id: "console_snes",
-      name: "Super Famicom",
-      type: "CONSOLE",
-      supported: ["snes", "super nintendo"],
-      games: [],
-    };
-  }
-  if (p.includes("advance") || p === "gba") {
-    return {
-      id: "console_gba",
-      name: "Game Boy Advance",
-      type: "CONSOLE",
-      supported: ["gba", "game boy advance"],
-      games: [],
-    };
-  }
-  if (p.includes("genesis") || p.includes("mega")) {
-    return {
-      id: "console_genesis",
-      name: "Sega Genesis",
-      type: "CONSOLE",
-      supported: ["genesis", "megadrive"],
-      games: [],
-    };
-  }
-
-  // Fallback generic
-  return {
-    id: "console_generic",
-    name: "Universal Emulator",
-    type: "CONSOLE",
-    supported: [p],
-    games: [],
-  };
-}
-
-function generateZoneCluster(world, zone, games, uniqueOffset, mode) {
-  const hubId = `hub_${zone.id.toLowerCase()}`;
-
-  // Create Hub
-  const hub = createRoom(hubId, zone, `${zone.name} Hub`);
-  hub.description = getRandomFlavor(zone) + " " + (zone.flavor[0] || "");
-  world.rooms[hubId] = hub;
-
-  // CONSOLE SPAWING PLAN
-  // Find unique platforms in this zone's games
-  const platforms = [...new Set(games.map((g) => g.platform).filter(Boolean))];
-
-  // CUSTOM LEVEL 1 LOGIC (Arcade Atrium)
-  // "star" topology: Hub -> North, East, West rooms. No Consoles.
-  if (zone.id === "ARCADE") {
-    // 1. Setup Rooms
-    const directions = [
-      { dir: "north", return: "south", name: "Main Gallery" },
-      { dir: "east", return: "west", name: "Side Arcade" },
-      { dir: "west", return: "east", name: "Maintenance Alley" },
-    ];
-
-    // Create room objects first
-    const roomMap = {};
-    directions.forEach((d) => {
-      const roomId = `room_${zone.id.toLowerCase()}_${d.dir}`;
-      const room = createRoom(roomId, zone, d.name);
-
-      if (d.dir === "north")
-        room.description =
-          "Rows of cabinets stretch out. You notice a high shelf above the machines.";
-      if (d.dir === "east")
-        room.description =
-          "A dimly lit corner. One cabinet has a 'Privilege Mode' lock on the coin slot.";
-      if (d.dir === "west")
-        room.description =
-          "Piles of spare parts and loose wires line the walls. It's a mess.";
-
-      connectRooms(world, hub, room, d.dir, d.return);
-      world.rooms[roomId] = room;
-      roomMap[d.dir] = room;
-    });
-
-    // 2. Distribute Games with Puzzles
-    // Need 5 games: 3 Easy, 1 High Shelf (North), 1 Locked (East)
-    // Tools: Broom (West), Token (West)
-
-    // A. Place Tools
-    const broom = {
-      id: "tool_broom",
-      name: "Broom",
-      type: "TOOL",
-      description: "A long-handled broom with stiff bristles.",
-    };
-    roomMap["west"].items.push(broom);
-
-    const token = {
-      id: "tool_token",
-      name: "Arcade Token",
-      type: "TOOL",
-      description: "A heavy golden token with a star stamped on it.",
-      metadata: { gem: true }, // Make it sparkle slightly
-    };
-    roomMap["west"].items.push(token);
-
-    // B. Place Games
-    // Game 1 (High Shelf) -> North
-    if (games.length > 0) {
-      const g = games.shift();
-      const gameItem = createGameItem(g);
-
-      // Setup Game Item
-      gameItem.hidden = true; // Initially hidden
-      gameItem.interactions = {
-        TAKE: [
-          {
-            actions: [{ type: "block", msg: "It's too high to reach." }]
-          }
-        ],
-        USE: [
-          {
-            // Use Broom on Game
-            tests: [{ type: "item", id: "tool_broom", context: "tool" }],
-            actions: [
-              {
-                type: "message",
-                content:
-                  "You reach up with the broom and knock the cartridge loose. It falls into your hands!",
-              },
-              {
-                type: "modify",
-                target: "self",
-                updates: { interactions: {}, hidden: false }, // Clear interactions
-              },
-              { type: "move", target: "self", location: "inventory" }
-            ],
-          },
-        ]
-      };
-      // We need a custom move action or use spawn+destroy. 
-      // actions.js has 'spawn' and 'destroy'. It does NOT have 'move' yet?
-      // Let's check actions.js. It has 'modify', 'spawn', 'destroy'.
-      // createGameItem returns an object. references in JS are by value for primitives, but objects are ref.
-      // But spawning creates a copy in processActions (`const item = { ...action.item }`).
-      // So to "move", we should destroy self and spawn copy.
-      // BUT `gameItem` variable here is the template.
-      // Let's stick to destroy self + spawn copy for now.
-      gameItem.interactions.USE[0].actions = [
-        {
-          type: "message",
-          content: "You reach up with the broom and knock the cartridge loose. It falls into your hands!"
-        },
-        {
-          type: "spawn",
-          location: "inventory",
-          item: { ...gameItem, hidden: false, interactions: {} } // Clean copy
-        },
-        { type: "destroy", target: "self" }
-      ];
-
-      roomMap["north"].items.push(gameItem);
-
-      // Setup Shelf Item
-      const shelfItem = {
-        id: "prop_shelf_north",
-        name: "High Shelf",
-        type: "PROP",
-        description: "A dusty shelf mounted high on the wall.",
-        onLook: {
-          actions: [
-            {
-              type: "modify",
-              target: gameItem, // We can pass reference if we are careful, OR query by ID?
-              // processActions modify target accepts an object. 
-              // If we pass `gameItem` object here, it refers to the object in memory.
-              // Since everything is in `dungeon.world`, checking `modify` implementation:
-              // `Object.assign(modTgt, action.updates)`
-              // Yes, should work if gameItem ref is valid. 
-              // However, save/load cycles break references. 
-              // `processActions` uses `context.target` or `context.tool`.
-              // It DOES NOT support arbitrary target object passed in JSON unless resolved.
-              // The `action` object in `onLook` is stored in state.
-              // When loaded from JSON, `target: gameItem` will be `target: { ... }` (copy) or circular ref error.
-              // We must use `targetId` and resolve it in `processActions`, OR 
-              // use a special "find" action? 
-              // Wait, `processActions` has `modify` with `target` as "self" or "tool".
-              // It doesn't support "find by ID".
-              // I need to update `processActions` to support `targetId`.
-            }
-          ]
-          // Wait, simpler approach:
-          // Just use a flag. 
-          // `gameItem` has test: `type: 'flag', id: 'seen_shelf_game', value: true`.
-          // `shelfItem` onLook sets flag `seen_shelf_game`.
-          // And `gameItem` is only found if flag is set?
-          // No, `hidden` property is on the item.
-          // We need to change `hidden` to false. 
-          // OR `gameItem` isn't hidden, but has a "condition" to be seen?
-          // The engine doesn't support "condition to be seen" yet.
-          // It supports `hidden` boolean.
-
-          // Let's update `processActions` to support finding a target by ID.
-          // This is the robust solution.
-        }
-      };
-
-      // Let's define the action properly assuming I will add support for `targetId` in action.
-      shelfItem.onLook = {
-        actions: [
-          {
-            type: "message",
-            content: "You squint at the darkness... Yes! There is a cartridge up there."
-          },
-          {
-            type: "modify",
-            targetId: gameItem.id,
-            updates: { hidden: false }
-          }
-        ]
-      };
-
-      // Shelf USE Broom
-      shelfItem.interactions = {
-        USE: [
-          {
-            tests: [{ type: "item", id: "tool_broom", context: "tool" }],
-            actions: [
-              {
-                type: "block",
-                msg: "Why would you need to use the broom with the shelf? (Maybe you should take a closer look at the shelf)"
-              }
-            ]
-          }
-        ]
-      };
-
-      roomMap["north"].items.push(shelfItem);
-    }
-
-    // Game 2 (Locked Cabinet) -> East
-    if (games.length > 0) {
-      const g = games.shift();
-      const gameItem = createGameItem(g);
-      gameItem.hidden = true;
-
-      // Setup Game Interactions
-      gameItem.interactions = {
-        TAKE: [
-          {
-            actions: [
-              { type: "message", content: "You carefully remove the cartridge from the display case." },
-              { type: "move", target: "self", location: "inventory" },
-              { type: "modify", target: "self", updates: { interactions: {} } }, // Clear special TAKE
-              {
-                type: "modify",
-                targetId: "prop_cabinet_east",
-                updates: { description: "An open display cabinet. It is empty." }
-              }
-            ]
-          }
-        ]
-      };
-
-      roomMap["east"].items.push(gameItem);
-
-      // Setup Cabinet Item
-      const cabinetItem = {
-        id: "prop_cabinet_east",
-        name: "Display Cabinet",
-        type: "PROP",
-        aliases: ["cabinet", "case", "display", "lock"],
-        description: "A glass display cabinet. Inside, a game cartridge sits on a velvet cushion. The door is locked and the coin slot is blinking.",
-        interactions: {
-          OPEN: [
-            {
-              // Fail if no token
-              tests: [{ type: "item", id: "tool_token", context: "inventory" }], // Just check existence? 
-              // No, usually OPEN fails unless unlocked. 
-              // But here we auto-use token if we have it? 
-              // Let's force explicit USE TOKEN or fail.
-              // But user might type "USE TOKEN ON CABINET".
-              actions: [
-                { type: "block", msg: "It's locked. The coin slot blinks red." }
-              ]
-            }
-          ],
-          USE: [
-            {
-              // Use Token
-              tests: [{ type: "item", id: "tool_token", context: "tool" }],
-              actions: [
-                { type: "message", content: "You insert the token. *KA-CHUNK* The door pops open!" },
-                { type: "destroy", target: "tool" }, // Remove Token
-                {
-                  type: "modify",
-                  target: "self",
-                  updates: {
-                    description: "A glass display cabinet. The door is open, revealing the cartridge inside.",
-                    interactions: {} // Remove locks
-                  }
-                },
-                {
-                  type: "modify",
-                  targetId: gameItem.id,
-                  updates: { hidden: false }
-                }
-              ]
-            }
-          ]
-        }
-      };
-
-      // Auto-use check for OPEN verb if they have token?
-      // User said: "It's a cabinet which you can unlock... Use broom with it... "
-      // User context: "The cabinet should be similar... unlock, which reveals game."
-      // Let's verify if I should allow "OPEN" to auto-unlock if token present.
-      // Original code did: "You mistakenly try to open it... realize you have token... insert it."
-      // Let's keep that friendly behavior.
-
-      cabinetItem.interactions.OPEN.unshift({
-        tests: [{ type: "item", id: "tool_token", context: "inventory" }],
-        actions: [
-          { type: "message", content: "You realize you have a token. You insert it into the slot..." },
-          { type: "trigger", verb: "USE", target: "display cabinet", tool: "arcade token" }
-          // Wait, trigger "USE" with tool "arcade token" might fail if parsing isn't perfect
-          // Better to just Copy-Paste the success actions? 
-          // Or recursively call actions. 
-          // Let's just inline the success actions for robustness.
-        ]
-      });
-      // Replace the inline actions:
-      cabinetItem.interactions.OPEN[0].actions = [
-        { type: "message", content: "You realize you have a token. You insert it into the slot... *KA-CHUNK* The door pops open!" },
-        { type: "destroy", targetId: "tool_token" }, // Destroy explicitly by ID since we don't have 'tool' context here
-        {
-          type: "modify",
-          target: "self",
-          updates: {
-            description: "A glass display cabinet. The door is open, revealing the cartridge inside.",
-            interactions: {}
-          }
-        },
-        {
-          type: "modify",
-          targetId: gameItem.id,
-          updates: { hidden: false }
-        }
-      ];
-
-      roomMap["east"].items.push(cabinetItem);
-    }
-
-    // Game 3 (Dusty Cartridge) -> North
-    if (games.length > 0) {
-      const g = games.shift();
-      const gameItem = createGameItem(g);
-
-      // Wrapper Item
-      const dustyItem = {
-        id: `dusty_${g.id}`,
-        name: "Dusty Cartridge",
-        type: "MISC", // Not a GAME yet
-        description:
-          "It's caked in thick grey dust. You can barely see the label. Maybe you could 'use' it to clean it off?",
-        interactions: {
-          USE: [
-            {
-              // Direct usage (no tool needed)
-              actions: [
-                {
-                  type: "message",
-                  content:
-                    "You blow into the open end of the cartridge. *Huff* *Huff*\nA cloud of grey dust flies out! The label is revealed.",
-                },
-                { type: "spawn", location: "inventory", item: gameItem },
-                { type: "destroy", target: "self" },
-              ],
-            },
-          ],
-        },
-      };
-
-      roomMap["north"].items.push(dustyItem);
-    }
-
-    // Game 4, 5 (Easy) -> Distributed
-    const locs = ["north", "east", "west"];
-    let idx = 0;
-    while (games.length > 0) {
-      const g = games.shift();
-      const item = createGameItem(g);
-      roomMap[locs[idx % 3]].items.push(item);
-      idx++;
-    }
-
-    return hub;
-  }
-
-  // STANDARD LOGIC
-  const roomCount = Math.ceil(games.length / 5) || 1;
-
-  // Decide which console goes in Hub (Primary one for the zone?)
-  if (platforms.length > 0) {
-    const p = platforms.shift();
-    const consoleItem = getConsoleForPlatform(p);
-    if (consoleItem) hub.items.push(consoleItem);
-  }
-
-  let previousRoom = hub;
-
-  // Create sub-rooms
-  for (let i = 0; i < roomCount; i++) {
-    const chunk = games.slice(i * 5, (i + 1) * 5);
-    if (chunk.length === 0) continue;
-
-    const roomId = `room_${zone.id.toLowerCase()}_${i}`;
-
-    // Naming variation
-    const suffix = i === roomCount - 1 ? "Archive" : "Gallery";
-    const roomName = `${zone.name} ${suffix} ${i + 1}`;
-
-    const room = createRoom(roomId, zone, roomName);
-
-    // Distribute remaining consoles
-    if (platforms.length > 0) {
-      // Place one console per room if available
-      const p = platforms.shift();
-      const consoleItem = getConsoleForPlatform(p);
-      if (consoleItem) {
-        room.items.push(consoleItem);
-        room.description += " A blinking console sits on a pedestal.";
-      }
-    }
-
-    const usePack = Math.random() < mode.packChance;
-
-    if (usePack && chunk.length > 2) {
-      const packItem = {
-        id: `pack_${roomId}`,
-        name: "Sealed " + (zone.genres[0] || "Retro") + " Bundle",
-        type: "PACK",
-        description: "A bundle of games from the " + zone.name + ".",
-        contents: chunk.map((g) => createGameItem(g)),
-      };
-      room.items.push(packItem);
-    } else {
-      chunk
-        .map((g) => createGameItem(g))
-        .forEach((item) => room.items.push(item));
-    }
-
-    world.rooms[roomId] = room;
-
-    connectRooms(world, previousRoom, room, "north", "south");
-    previousRoom = room;
-  }
-
-  // Dump any remaining platforms in the final room if we ran out of space
-  while (platforms.length > 0) {
-    const p = platforms.shift();
-    const consoleItem = getConsoleForPlatform(p);
-    if (
-      consoleItem &&
-      !previousRoom.items.some((i) => i.id === consoleItem.id)
-    ) {
-      // Avoid dupe in same room
-      previousRoom.items.push(consoleItem);
-    }
-  }
-
-  return hub;
-}
-
-function createGameItem(g) {
-  return {
-    id: g.id,
-    name: g.name,
-    type: "GAME",
-    description: g.notes || "A classic game cartridge.",
-    metadata: g,
-  };
-}
-
-function createRoom(id, zone, name) {
-  return {
-    id,
-    name,
-    zoneId: zone.id,
-    description: getRandomFlavor(zone),
-    exits: {},
-    items: [],
-  };
-}
+// Obsolete code removed.
 
 function connectRooms(world, roomA, roomB, dirA, dirB, lockConfig = null) {
   if (!roomA || !roomB) return;

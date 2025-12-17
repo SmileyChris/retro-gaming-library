@@ -1,9 +1,7 @@
 import { dungeon, writeLog, clearLog } from "./store.svelte.js";
 import { parseCommand } from "./parser.js";
-import {
-  generateDungeon,
-  getConsoleForPlatform,
-} from "./generation/generator.js";
+import { generateDungeon } from "./generation/generator.js";
+import { getConsoleForPlatform } from "./generation/populator.js";
 import { saveGame, loadGame, clearSave } from "./persistence.js";
 import { NPC_ROSTER } from "./content/npcs.js";
 import { DUNGEON_GAMES } from "./content/games.js";
@@ -12,6 +10,8 @@ import { handleUse } from "./commands/use.js";
 import { handleTake } from "./commands/take.js";
 import { handleOpen } from "./commands/open.js";
 import { handleInventory } from "./commands/inventory.js";
+import { handleMove } from "./commands/move.js";
+import { handleTalk } from "./commands/talk.js";
 import { processActions } from "./actions.js";
 
 // Init World if running on client (not in test)
@@ -66,6 +66,8 @@ export async function handleInput(input, injectedSystem = null) {
     writeLog,
     executeCommand,
     clearLog,
+    handleLook,
+    checkRoomTriggers,
   };
 
   system.writeLog(`> ${input}`, "command");
@@ -140,13 +142,15 @@ export async function executeCommand(cmd, injectedSystem = null) {
     writeLog,
     executeCommand,
     clearLog,
+    handleLook,
+    checkRoomTriggers,
   };
 
   switch (cmd.verb) {
     case "LOOK":
       return handleLook(cmd.target, true, system);
     case "GO":
-      return handleGo(cmd.target, system);
+      return handleMove(system, cmd.target);
     case "HELP":
       return handleHelp(system);
     case "CLEAR":
@@ -159,7 +163,7 @@ export async function executeCommand(cmd, injectedSystem = null) {
     case "DROP":
       return handleDrop(cmd.target, system);
     case "TALK":
-      return handleTalk(cmd.target, system);
+      return handleTalk(system, cmd.target);
     case "RESET":
       return handleReset(cmd);
     case "OPEN":
@@ -301,55 +305,6 @@ function listRoomContents(room, system = null) {
   }
 }
 
-function handleGo(target, system = null) {
-  const d = system ? system.dungeon : dungeon;
-  const log = system ? system.writeLog : writeLog;
-  if (!target) {
-    log("Usage: go [direction]");
-    return;
-  }
-  const room = d.world.rooms[d.currentRoom];
-  const nextRoomId = room.exits[target.toLowerCase()];
-
-  if (room.locks && room.locks[target.toLowerCase()]) {
-    const lock = room.locks[target.toLowerCase()];
-    const hasKey = d.inventory.some((i) => i.id === lock.keyId);
-
-    if (hasKey) {
-      // Find key name
-      const keyItem = d.inventory.find((i) => i.id === lock.keyId);
-
-      // CHECK BACKPACK REQUIREMENT
-      const hasBackpack = d.inventory.some(
-        (i) => i.id === "backpack_starter" || i.type === "PACK"
-      );
-
-      if (!hasBackpack && target.toLowerCase() === "up") {
-        log(
-          "The elevator door opens, but you realize you have too many loose cartridges to carry to the next sector efficiently.",
-          "error"
-        );
-        log("You should speak to the Archivist about a container.", "dim");
-        return;
-      }
-
-      log(`*CLICK* The ${keyItem ? keyItem.name : "key"} turns!`, "info");
-      delete room.locks[target.toLowerCase()];
-    } else {
-      log(lock.msg, "error");
-      return; // STOP
-    }
-  }
-
-  if (nextRoomId) {
-    d.currentRoom = nextRoomId;
-    handleLook(null, false, system);
-    checkRoomTriggers(system);
-  } else {
-    log(`You cannot go '${target}' from here.`);
-  }
-}
-
 function checkRoomTriggers(system = null) {
   // ...
 }
@@ -426,158 +381,6 @@ function handleDrop(target, system = null) {
     log(`You drop the ${item.name}.`);
   } else {
     log(`You aren't carrying a '${target}'.`);
-  }
-}
-
-function handleTalk(target, system = null) {
-  const d = system ? system.dungeon : dungeon;
-  const log = system ? system.writeLog : writeLog;
-
-  const room = d.world.rooms[d.currentRoom];
-
-  if (!target) {
-    if (room.npcs && room.npcs.length === 1) {
-      target = room.npcs[0].name;
-    } else {
-      log("Talk to whom?");
-      return;
-    }
-  }
-
-  if (!room.npcs || room.npcs.length === 0) {
-    log("There is no one here to talk to.");
-    return;
-  }
-
-  let search = target.toLowerCase();
-  if (search.startsWith("to ")) search = search.substring(3).trim();
-
-  const npc = room.npcs.find((n) => {
-    if (n.name.toLowerCase().includes(search)) return true;
-    if (n.aliases.some((a) => a.toLowerCase().includes(search))) return true;
-    if (n.shortDescription && n.shortDescription.toLowerCase().includes(search))
-      return true;
-    return false;
-  });
-
-  if (npc) {
-    log(`[ ${npc.name} ]`, "info");
-
-    // ARCHIVIST PRECEDENCE
-    if (npc.id === "archivist") {
-      const hasKey = d.inventory.find((i) => i.id === "key_level_1");
-      const hasBackpack = d.inventory.find((i) => i.id === "backpack_starter");
-
-      if (hasKey && !hasBackpack) {
-        log(`"I see you have the elevator key," says the Archivist.`);
-        log(
-          `"But you cannot travel the zones with your hands full. Take this."`,
-          "info"
-        );
-        const pack = {
-          id: "backpack_starter",
-          name: "Infinite Backpack",
-          type: "PACK",
-          description: "Bigger on inside.",
-          contents: [],
-        };
-        d.inventory.push(pack);
-        log(`The Archivist gives you an ${pack.name}.`, "success");
-        return;
-      }
-
-      if (!d.world.flags) d.world.flags = {};
-
-      if (!d.world.flags.archivistMet) {
-        d.world.flags.archivistMet = true;
-        log(`"Welcome to the constructs, user."`);
-        return;
-      }
-
-      if (!d.world.flags.receivedStarterGear) {
-        d.world.flags.receivedStarterGear = true;
-        log(`"Take this backpack."`);
-        d.inventory.push({
-          id: "backpack_starter",
-          name: "Backpack",
-          type: "PACK",
-        });
-        d.world.flags.starterQuestActive = true;
-        d.quests.push({
-          questId: "archivist_starter",
-          npcId: "archivist",
-          status: "active",
-        });
-        return;
-      }
-
-      if (
-        d.world.flags.starterQuestActive &&
-        !d.world.flags.starterQuestComplete
-      ) {
-        const gameCount = d.inventory.filter((i) => i.type === "GAME").length;
-        if (gameCount >= 5) {
-          d.world.flags.starterQuestComplete = true;
-          log(`"Splendid!"`);
-          d.inventory.push({ id: "key_level_1", name: "Key", type: "KEY" });
-        } else {
-          log(`"I need 5 games."`);
-        }
-        return;
-      }
-    }
-
-    // GENERIC INTERACTIONS
-    if (!d.relationships) d.relationships = {};
-    if (!d.relationships[npc.id]) {
-      d.relationships[npc.id] = { trust: 0, known: true };
-    }
-    const rel = d.relationships[npc.id];
-
-    if (!d.quests) d.quests = [];
-    const activeQuestIdx = d.quests.findIndex(
-      (q) => q.npcId === npc.id && q.status === "active"
-    );
-
-    if (activeQuestIdx > -1) {
-      const questMeta = d.quests[activeQuestIdx];
-      const questDef = npc.quests.find((q) => q.id === questMeta.questId);
-
-      if (questDef) {
-        const item = questDef.condition(d.inventory);
-        if (item) {
-          d.quests[activeQuestIdx].status = "completed";
-          log(`"${questDef.endText}"`, "response");
-          if (questDef.reward && questDef.reward.type === "KEY") {
-            d.inventory.push({ id: "key_level_1", name: "Key", type: "KEY" });
-          }
-          return;
-        } else {
-          log(`"Don't forget, I need that item."`);
-          return;
-        }
-      }
-    }
-
-    if (npc.quests) {
-      const availableQuest = npc.quests.find((q) => {
-        const status = d.quests.find((uq) => uq.questId === q.id);
-        if (status) return false;
-        return rel.trust >= q.req.trust;
-      });
-      if (availableQuest) {
-        log(`"${availableQuest.startText}"`, "response");
-        d.quests.push({
-          questId: availableQuest.id,
-          npcId: npc.id,
-          status: "active",
-        });
-        return;
-      }
-    }
-
-    const lines = npc.dialogue.default;
-    log(`"${lines[Math.floor(Math.random() * lines.length)]}"`);
   }
 }
 
