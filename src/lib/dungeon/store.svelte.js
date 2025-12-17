@@ -1,5 +1,6 @@
 const defaultState = {
   isOpen: false,
+  isBooted: false, // Whether engine has been lazy-loaded
   history: [],
   currentRoom: "VOID",
   world: null,

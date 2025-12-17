@@ -2,12 +2,25 @@
   import { onMount } from "svelte";
   import { scale } from "svelte/transition";
   import { dungeon, toggleTerminal } from "../../dungeon/store.svelte.js";
-  import { handleInput } from "../../dungeon/engine.js";
   import Output from "./Output.svelte";
   import "./CRT.css";
 
   let inputEl = $state();
   let inputValue = $state("");
+  let engineModule = $state(null);
+
+  // Lazy load the engine when terminal opens for the first time
+  $effect(() => {
+    if (dungeon.isOpen && !dungeon.isBooted && !engineModule) {
+      loadEngine();
+    }
+  });
+
+  async function loadEngine() {
+    const module = await import("../../dungeon/engine.js");
+    engineModule = module;
+    await module.initEngine();
+  }
 
   function handleKeyDown(e) {
     // Global toggle using Tilde (~)
@@ -24,7 +37,7 @@
   }
 
   async function submit() {
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || !engineModule) return;
 
     // Check for UI-level commands
     const lower = inputValue.trim().toLowerCase();
@@ -36,7 +49,7 @@
 
     const cmd = inputValue;
     inputValue = "";
-    await handleInput(cmd);
+    await engineModule.handleInput(cmd);
   }
 
   // Attach global listener
@@ -94,26 +107,35 @@
         </div>
       </div>
 
-      <Output history={dungeon.history} />
+      {#if !dungeon.isBooted}
+        <div class="flex-1 flex items-center justify-center">
+          <div class="text-green-500 font-mono text-center">
+            <div class="text-xl mb-2">BOOTING...</div>
+            <div class="text-green-700 text-sm">Loading dungeon modules</div>
+          </div>
+        </div>
+      {:else}
+        <Output history={dungeon.history} />
 
-      <div class="input-line relative">
-        <span class="text-green-500 font-bold mr-2">{">"}</span>
-        <input
-          bind:this={inputEl}
-          bind:value={inputValue}
-          onkeydown={(e) => e.key === "Enter" && submit()}
-          onblur={() => inputEl?.focus()}
-          type="text"
-          class="bg-transparent border-none outline-none text-green-400 font-mono w-full caret-transparent"
-          autocomplete="off"
-          spellcheck="false"
-        />
-        <!-- Custom Caret -->
-        <span
-          class="input-caret absolute pointer-events-none text-green-400"
-          style="left: {getCaretLeft(inputValue)}">█</span
-        >
-      </div>
+        <div class="input-line relative">
+          <span class="text-green-500 font-bold mr-2">{">"}</span>
+          <input
+            bind:this={inputEl}
+            bind:value={inputValue}
+            onkeydown={(e) => e.key === "Enter" && submit()}
+            onblur={() => inputEl?.focus()}
+            type="text"
+            class="bg-transparent border-none outline-none text-green-400 font-mono w-full caret-transparent"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <!-- Custom Caret -->
+          <span
+            class="input-caret absolute pointer-events-none text-green-400"
+            style="left: {getCaretLeft(inputValue)}">█</span
+          >
+        </div>
+      {/if}
     </div>
   </div>
 {/if}

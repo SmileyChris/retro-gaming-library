@@ -28,13 +28,13 @@ A curated collection of 220 essential retro games across 9 classic platforms, bu
 
 ```bash
 # Install dependencies
-npm install
+bun install
 
 # Start dev server
-npm run dev
+bun dev
 
 # Build for production
-npm run build
+bun run build
 ```
 
 Pushes to `main` automatically deploy to [retro.smileychris.name](https://retro.smileychris.name).
@@ -44,11 +44,11 @@ Pushes to `main` automatically deploy to [retro.smileychris.name](https://retro.
 Images are sourced from [libretro-thumbnails](https://github.com/libretro-thumbnails/libretro-thumbnails).
 
 ```bash
-npm run fetch-boxart        # Download box art
-npm run fetch-screenshots   # Download screenshots
+bun fetch-boxart        # Download box art
+bun fetch-screenshots   # Download screenshots
 
 # See all options
-npm run fetch-boxart -- --help
+bun fetch-boxart --help
 ```
 
 ## Tech Stack

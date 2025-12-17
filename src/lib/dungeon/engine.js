@@ -17,16 +17,18 @@ import { handlePush } from "./commands/push.js";
 import { handleSudo } from "./commands/sudo.js";
 import { processActions } from "./actions.js";
 
-// Init World if running on client (not in test)
-if (typeof window !== "undefined") {
-  (async () => {
-    const loaded = await loadGame();
-    if (!loaded) {
-      initNewGame();
-    } else {
-      setTimeout(() => handleLook(), 500);
-    }
-  })();
+/**
+ * Initialize the engine - call this after lazy loading
+ * Returns a promise that resolves when initialization is complete
+ */
+export async function initEngine() {
+  const loaded = await loadGame();
+  if (!loaded) {
+    initNewGame();
+  } else {
+    handleLook();
+  }
+  dungeon.isBooted = true;
 }
 
 export function initNewGame(forceSeed = null, system = null) {

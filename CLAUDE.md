@@ -5,11 +5,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run dev          # Start Vite dev server
-npm run build        # Production build
-npm run preview      # Preview production build
-npm run fetch-boxart # Download box art from LibRetro Thumbnails
-npm run fetch-boxart:debug  # Debug mode with --debug --fail-fast flags
+bun dev          # Start Vite dev server
+bun run build    # Production build
+bun preview      # Preview production build
+bun fetch-boxart # Download box art from LibRetro Thumbnails
+bun fetch-boxart:debug  # Debug mode with --debug --fail-fast flags
 ```
 
 ### fetch-boxart options
