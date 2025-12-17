@@ -73,11 +73,13 @@ export const DUNGEON_GAMES = allGames.map((game) => {
 // Inject Special Hacking Cartridge
 DUNGEON_GAMES.push({
   id: "glitch_layer_alpha",
-  title: "Corrupted_Save.hex",
+  name: "Corrupted_Save.hex",
   platform: "PC-98",
-  year: "19XX",
   genres: ["Hacking", "Glitch"],
   description: "A rectangular slab of black plastic. It feels warm.",
+  notes: "System Critical",
+  gem: false,
+  libretroName: "N/A",
   dungeonProps: {
     weight: 0,
     value: 9999,
@@ -87,12 +89,14 @@ DUNGEON_GAMES.push({
 
 DUNGEON_GAMES.push({
   id: "debug_access_tool",
-  title: "QA_Internal_Build",
+  name: "QA_Internal_Build",
   platform: "DEV_KIT",
-  year: "2024",
   genres: ["Debug", "Dev"],
   description:
-    "A plain gray cartridge with 'PROPERTY OF DEV TEAM' written in marker.",
+    "A plain gray cartridge with 'PROPERTY OF DEV TEAM' written in marker. It seems to unlock Debug Mode.",
+  notes: "Developer Use Only",
+  gem: false,
+  libretroName: "N/A",
   dungeonProps: {
     weight: 0,
     value: 0,
