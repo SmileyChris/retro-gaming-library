@@ -1,5 +1,5 @@
 <script>
-  import { platformConfig, allGames } from "./data.js";
+  import { platformConfig } from "./data.js";
   import CartridgeList from "./CartridgeList.svelte";
 
   let {
@@ -23,30 +23,15 @@
     }
   }
 
-  // Calculate game counts per platform
-  let platformCounts = $derived.by(() => {
-    const counts = {
-      All: allGames.length,
-      Favourites: favorites.length,
-    };
-    allGames.forEach((g) => {
-      counts[g.platform] = (counts[g.platform] || 0) + 1;
-    });
-    return counts;
-  });
-
   // Build platform list with "All" first, then Favourites if any
   let platforms = $derived.by(() => {
-    const list = [
-      { key: "All", name: "All Games", logo: "/logo.png", color: "#6366F1" },
-    ];
+    const list = [{ platform: "All" }];
 
     if (favorites.length > 0) {
       list.push({
         key: "Favourites",
-        name: "Favourites",
-        logo: null,
-        icon: "🤍",
+        platform: "Favourites",
+        count: favorites.length,
         color: "#EF4444",
       });
     }
@@ -54,32 +39,23 @@
     list.push(
       ...Object.entries(platformConfig)
         .filter(([key]) => key !== "All")
-        .map(([key, config]) => ({
-          key,
-          name: key,
-          logo:
-            config.logo || `/logos/${key.toLowerCase().replace("/", "-")}.svg`,
-          color: config.color,
-        }))
+        .map(([key]) => ({ platform: key }))
     );
 
     return list;
   });
-
-  function getHeaderBackground(item) {
-    if (item.key === "All") {
-      return "linear-gradient(90deg, #c084fc, #ec4899, #ef4444, #c084fc)";
-    }
-    return undefined;
-  }
 </script>
 
-{#snippet content(platform)}
+{#snippet content(item)}
+  {@const config = platformConfig[item.platform]}
+  {@const logo = config?.logo}
   <div class="platform-logo-container">
-    {#if platform.logo}
+    {#if item.platform === "Favourites"}
+      <div class="platform-icon-only">🤍</div>
+    {:else if logo}
       <img
-        src={platform.logo}
-        alt={platform.name}
+        src={logo}
+        alt={item.platform}
         class="platform-logo"
         draggable="false"
         onerror={(e) => {
@@ -89,17 +65,16 @@
       />
       <div
         class="platform-logo-fallback"
-        style="display: none; background-color: {platform.color}"
+        style="display: none; background-color: {config?.color}"
       >
-        {platformConfig[platform.key]?.icon || "🎮"}
+        {config?.icon || "🎮"}
       </div>
     {:else}
       <div class="platform-icon-only">
-        {platform.icon || "🎮"}
+        {config?.icon || "🎮"}
       </div>
     {/if}
   </div>
-  <div class="platform-name">{platform.name}</div>
 {/snippet}
 
 <CartridgeList
@@ -110,11 +85,7 @@
   {spinTo}
   {onSpinComplete}
   {content}
-  getItemKey={(p) => p.key}
-  getItemColor={(p) => p.color}
-  getItemCount={(p) => platformCounts[p.key] || 0}
-  {getHeaderBackground}
-  shouldCycle={(p) => p.key === "All"}
+  getItemKey={(p) => p.platform}
 />
 
 <style>
@@ -150,13 +121,5 @@
     align-items: center;
     justify-content: center;
     font-size: 1.5rem;
-  }
-
-  .platform-name {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #e5e7eb;
-    text-align: center;
-    white-space: nowrap;
   }
 </style>

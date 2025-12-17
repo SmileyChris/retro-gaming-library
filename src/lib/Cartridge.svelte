@@ -1,16 +1,73 @@
 <script>
+  import { platformConfig, allGames } from "./data.js";
+  import { getGenreColor } from "./utils.js";
+
   let {
-    color,
+    // Smart props - pass one of these to auto-configure
+    platform = undefined,
+    genre = undefined,
+    isGem = false,
+    // Manual overrides (optional when using smart props)
+    color: colorOverride = undefined,
+    shellColor: shellColorOverride = undefined,
     headerBackground = undefined,
-    count = undefined,
+    title: titleOverride = undefined,
+    count: countOverride = undefined,
+    // Animation/state props
     inserting = false,
     fading = false,
-    cycle = false,
+    cycle: cycleOverride = undefined,
     onclick = undefined,
     children,
     class: className = "",
     style = "",
   } = $props();
+
+  // Derive values based on platform/genre/isGem
+  let color = $derived.by(() => {
+    if (colorOverride) return colorOverride;
+    if (platform) return platformConfig[platform]?.color || "#6366F1";
+    if (isGem) return getGenreColor("Hidden Gems");
+    if (genre) return getGenreColor(genre);
+    return "#6366F1";
+  });
+
+  let shellColor = $derived.by(() => {
+    if (shellColorOverride) return shellColorOverride;
+    if (platform) return "#475569"; // Slate for platforms
+    return "#374151"; // Gray for genres/gems
+  });
+
+  let title = $derived.by(() => {
+    if (titleOverride) return titleOverride;
+    if (platform) return platform;
+    if (isGem) return "Hidden Gem";
+    if (genre) return genre;
+    return "";
+  });
+
+  let count = $derived.by(() => {
+    if (countOverride !== undefined) return countOverride;
+    if (platform === "All") return allGames.length;
+    if (platform) return allGames.filter((g) => g.platform === platform).length;
+    if (isGem) return allGames.filter((g) => g.gem).length;
+    if (genre) return allGames.filter((g) => g.genres.includes(genre)).length;
+    return undefined;
+  });
+
+  let cycle = $derived.by(() => {
+    if (cycleOverride !== undefined) return cycleOverride;
+    if (platform === "All") return true;
+    return false;
+  });
+
+  let derivedHeaderBackground = $derived.by(() => {
+    if (headerBackground) return headerBackground;
+    if (platform === "All") {
+      return "linear-gradient(90deg, #c084fc, #ec4899, #ef4444, #c084fc)";
+    }
+    return undefined;
+  });
 </script>
 
 <button
@@ -18,24 +75,25 @@
   class="cartridge-card group {inserting ? 'inserting' : ''} {fading
     ? 'fading'
     : ''} {className}"
-  style="--cartridge-color: {color}; {style}"
+  style="--cartridge-color: {color}; --shell-color: {shellColor}; {style}"
 >
   <div class="cartridge-shell">
     <div class="cartridge-label">
       <div
         class="label-header {cycle ? 'cycling' : ''}"
-        style="background: {headerBackground || color}; {cycle
+        style="background: {derivedHeaderBackground || color}; {cycle
           ? 'background-size: 200% auto;'
           : ''}"
       >
-        {#if count !== undefined}
-          <span class="label-count">{count}</span>
-        {/if}
+        <span class="label-title">{title}</span>
       </div>
       <div class="label-content">
         {@render children()}
       </div>
     </div>
+    {#if count !== undefined}
+      <span class="cart-count">{count}</span>
+    {/if}
   </div>
 </button>
 
@@ -62,7 +120,7 @@
   /* Cartridge Design */
   .cartridge-shell {
     width: 120px;
-    background-color: #374151; /* The cartridge plastic color */
+    background-color: var(--shell-color); /* The cartridge plastic color */
     padding: 6px;
     padding-bottom: 24px; /* Thicker chin */
     border-radius: 8px 8px 16px 16px;
@@ -94,38 +152,55 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    height: 100%;
   }
 
   .label-header {
     width: 100%;
-    padding: 2px 0;
+    padding: 6px 2px;
+    margin-bottom: 2px;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 18px; /* Provide some height even if empty */
+    min-height: 24px;
   }
 
-  .label-count {
-    color: rgba(0, 0, 0, 0.5);
-    font-weight: 900;
-    font-size: 0.9rem;
-    line-height: 1;
-    opacity: 0.4; /* Slightly visible by default */
-    transition: opacity 0.2s ease;
-  }
-
-  .cartridge-card:hover .label-count {
-    opacity: 1; /* Show on hover */
+  .label-title {
+    color: rgba(0, 0, 0, 0.85);
+    font-weight: 700;
+    font-size: 0.7rem;
+    line-height: 1.1;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
   }
 
   .label-content {
-    padding: 0.75rem 0.5rem;
+    padding: 0.5rem 0.5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: center;
+    min-height: 90px;
     width: 100%;
+  }
+
+  .cart-count {
+    position: absolute;
+    bottom: 6px;
+    right: 12px;
+    color: rgba(0, 0, 0, 0.3);
+    font-weight: 700;
+    font-size: 0.8rem;
+    line-height: 1;
+    transition: color 0.2s ease;
+  }
+
+  .cartridge-card:hover .cart-count {
+    color: #000;
   }
 
   /* Hover Effects */

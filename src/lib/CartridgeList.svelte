@@ -9,11 +9,7 @@
     spinTo = null,
     onSpinComplete = null,
     content,
-    getItemKey = (item) => item.key,
-    getItemColor = (item) => item.color,
-    getItemCount = null,
-    getHeaderBackground = null,
-    shouldCycle = null,
+    getItemKey = (item) => item.key ?? item.platform ?? item.genre,
   } = $props();
 
   // Drag to scroll with momentum
@@ -183,15 +179,8 @@
   <div class="selector-scroll-inner">
     {#each items as item}
       {@const key = getItemKey(item)}
-      {@const color = getItemColor(item)}
-      {@const count = getItemCount ? getItemCount(item) : undefined}
-      {@const headerBg = getHeaderBackground ? getHeaderBackground(item) : undefined}
-      {@const cycle = shouldCycle ? shouldCycle(item) : false}
       <Cartridge
-        {color}
-        headerBackground={headerBg}
-        {cycle}
-        {count}
+        {...item}
         inserting={insertingKey === key}
         fading={externalFading || (insertingKey && insertingKey !== key)}
         class={spinHighlight === key ? 'spin-highlighted' : ''}

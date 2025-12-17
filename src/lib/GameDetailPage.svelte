@@ -3,7 +3,6 @@
   import { navigate, transitioningGame } from "./router.svelte.js";
   import { platformConfig, allGames } from "./data.js";
   import { gameDescriptions } from "./descriptions.js";
-  import { getGenreColor } from "./utils.js";
   import Cartridge from "./Cartridge.svelte";
 
   let { gameId } = $props();
@@ -11,9 +10,6 @@
   // Find the game
   let game = $derived(allGames.find((g) => g.id === gameId));
   let config = $derived(game ? platformConfig[game.platform] : null);
-  let platformCount = $derived(
-    game ? allGames.filter((g) => g.platform === game.platform).length : 0
-  );
 
   // Favorites management
   let favorites = $state([]);
@@ -86,7 +82,14 @@
   // Description (from separate descriptions file)
   let description = $derived(game ? gameDescriptions[game.id] : null);
 
-  async function navigateAway(path) {
+  // Cartridge insertion animation state
+  let insertingCartridge = $state(null);
+
+  async function navigateAway(path, cartridgeKey = null) {
+    if (cartridgeKey) {
+      insertingCartridge = cartridgeKey;
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    }
     transitioningGame.id = game.id;
     await tick();
     navigate(path);
@@ -159,13 +162,14 @@
               <span class="text-2xl">{isFavorite ? "❤️" : "🤍"}</span>
             </button>
           </div>
-          <!-- Platform Cartridge -->
-          <div class="mt-8 hidden md:flex justify-center">
+          <!-- Platform & Genre Cartridges -->
+          <div class="mt-8 hidden md:flex flex-wrap gap-4 justify-center">
             <Cartridge
-              color={config ? config.color : "#6366F1"}
-              count={platformCount}
+              platform={game.platform}
+              inserting={insertingCartridge === "platform"}
+              fading={insertingCartridge !== null && insertingCartridge !== "platform"}
               onclick={() => {
-                navigateAway(`/platform/${encodeURIComponent(game.platform)}`);
+                navigateAway(`/platform/${encodeURIComponent(game.platform)}`, "platform");
               }}
             >
               <div class="cartridge-content-wrapper">
@@ -185,6 +189,55 @@
                 />
               </div>
             </Cartridge>
+            {#if isFavorite}
+              <Cartridge
+                platform="Favourites"
+                count={favorites.length}
+                color="#EF4444"
+                inserting={insertingCartridge === "favourites"}
+                fading={insertingCartridge !== null && insertingCartridge !== "favourites"}
+                onclick={() => {
+                  navigateAway("/favourites", "favourites");
+                }}
+              >
+                <div class="cartridge-content-wrapper">
+                  <span class="fav-icon">🤍</span>
+                </div>
+              </Cartridge>
+            {/if}
+            {#each game.genres as genreName}
+              <Cartridge
+                genre={genreName}
+                inserting={insertingCartridge === `genre-${genreName}`}
+                fading={insertingCartridge !== null && insertingCartridge !== `genre-${genreName}`}
+                onclick={() => {
+                  navigateAway(`/genre/${encodeURIComponent(genreName)}`, `genre-${genreName}`);
+                }}
+              >
+                <div class="genre-image-container">
+                  <img
+                    src={boxArtUrl}
+                    alt={genreName}
+                    class="genre-image"
+                    draggable="false"
+                  />
+                </div>
+              </Cartridge>
+            {/each}
+            {#if game.gem}
+              <Cartridge
+                isGem
+                inserting={insertingCartridge === "gem"}
+                fading={insertingCartridge !== null && insertingCartridge !== "gem"}
+                onclick={() => {
+                  navigateAway("/gems", "gem");
+                }}
+              >
+                <div class="cartridge-content-wrapper">
+                  <span class="gem-icon">💎</span>
+                </div>
+              </Cartridge>
+            {/if}
           </div>
         </div>
 
@@ -200,56 +253,19 @@
             </h2>
             <p class="text-purple-300 text-sm font-medium mb-4">{game.notes}</p>
 
-            <!-- Genres -->
+            <!-- Mobile Cartridges -->
             <div
-              class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-6 text-sm"
+              class="md:hidden flex flex-wrap gap-3 mb-6"
               style="view-transition-name: game-{game.id}-genres"
             >
-              {#each game.genres as genre}
-                <button
-                  onclick={() => {
-                    navigateAway(`/genre/${encodeURIComponent(genre)}`);
-                  }}
-                  class="genre-link inline-flex items-center gap-1.5 text-gray-400 transition cursor-pointer"
-                  style="--hover-color: {getGenreColor(genre)}"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    class="w-4 h-4"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M5.25 2.25a3 3 0 00-3 3v4.318a3 3 0 00.879 2.121l9.58 9.581c.92.92 2.39 1.186 3.548.428a18.849 18.849 0 005.441-5.44c.758-1.16.492-2.629-.428-3.548l-9.58-9.581a3 3 0 00-2.122-.879H5.25zM6.375 7.5a1.125 1.125 0 100-2.25 1.125 1.125 0 000 2.25z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  {genre}
-                </button>
-              {/each}
-              {#if game.gem}
-                <button
-                  onclick={() => {
-                    navigateAway("/gems");
-                  }}
-                  class="genre-link inline-flex items-center gap-1.5 text-gray-400 transition cursor-pointer"
-                  style="--hover-color: {getGenreColor('Hidden Gems')}"
-                >
-                  <span style="filter: grayscale(1);">💎</span>
-                  Hidden Gem
-                </button>
-              {/if}
-            </div>
-
-            <!-- Mobile Cartridge (Floated) -->
-            <div class="md:hidden float-right ml-4 mb-2">
               <Cartridge
-                color={config ? config.color : "#6366F1"}
-                count={platformCount}
+                platform={game.platform}
+                inserting={insertingCartridge === "platform"}
+                fading={insertingCartridge !== null && insertingCartridge !== "platform"}
                 onclick={() => {
                   navigateAway(
-                    `/platform/${encodeURIComponent(game.platform)}`
+                    `/platform/${encodeURIComponent(game.platform)}`,
+                    "platform"
                   );
                 }}
               >
@@ -270,6 +286,55 @@
                   />
                 </div>
               </Cartridge>
+              {#if isFavorite}
+                <Cartridge
+                  platform="Favourites"
+                  count={favorites.length}
+                  color="#EF4444"
+                  inserting={insertingCartridge === "favourites"}
+                  fading={insertingCartridge !== null && insertingCartridge !== "favourites"}
+                  onclick={() => {
+                    navigateAway("/favourites", "favourites");
+                  }}
+                >
+                  <div class="cartridge-content-wrapper">
+                    <span class="fav-icon">🤍</span>
+                  </div>
+                </Cartridge>
+              {/if}
+              {#each game.genres as genreName}
+                <Cartridge
+                  genre={genreName}
+                  inserting={insertingCartridge === `genre-${genreName}`}
+                  fading={insertingCartridge !== null && insertingCartridge !== `genre-${genreName}`}
+                  onclick={() => {
+                    navigateAway(`/genre/${encodeURIComponent(genreName)}`, `genre-${genreName}`);
+                  }}
+                >
+                  <div class="genre-image-container">
+                    <img
+                      src={boxArtUrl}
+                      alt={genreName}
+                      class="genre-image"
+                      draggable="false"
+                    />
+                  </div>
+                </Cartridge>
+              {/each}
+              {#if game.gem}
+                <Cartridge
+                  isGem
+                  inserting={insertingCartridge === "gem"}
+                  fading={insertingCartridge !== null && insertingCartridge !== "gem"}
+                  onclick={() => {
+                    navigateAway("/gems", "gem");
+                  }}
+                >
+                  <div class="cartridge-content-wrapper">
+                    <span class="gem-icon">💎</span>
+                  </div>
+                </Cartridge>
+              {/if}
             </div>
 
             {#if description}
@@ -310,19 +375,6 @@
 {/if}
 
 <style>
-  .genre-link {
-    transition: color 0.2s ease;
-  }
-
-  .genre-link:hover {
-    color: var(--hover-color) !important;
-  }
-
-  /* When hovering the gem button, remove grayscale from the diamond */
-  .genre-link:hover span {
-    filter: none !important;
-  }
-
   /* Cartridge content styling for detail page */
   .cartridge-content-wrapper {
     width: 80px;
@@ -330,5 +382,40 @@
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  .platform-logo {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    filter: grayscale(1) brightness(1.2);
+    opacity: 0.9;
+  }
+
+  .genre-image-container {
+    width: 80px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 4px;
+  }
+
+  .genre-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(0.8) brightness(1.2);
+  }
+
+  .gem-icon {
+    font-size: 2.5rem;
+    filter: grayscale(0.8) brightness(1.2);
+  }
+
+  .fav-icon {
+    font-size: 2.5rem;
+    filter: grayscale(1) brightness(1.2);
   }
 </style>

@@ -124,6 +124,14 @@
   let platformColor = $derived(platformInfo?.color || "#6366F1");
   let platformIcon = $derived(platformInfo?.icon || "🎮");
 
+  // Get the color for the current page context (platform, genre, gems, favourites)
+  let pageColor = $derived.by(() => {
+    if (initialGems) return getGenreColor("Hidden Gems");
+    if (initialFavourites) return "#EF4444";
+    if (initialGenre) return getGenreColor(initialGenre);
+    return platformColor;
+  });
+
   // Page title logic
   let pageTitle = $derived.by(() => {
     if (initialFavourites) return "Favourites";
@@ -504,7 +512,11 @@
             <div>
               <h1 class="retro-font text-base lg:text-xl text-white">
                 {pageTitle}
-                <span class="text-gray-400 font-normal">({gameCount})</span>
+                {#if platform === "All" && !initialGenre && !initialGems && !initialFavourites}
+                  <span class="font-normal gradient-count">({gameCount})</span>
+                {:else}
+                  <span class="font-normal" style="color: {pageColor}">({gameCount})</span>
+                {/if}
               </h1>
               <p class="text-gray-400 text-xs">
                 {#if pageSubtitle}{pageSubtitle}{/if}
@@ -740,3 +752,12 @@
     </div>
   </footer>
 </div>
+
+<style>
+  .gradient-count {
+    background: linear-gradient(90deg, #c084fc, #ec4899, #ef4444);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+</style>

@@ -1,7 +1,6 @@
 <script>
   import { navigate } from "./router.svelte.js";
   import { allGames, platformConfig } from "./data.js";
-  import { getGenreColor } from "./utils.js";
   import CartridgeList from "./CartridgeList.svelte";
 
   let {
@@ -13,12 +12,12 @@
     onSpinComplete = null,
   } = $props();
 
-  // Get unique genres with their games, plus special categories
+  // Get unique genres
   const regularGenres = [...new Set(allGames.flatMap((g) => g.genres))].sort();
-  const allGenres = ["All Games", "Hidden Gems", ...regularGenres];
 
+  // Games per genre (for image cycling)
   const genreGames = Object.fromEntries([
-    ["All Games", allGames],
+    ["All", allGames],
     ["Hidden Gems", allGames.filter((g) => g.gem)],
     ...regularGenres.map((genre) => [
       genre,
@@ -26,34 +25,40 @@
     ]),
   ]);
 
-  // Filter displayed genres based on prop
-  let displayedGenres = $derived(
-    showAllGames ? allGenres : allGenres.filter((g) => g !== "All Games")
-  );
+  // Build items with smart props
+  let items = $derived.by(() => {
+    const list = [];
 
-  // Build items for CartridgeList
-  let items = $derived(
-    displayedGenres.map((genre) => ({
-      key: genre,
-      name: genre,
-      color: getGenreColor(genre),
-      games: genreGames[genre],
-      isSpecial: genre === "All Games" || genre === "Hidden Gems",
-    }))
-  );
+    if (showAllGames) {
+      list.push({ platform: "All", games: genreGames["All"] });
+    }
+
+    list.push({ isGem: true, games: genreGames["Hidden Gems"] });
+
+    list.push(
+      ...regularGenres.map((g) => ({ genre: g, games: genreGames[g] }))
+    );
+
+    return list;
+  });
 
   // Track current image index for each genre (for cycling)
   let genreImageIndex = $state(
-    Object.fromEntries(allGenres.map((g) => [g, 0]))
+    Object.fromEntries([
+      ["All", 0],
+      ["Hidden Gems", 0],
+      ...regularGenres.map((g) => [g, 0]),
+    ])
   );
 
   // Cycle images every 800ms
   $effect(() => {
+    const keys = Object.keys(genreImageIndex);
     const intervalId = setInterval(() => {
-      const genre = allGenres[Math.floor(Math.random() * allGenres.length)];
-      const games = genreGames[genre];
-      if (games.length > 1) {
-        genreImageIndex[genre] = (genreImageIndex[genre] + 1) % games.length;
+      const key = keys[Math.floor(Math.random() * keys.length)];
+      const games = genreGames[key];
+      if (games && games.length > 1) {
+        genreImageIndex[key] = (genreImageIndex[key] + 1) % games.length;
       }
     }, 800);
     return () => clearInterval(intervalId);
@@ -65,57 +70,48 @@
     return `/boxart/${game.platform}/${filename}`;
   }
 
+  function getItemKey(item) {
+    if (item.platform) return item.platform;
+    if (item.isGem) return "Hidden Gems";
+    return item.genre;
+  }
+
   function handleSelect(key) {
     if (onSelect) {
       onSelect(key);
     } else {
-      if (key === "All Games") navigate("/platform/All");
+      if (key === "All") navigate("/platform/All");
       else if (key === "Hidden Gems") navigate("/gems");
       else navigate(`/genre/${encodeURIComponent(key)}`);
     }
   }
-
-  function getHeaderBackground(item) {
-    if (item.key === "All Games") {
-      return "linear-gradient(90deg, #c084fc, #ec4899, #ef4444, #c084fc)";
-    }
-    return undefined;
-  }
 </script>
 
-{#snippet content(genre)}
-  {#if genre.isSpecial}
-    <div class="genre-image-container">
-      {#if genre.key === "All Games"}
-        <img
-          src={platformConfig["All"].logo}
-          alt="All Games"
-          class="genre-image special-logo"
-          draggable="false"
-        />
-      {:else}
-        <div class="genre-icon special">💎</div>
-      {/if}
-    </div>
-  {:else}
-    {@const currentGame = genre.games[genreImageIndex[genre.key]]}
-    {#if currentGame}
-      <div class="genre-image-container">
-        <img
-          src={getGameImage(currentGame)}
-          alt={genre.key}
-          class="genre-image"
-          loading="lazy"
-          draggable="false"
-        />
-      </div>
+{#snippet content(item)}
+  {@const key = getItemKey(item)}
+  {@const currentGame = item.games[genreImageIndex[key]]}
+  <div class="genre-image-container">
+    {#if item.platform === "All"}
+      <img
+        src={platformConfig["All"].logo}
+        alt="All Games"
+        class="genre-image special-logo"
+        draggable="false"
+      />
+    {:else if item.isGem}
+      <div class="genre-icon special">💎</div>
+    {:else if currentGame}
+      <img
+        src={getGameImage(currentGame)}
+        alt={key}
+        class="genre-image"
+        loading="lazy"
+        draggable="false"
+      />
     {:else}
-      <div class="genre-image-container">
-        <div class="genre-icon">🎮</div>
-      </div>
+      <div class="genre-icon">🎮</div>
     {/if}
-  {/if}
-  <div class="genre-name">{genre.name}</div>
+  </div>
 {/snippet}
 
 <CartridgeList
@@ -126,11 +122,7 @@
   {spinTo}
   {onSpinComplete}
   {content}
-  getItemKey={(g) => g.key}
-  getItemColor={(g) => g.color}
-  getItemCount={(g) => g.games.length}
-  {getHeaderBackground}
-  shouldCycle={(g) => g.key === "All Games"}
+  {getItemKey}
 />
 
 <style>
@@ -164,14 +156,5 @@
     object-fit: contain;
     filter: grayscale(0.8) brightness(1.2);
     padding: 4px;
-  }
-
-  .genre-name {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #e5e7eb;
-    margin-top: 0.5rem;
-    text-align: center;
-    line-height: 1.1;
   }
 </style>

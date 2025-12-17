@@ -73,14 +73,14 @@
 </script>
 
 <div
-  class="game-card bg-gray-900 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-gray-500 relative cursor-pointer {isSparkling
+  class="game-card bg-gray-900 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-gray-600 relative cursor-pointer {isSparkling
     ? 'sparkle-effect'
     : ''}"
-  style={highlightAnimation
-    ? "animation: randomPickGlow 4s ease-out forwards"
+  style="--platform-color: {config?.color || '#6366F1'}; {highlightAnimation
+    ? 'animation: randomPickGlow 4s ease-out forwards'
     : isHighlighted
-      ? "box-shadow: 0 0 15px 3px rgba(168, 85, 247, 0.5)"
-      : ""}
+      ? 'box-shadow: 0 0 15px 3px rgba(168, 85, 247, 0.5)'
+      : ''}"
   onclick={handleCardClick}
   role="button"
   tabindex="0"
@@ -131,6 +131,16 @@
 </div>
 
 <style>
+  /* Platform-colored hover glow */
+  .game-card {
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .game-card:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4),
+      0 0 30px color-mix(in srgb, var(--platform-color) 70%, transparent);
+  }
+
   /* Sparkle/Shine Effect */
   .sparkle-effect {
     position: relative;
