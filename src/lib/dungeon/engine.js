@@ -45,10 +45,19 @@ export function initNewGame(forceSeed = null, system = null) {
   d.inventory = [];
   d.relationships = {};
   d.quests = [];
-  d.flags = new Set();
+  d.flags = {};
 
   setTimeout(() => {
-    log(forceSeed ? "SYSTEM REBOOTED." : "UNIVERSE REGENERATED.", "info");
+    // Only show regeneration message if this was an explicit reset (forceSeed present)
+    // or if we want to differentiate boot vs reset.
+    // User requested simpler boot.
+    if (forceSeed) {
+      log("SYSTEM REBOOTED.", "info");
+    } else {
+      // Optional: "System Online" or nothing.
+      // log("System Initialized.", "dim");
+    }
+
     if (system) {
       handleLook(null, false, system);
     } else {
@@ -181,6 +190,13 @@ export async function executeCommand(cmd, injectedSystem = null) {
       return handlePush(system, cmd.target);
     case "SUDO":
       return handleSudo(system, cmd.target);
+    case "EXIT":
+      system.dungeon.isOpen = false;
+      return;
+    case "SAVE":
+      saveGame();
+      system.writeLog("Details saved to cartridge memory.", "success");
+      return;
     default:
       system.writeLog(`Unknown command sequence: "${cmd.raw}"`, "error");
       return;

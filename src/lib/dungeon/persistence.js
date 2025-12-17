@@ -18,6 +18,10 @@ export async function saveGame() {
     visited: Array.from(dungeon.visited),
     inventory: dungeon.inventory,
     world: dungeon.world,
+    flags: dungeon.flags, // It is an object now
+    quests: dungeon.quests,
+    relationships: dungeon.relationships,
+    realm: dungeon.realm, // Check if this is safe to serialize? usually okay if active
     timestamp: Date.now(),
   };
 
@@ -40,6 +44,10 @@ export async function loadGame() {
       dungeon.currentRoom = state.currentRoom;
       dungeon.inventory = state.inventory || [];
       dungeon.visited = new Set(state.visited || []);
+      dungeon.flags = state.flags || {};
+      dungeon.quests = state.quests || [];
+      dungeon.relationships = state.relationships || {};
+      dungeon.realm = state.realm || null;
       writeLog("SYSTEM RESTORED FROM BACKUP...", "info");
       return true;
     }

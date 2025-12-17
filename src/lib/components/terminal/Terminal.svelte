@@ -26,6 +26,14 @@
   async function submit() {
     if (!inputValue.trim()) return;
 
+    // Check for UI-level commands
+    const lower = inputValue.trim().toLowerCase();
+    if (["exit", "quit"].includes(lower)) {
+      toggleTerminal();
+      inputValue = "";
+      return;
+    }
+
     const cmd = inputValue;
     inputValue = "";
     await handleInput(cmd);
@@ -68,15 +76,22 @@
         class="p-4 border-b border-green-900/50 flex justify-between items-center text-green-700"
       >
         <span>RETRO REALM OS v1.0a</span>
-        <span
-          >MEM: {Math.max(
-            0,
-            65536 -
-              (dungeon.visited?.size || 0) * 128 -
-              (dungeon.inventory?.length || 0) * 512 -
-              dungeon.history.length * 64
-          )} BYTES FREE</span
-        >
+        <div class="flex items-center gap-4">
+          <span
+            >MEM: {Math.max(
+              0,
+              65536 -
+                (dungeon.visited?.size || 0) * 128 -
+                (dungeon.inventory?.length || 0) * 512 -
+                dungeon.history.length * 64
+            )} BYTES FREE</span
+          >
+          <button
+            onclick={toggleTerminal}
+            class="hover:text-green-500 hover:bg-green-900/20 px-1 transition-colors cursor-pointer"
+            >[X]</button
+          >
+        </div>
       </div>
 
       <Output history={dungeon.history} />

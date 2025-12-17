@@ -15,6 +15,8 @@ export const COMMANDS = {
   JOURNAL: ["journal", "j", "log", "quests", "tasks"],
   DROP: ["drop", "throw", "discard"],
   PLAY: ["play", "run", "boot"],
+  EXIT: ["exit", "quit", "close", "leave"],
+  SAVE: ["save"],
 };
 
 export const DIRECTION_ALIASES = {

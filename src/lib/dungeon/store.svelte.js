@@ -12,16 +12,8 @@ const defaultState = {
   flags: {}, // Feature flags / Tutorial tips seen
 };
 
-let store;
-try {
-  // @ts-ignore
-  store = $state(defaultState);
-} catch (e) {
-  // Fallback for non-Svelte environments (Tests)
-  store = defaultState;
-}
-
-export const dungeon = store;
+// @ts-ignore
+export const dungeon = $state(defaultState);
 
 /**
  * Toggles the terminal visibility

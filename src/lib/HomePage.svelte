@@ -3,6 +3,7 @@
   import { navigate } from "./router.svelte.js";
   import { allGames } from "./data.js";
   import { browse } from "./browseStore.svelte.js";
+  import { toggleTerminal } from "./dungeon/store.svelte.js";
   import PlatformSelector from "./PlatformSelector.svelte";
   import GenreSelector from "./GenreSelector.svelte";
   import ViewToggle from "./ViewToggle.svelte";
@@ -13,7 +14,9 @@
   let spinTarget = $state(null);
   let spinGenreTarget = $state(null);
   let pendingRandomGame = $state(null);
-  let isSpinAnimating = $derived(spinTarget !== null || spinGenreTarget !== null);
+  let isSpinAnimating = $derived(
+    spinTarget !== null || spinGenreTarget !== null
+  );
 
   // Get unique genres with their games, plus special categories
   const regularGenres = [...new Set(allGames.flatMap((g) => g.genres))].sort();
@@ -44,7 +47,9 @@
 
     if (browse.mode === "genres") {
       // Scroll to the visible genre selector
-      const el = [...document.querySelectorAll('[data-selector="genres"]')].find(e => e.offsetParent !== null);
+      const el = [
+        ...document.querySelectorAll('[data-selector="genres"]'),
+      ].find((e) => e.offsetParent !== null);
       el?.scrollIntoView({ behavior: "smooth", block: "center" });
       // Pick a random genre and trigger spin animation
       const genreOptions = ["Hidden Gems", ...regularGenres];
@@ -63,7 +68,9 @@
       spinGenreTarget = randomGenre;
     } else {
       // Scroll to the visible platform selector
-      const el = [...document.querySelectorAll('[data-selector="platforms"]')].find(e => e.offsetParent !== null);
+      const el = [
+        ...document.querySelectorAll('[data-selector="platforms"]'),
+      ].find((e) => e.offsetParent !== null);
       el?.scrollIntoView({ behavior: "smooth", block: "center" });
       // Pick a random game and trigger spin animation
       const randomIndex = Math.floor(Math.random() * allGames.length);
@@ -113,7 +120,9 @@
         if (genre === "Hidden Gems") {
           navigate(`/gems?highlight=${id}${searchParam}`);
         } else {
-          navigate(`/genre/${encodeURIComponent(genre)}?highlight=${id}${searchParam}`);
+          navigate(
+            `/genre/${encodeURIComponent(genre)}?highlight=${id}${searchParam}`
+          );
         }
       });
     }
@@ -163,6 +172,48 @@
   <!-- Search Bar -->
   <div class="w-full max-w-md mb-12">
     <div class="flex items-center gap-3">
+      <button
+        onclick={toggleTerminal}
+        class="has-tooltip flex items-center justify-center w-14 h-14 rounded-full bg-gray-800 border border-gray-600 text-green-500 hover:bg-gray-700 hover:text-green-400 hover:border-green-500 transition shrink-0"
+        data-tooltip="Enter the Dungeon"
+        aria-label="Enter the Dungeon"
+      >
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M8 9l3 3-3 3m5 0h3"
+          />
+        </svg>
+      </button>
+
+      <button
+        onclick={toggleTerminal}
+        class="has-tooltip flex items-center justify-center w-14 h-14 rounded-full bg-gray-800 border border-gray-600 text-green-500 hover:bg-gray-700 hover:text-green-400 hover:border-green-500 transition shrink-0"
+        data-tooltip="Enter the Dungeon"
+        aria-label="Enter the Dungeon"
+      >
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M8 9l3 3-3 3m5 0h3"
+          />
+        </svg>
+      </button>
+
       <button
         onclick={() => {
           if (!isSpinAnimating) pickRandomGame();
