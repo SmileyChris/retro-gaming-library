@@ -1,6 +1,6 @@
-import { dungeon, writeLog } from "../store.svelte.js";
+export function handleInventory(system) {
+  const { dungeon, writeLog } = system;
 
-export function handleInventory() {
   if (dungeon.inventory.length === 0) {
     writeLog("Your pockets are empty.", "info");
   } else {

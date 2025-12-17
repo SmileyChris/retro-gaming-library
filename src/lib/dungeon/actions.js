@@ -1,7 +1,5 @@
 // @ts-check
-import { dungeon, writeLog } from "./store.svelte.js";
 import { parseCommand } from "./parser.js";
-import { executeCommand } from "./engine.js";
 
 /**
  * @typedef {Object} ActionDef
@@ -35,14 +33,24 @@ import { executeCommand } from "./engine.js";
  */
 
 /**
+ * Executing Context
+ * @typedef {Object} System
+ * @property {Object} dungeon - The game state
+ * @property {Function} writeLog - Logging function (text, type)
+ * @property {Function} executeCommand - Command dispatcher
+ */
+
+/**
  * Executes an interaction based on Verb, Target, and Optional Tool.
  * Handles implicit targeting and handler selection.
+ * @param {System} system - The game system context
  * @param {string} verb - The command verb (USE, OPEN, TALK, etc.)
  * @param {string} targetName - The user's input string for the target (can be null/empty)
  * @param {string} toolName - The user's input string for the tool (can be null)
  * @returns {Promise<boolean>} - True if interaction was handled
  */
-export async function executeInteraction(verb, targetName, toolName) {
+export async function executeInteraction(system, verb, targetName, toolName) {
+  const { dungeon, writeLog } = system;
   const room = dungeon.world.rooms[dungeon.currentRoom];
 
   // 1. Resolve Target
@@ -69,14 +77,8 @@ export async function executeInteraction(verb, targetName, toolName) {
       (i) => i.interactions && i.interactions[verb]
     );
 
-    // We strictly filter for candidates where a handler actually passes its tests?
-    // That might be too expensive or dangerous (side effects in tests?).
-    // Let's just assume if it HAS the verb, it's a candidate.
-
     if (candidates.length === 1) {
       targetItem = candidates[0];
-      // Check if we need to infer tool too?
-      // For now, implicit targeting usually implies direct use.
     } else if (candidates.length > 1) {
       writeLog(
         `Which one? (${candidates.map((i) => i.name).join(", ")})`,
@@ -105,21 +107,14 @@ export async function executeInteraction(verb, targetName, toolName) {
     const handlers = targetItem.interactions[verb];
     for (const handler of handlers) {
       const context = { target: targetItem, tool: toolItem, verb };
-      // If we have a tool, we prioritize handlers that matches the tool?
-      // Or we just pick the first valid one.
-      // If I type "Use Cabinet" (tool=null), and handler requires tool -> fail test. (checkTests handles this).
-      if (checkTests(handler.tests, context)) {
-        await processActions(handler.actions, context);
+      if (checkTests(system, handler.tests, context)) {
+        await processActions(system, handler.actions, context);
         return true;
       }
     }
   }
 
   // B. Implicit Tool Inference (e.g. "Use Broom")
-  // If the target didn't handle it, AND we didn't provide a separate tool...
-  // Maybe the target IS the tool?
-  // "Use Broom" -> target=Broom, tool=null.
-  // We want to treat Broom as tool and infer target.
   if (!toolItem && targetItem) {
     // Treat target as tool
     const inferredTool = targetItem;
@@ -147,13 +142,12 @@ export async function executeInteraction(verb, targetName, toolName) {
     if (candidates.length === 1) {
       const inferredTarget = candidates[0];
       // Execute!
-      // We need to re-run the matching logic with new context
       const handlers = inferredTarget.interactions[verb];
       for (const handler of handlers) {
         const context = { target: inferredTarget, tool: inferredTool, verb };
-        if (checkTests(handler.tests, context)) {
+        if (checkTests(system, handler.tests, context)) {
           writeLog(`(using on ${inferredTarget.name})`, "dim");
-          await processActions(handler.actions, context);
+          await processActions(system, handler.actions, context);
           return true;
         }
       }
@@ -176,19 +170,21 @@ function matchItem(item, search) {
 
 /**
  * Checks a list of tests against the context.
+ * @param {System} system
  * @param {Array} tests
  * @param {Object} context
  */
-function checkTests(tests, context) {
+export function checkTests(system, tests, context) {
   if (!tests || tests.length === 0) return true;
 
   for (const test of tests) {
-    if (!runTest(test, context)) return false;
+    if (!runTest(system, test, context)) return false;
   }
   return true;
 }
 
-function runTest(test, context) {
+function runTest(system, test, context) {
+  const { dungeon } = system;
   switch (test.type) {
     case "item":
       // Check if player has item OR if tool matches
@@ -212,11 +208,13 @@ function runTest(test, context) {
 
 /**
  * Recursive action processor
+ * @param {System} system
  * @param {Array} actions
  * @param {Object} context
  */
-export async function processActions(actions, context) {
+export async function processActions(system, actions, context) {
   if (!actions) return;
+  const { dungeon, writeLog, executeCommand } = system;
 
   for (const action of actions) {
     switch (action.type) {
@@ -236,20 +234,20 @@ export async function processActions(actions, context) {
       case "destroy":
         let tgt = null;
         if (action.targetId) {
-          tgt = findItemById(action.targetId);
+          tgt = findItemById(system, action.targetId);
         } else {
           tgt = action.target === "self" ? context.target : context.tool;
         }
 
         if (tgt) {
-          removeFromWorld(tgt);
+          removeFromWorld(system, tgt);
         }
         break;
 
       case "modify":
         let modTgt = null;
         if (action.targetId) {
-          modTgt = findItemById(action.targetId);
+          modTgt = findItemById(system, action.targetId);
         } else {
           modTgt = action.target === "self" ? context.target : context.tool;
         }
@@ -260,13 +258,11 @@ export async function processActions(actions, context) {
         break;
 
       case "move":
-        const moveTgt = action.target === "self" ? context.target : context.tool;
-        // If we have targetId support, use it?
-        // Let's stick to standard target logic for now or add targetId support if consistent?
-        // But for 'move', usually we move self.
+        const moveTgt =
+          action.target === "self" ? context.target : context.tool;
         if (moveTgt) {
           // Remove from source
-          removeFromWorld(moveTgt);
+          removeFromWorld(system, moveTgt);
           // Add to dest
           if (action.location === "inventory") {
             dungeon.inventory.push(moveTgt);
@@ -277,12 +273,6 @@ export async function processActions(actions, context) {
         break;
 
       case "trigger":
-        // Inline command execution (e.g. "talk archivist")
-        // We construct a fake command object or string?
-        // Let's use parser to be safe, or direct valid structure.
-        // Direct structure: { verb: action.verb, target: action.target }
-        // BUT executeCommand takes structure.
-        // And we need to await it.
         await executeCommand({
           verb: action.verb,
           target: action.target,
@@ -292,24 +282,26 @@ export async function processActions(actions, context) {
 
       case "test":
         // Nested branching
-        const pass = checkTests(action.req ? [action.req] : [], context);
-        if (pass && action.then) await processActions(action.then, context);
-        if (!pass && action.else) await processActions(action.else, context);
+        const pass = checkTests(
+          system,
+          action.req ? [action.req] : [],
+          context
+        );
+        if (pass && action.then)
+          await processActions(system, action.then, context);
+        if (!pass && action.else)
+          await processActions(system, action.else, context);
         break;
 
       case "block":
         if (action.msg) writeLog(action.msg, "error");
-        return false; // Should stop chain?
-        // But processActions is void.
-        // And executeInteraction returns boolean "handled".
-        // Detailed blocking (e.g. prevent TAKE) requires processActions to return something?
-        // For now, block just stops *this* chain.
-        return;
+        return; // Blocks further execution in this chain
     }
   }
 }
 
-function removeFromWorld(item) {
+function removeFromWorld(system, item) {
+  const { dungeon } = system;
   // Try inventory
   const invIdx = dungeon.inventory.indexOf(item);
   if (invIdx !== -1) {
@@ -324,14 +316,13 @@ function removeFromWorld(item) {
   }
 }
 
-function findItemById(id) {
+function findItemById(system, id) {
+  const { dungeon } = system;
   // Check inventory
   const invItem = dungeon.inventory.find((i) => i.id === id);
   if (invItem) return invItem;
 
   // Check current room
-  // Note: We only search current room primarily, but since dungeon has all rooms, 
-  // we could search globally if needed. For now, local scope is safer.
   const room = dungeon.world.rooms[dungeon.currentRoom];
   const roomItem = room.items.find((i) => i.id === id);
   if (roomItem) return roomItem;

@@ -1,4 +1,4 @@
-export const dungeon = $state({
+const defaultState = {
   isOpen: false,
   history: [],
   currentRoom: "VOID",
@@ -10,7 +10,18 @@ export const dungeon = $state({
   realm: null, // { active: boolean, id: string, state: object }
   isProcessing: false,
   flags: new Set(), // Feature flags / Tutorial tips seen
-});
+};
+
+let store;
+try {
+  // @ts-ignore
+  store = $state(defaultState);
+} catch (e) {
+  // Fallback for non-Svelte environments (Tests)
+  store = defaultState;
+}
+
+export const dungeon = store;
 
 /**
  * Toggles the terminal visibility

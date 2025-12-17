@@ -1,7 +1,8 @@
-import { dungeon, writeLog } from "../store.svelte.js";
 import { executeInteraction } from "../actions.js";
 
-export async function handleTake(target) {
+export async function handleTake(system, target) {
+  const { dungeon, writeLog } = system;
+
   if (!target) {
     writeLog("Take what?");
     return;
@@ -69,10 +70,7 @@ export async function handleTake(target) {
   }
 
   // SEMANTIC INTERACTION (Singular)
-  // Check if there is specific logic for "taking" this target (e.g. Blocking)
-  // Note: We deliberately check this BEFORE standard lookup because executeInteraction handles lookup.
-  // BUT executeInteraction handles implicit lookup "Take it".
-  const handled = await executeInteraction("TAKE", target, null);
+  const handled = await executeInteraction(system, "TAKE", target, null);
   if (handled) return;
 
   // SINGULAR TAKE LOGIC

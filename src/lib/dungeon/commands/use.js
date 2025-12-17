@@ -1,7 +1,8 @@
-import { dungeon, writeLog } from "../store.svelte.js";
 import { executeInteraction } from "../actions.js";
 
-export async function handleUse(rawTarget) {
+export async function handleUse(system, rawTarget) {
+  const { dungeon, writeLog } = system;
+
   if (!rawTarget) {
     writeLog("Use what?");
     return;
@@ -16,7 +17,7 @@ export async function handleUse(rawTarget) {
     lowerTarget.startsWith("bag") ||
     lowerTarget.startsWith("pocket")
   ) {
-    handleBackpackInterface(lowerTarget);
+    handleBackpackInterface(system, lowerTarget);
     return;
   }
 
@@ -36,26 +37,20 @@ export async function handleUse(rawTarget) {
   }
 
   // 3. SEMANTIC INTERACTION DELEGATION
-  const handled = await executeInteraction("USE", targetName, toolName);
+  const handled = await executeInteraction(system, "USE", targetName, toolName);
   if (handled) return;
 
   // 4. FALLBACK LOGIC (Legacy / Specifics)
-  // If we had a tool but failed, we probably shouldn't try generic usage on the tool?
-  // "Use key on cabinet" -> failed. Should we try "Use key"? Probably not.
-
   if (toolName) {
-    // Explicit failure handled by executeInteraction usually (if target found but no handler).
-    // If target not found, executeInteraction returns false.
     writeLog("You can't do that.");
     return;
   }
 
   // 5. GENERIC ITEM USAGE (Consoles, Packs)
-  // Find the item to run legacy logic
   let item =
     dungeon.inventory.find((i) => i.name.toLowerCase().includes(lowerTarget)) ||
-    dungeon.world.rooms[dungeon.currentRoom].items.find((i) =>
-      !i.hidden && i.name.toLowerCase().includes(lowerTarget)
+    dungeon.world.rooms[dungeon.currentRoom].items.find(
+      (i) => !i.hidden && i.name.toLowerCase().includes(lowerTarget)
     );
 
   if (!item) {
@@ -67,7 +62,6 @@ export async function handleUse(rawTarget) {
 
   // B. Consoles
   if (targetItem.type === "CONSOLE") {
-    // ... Console Logic ...
     writeLog(`[ ${targetItem.name.toUpperCase()} ] - SYSTEM MENU`, "info");
     writeLog("Scanning backpack modules...", "dim");
 
@@ -137,24 +131,14 @@ export async function handleUse(rawTarget) {
   writeLog(`You fiddle with the ${targetItem.name}, but nothing happens.`);
 }
 
-export function handleBackpackInterface(target) {
-  // ... duplicate logic from engine.js ...
-  // Need to access dungeon inventory.
-  // For brevity, I'll assume I can copy paste or clean up.
+export function handleBackpackInterface(system, target) {
+  const { dungeon, writeLog } = system;
 
-  // Simplification for this step: Just print "Use the standard inventory command."
-  // OR copy the loop.
-  // Let's copy the logic.
   let page = 1;
   const parts = target.split(" ");
   if (parts[1] && !isNaN(parts[1])) page = parseInt(parts[1]);
 
   const games = dungeon.inventory.filter((i) => i.type === "GAME");
-  // ... etc
-  // (Pasting full logic in final file)
-  // For now, I'll put a placeholder if I can't fit it, but I should fit it.
-
-  // ACTUALLY RE-IMPLEMENTING CLEANLY
   const pageSize = 15;
   const totalPages = Math.ceil(games.length / pageSize);
 
@@ -176,7 +160,6 @@ export function handleBackpackInterface(target) {
     const slice = games.slice(start, end);
 
     slice.forEach((game) => {
-      // platform formatting
       writeLog(`[CHIP] ${game.name}`);
     });
     writeLog("----------------------------------------", "dim");
