@@ -198,7 +198,18 @@ export async function executeCommand(cmd, injectedSystem = null) {
       system.writeLog("Details saved to cartridge memory.", "success");
       return;
     default:
-      system.writeLog(`Unknown command sequence: "${cmd.raw}"`, "error");
+      const firstWord = cmd.raw.split(" ")[0];
+      const responses = [
+        `I don't know how to "${firstWord}".`,
+        `What does "${firstWord}" mean?`,
+        `"${firstWord}" is not recognized.`,
+        `I can't do that.`,
+        `System error: "${firstWord}" undefined.`,
+      ];
+      system.writeLog(
+        responses[Math.floor(Math.random() * responses.length)],
+        "error"
+      );
       return;
   }
 }
