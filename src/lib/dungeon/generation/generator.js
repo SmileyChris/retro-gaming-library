@@ -71,7 +71,8 @@ export function generateDungeon(seed = Date.now()) {
     id: "start_gate",
     name: "The Grand Entrance",
     zoneId: "START",
-    description: "You stand before the towering gates of the Retro Library.",
+    description:
+      "You stand before the towering gates of the Retro Library. The path forward leads NORTH into the Arcade.",
     exits: {},
     items: [],
   };
