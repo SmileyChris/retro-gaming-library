@@ -9,7 +9,7 @@ const defaultState = {
   quests: [], // { id, status: 'active'|'completed' }
   realm: null, // { active: boolean, id: string, state: object }
   isProcessing: false,
-  flags: new Set(), // Feature flags / Tutorial tips seen
+  flags: {}, // Feature flags / Tutorial tips seen
 };
 
 let store;

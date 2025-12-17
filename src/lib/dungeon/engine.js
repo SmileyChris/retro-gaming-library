@@ -12,6 +12,9 @@ import { handleOpen } from "./commands/open.js";
 import { handleInventory } from "./commands/inventory.js";
 import { handleMove } from "./commands/move.js";
 import { handleTalk } from "./commands/talk.js";
+import { handleSay } from "./commands/say.js";
+import { handlePush } from "./commands/push.js";
+import { handleSudo } from "./commands/sudo.js";
 import { processActions } from "./actions.js";
 
 // Init World if running on client (not in test)
@@ -112,11 +115,6 @@ function handleReset(cmd) {
   const isHard =
     cmd.target === "reset" || cmd.target === "hard" || cmd.target === "sudo";
 
-  if (cmd.target === "cheat") {
-    handleCheat();
-    return;
-  }
-
   if (isHard) {
     writeLog(
       "WARNING: This will DESTROY the current universe and generate a new one.",
@@ -174,14 +172,19 @@ export async function executeCommand(cmd, injectedSystem = null) {
       return handlePlay(cmd.target, system);
     case "USE":
       return handleUse(system, cmd.target);
+    case "SAY":
+      return handleSay(system, cmd.target); // target is the full text for SAY ideally, parser might split it?
+    // parser.js usually puts everything after verb into 'target' or 'raw'?
+    // If parser splits by spaces, 'target' might be just the first word if not careful.
+    // Need to check parser behavior. Assuming cmd.target is the rest of the string.
+    case "PUSH":
+      return handlePush(system, cmd.target);
+    case "SUDO":
+      return handleSudo(system, cmd.target);
     default:
       system.writeLog(`Unknown command sequence: "${cmd.raw}"`, "error");
       return;
   }
-}
-
-function handleCheat() {
-  // Cheat function implementation omitted for brevity
 }
 
 function handleJournal(system = null) {

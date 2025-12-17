@@ -69,6 +69,23 @@ export function populateContent(world, topology, zone, games, mode) {
 
   // 5. Sensory Pass (Smells, Sounds)
   generateSensoryHints(world, rooms);
+
+  // 6. Narrative Pass (Threats & Lore)
+  applyNarrativeFlavor(world, rooms);
+}
+
+function applyNarrativeFlavor(world, rooms) {
+  if (!world.narrative) return;
+  const { threat } = world.narrative;
+
+  rooms.forEach((room) => {
+    // 20% Chance to be corrupted/influenced by the Threat
+    if (Math.random() < 0.2) {
+      const flavors = Object.values(threat.flavor);
+      const flavor = flavors[Math.floor(Math.random() * flavors.length)];
+      room.description += ` ${flavor}`;
+    }
+  });
 }
 
 function generateSensoryHints(world, rooms) {

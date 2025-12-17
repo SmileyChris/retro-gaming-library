@@ -69,3 +69,33 @@ export const DUNGEON_GAMES = allGames.map((game) => {
     },
   };
 });
+
+// Inject Special Hacking Cartridge
+DUNGEON_GAMES.push({
+  id: "glitch_layer_alpha",
+  title: "Corrupted_Save.hex",
+  platform: "PC-98",
+  year: "19XX",
+  genres: ["Hacking", "Glitch"],
+  description: "A rectangular slab of black plastic. It feels warm.",
+  dungeonProps: {
+    weight: 0,
+    value: 9999,
+    hasRealm: true,
+  },
+});
+
+DUNGEON_GAMES.push({
+  id: "debug_access_tool",
+  title: "QA_Internal_Build",
+  platform: "DEV_KIT",
+  year: "2024",
+  genres: ["Debug", "Dev"],
+  description:
+    "A plain gray cartridge with 'PROPERTY OF DEV TEAM' written in marker.",
+  dungeonProps: {
+    weight: 0,
+    value: 0,
+    hasRealm: true,
+  },
+});

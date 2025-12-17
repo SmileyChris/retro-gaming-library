@@ -1,23 +1,51 @@
 import gen1 from "./data/gen-1.js";
-import { PlatformerState, GENRES } from "./mechanics.js";
+import stealth1 from "./data/stealth_1.js";
+import rpg1 from "./data/rpg_1.js";
+import racing1 from "./data/racing_1.js";
+import hacking1 from "./data/hacking_1.js";
+import debug1 from "./data/debug_1.js";
+import {
+  PlatformerState,
+  StealthState,
+  RacingState,
+  HackingState,
+  DebugState,
+  RPGState,
+  GENRES,
+} from "./mechanics.js";
 import { dungeon, writeLog } from "../store.svelte.js";
 
 // Registry of supported realms
 const REALM_REGISTRY = {
   "gen-1": gen1,
+  stealth_mission_alpha: stealth1,
+  rpg_chronicles_1: rpg1,
+  speedrunner_track_1: racing1,
+  glitch_layer_alpha: hacking1,
+  debug_access_tool: debug1,
 };
 
 /**
  * Attempts to enter a Game Realm
  * @param {string} gameId
+ * @param {object} options
  * @returns {boolean} success
  */
-export function enterRealm(gameId) {
+export function enterRealm(gameId, options = {}) {
   const definition = REALM_REGISTRY[gameId];
+  const delay = options.delay ?? 1000;
 
   if (!definition) {
     writeLog("The cartridge refuses to boot. It seems inert.");
     return false;
+  }
+
+  // Pre-check for blocked realms (Synchronous)
+  if (definition.mechanics.type === GENRES.HACKING) {
+    if (dungeon.flags && dungeon.flags["hacking_disabled"]) {
+      writeLog("Error: Hacking Module Offline. Access Denied.", "error");
+      return false;
+    }
   }
 
   writeLog("Initializing Neural Link...", "dim");
@@ -36,8 +64,24 @@ export function enterRealm(gameId) {
           definition.mechanics.stats.lives
         );
         break;
+      case GENRES.STEALTH:
+        state = new StealthState(definition.realmId);
+        break;
+      case GENRES.RACING:
+        state = new RacingState(definition.realmId);
+        break;
+      case GENRES.HACKING:
+        state = new HackingState(definition.realmId);
+        break;
+      case GENRES.DEBUG:
+        state = new DebugState(definition.realmId);
+        break;
+      case GENRES.RPG:
+        state = new RPGState(definition.realmId, definition.mechanics.stats);
+        break;
       default:
         state = { realmId: definition.realmId, ...definition.mechanics.stats };
+        break;
     }
 
     // Set starting phase
@@ -61,7 +105,7 @@ export function enterRealm(gameId) {
 
     // Auto-look at first location
     setTimeout(() => handleRealmLook(), 500);
-  }, 1000);
+  }, delay);
 
   return true;
 }
@@ -96,22 +140,42 @@ export function processRealmCommand(input) {
 
   // Handle HELP
   if (input.toLowerCase() === "help") {
-    writeLog("Realm Commands: RUN, JUMP, SPIN, DUCK, LOOK, EXIT", "info");
+    // Dynamically list commands based on genre
+    const actions = Object.keys(def.mechanics.actions)
+      .map((k) => k.toUpperCase())
+      .join(", ");
+    const common = "LOOK, EXIT";
+    writeLog(`Realm Commands: ${actions}, ${common}`, "info"); // Dynamic help!
     return;
   }
 
   // BOSS BATTLE INTERCEPT
   // Check if we have an active boss state
+  // BOSS BATTLE INTERCEPT
+  // Check if we have an active boss state
   if (realm.state.activeBoss) {
-    handleBossBattle(input, realm.state.activeBoss, realm.state, def);
-    return;
+    // Allow specific overrides (e.g. DEBUG KILL)
+    const action = input.toLowerCase().split(" ")[0];
+    const mechAction = def.mechanics.actions[action];
+    if (!mechAction || !mechAction.overrideBoss) {
+      handleBossBattle(input, realm.state.activeBoss, realm.state, def);
+      return;
+    }
   }
 
-  // 1. Check Genre Mechanics (Actions)
+  // 1. Check Genre Mechanics (Actions) Or Location Interactions
   const action = input.toLowerCase().split(" ")[0]; // Simple verb parsing
   const mechanics = def.mechanics;
 
-  if (mechanics.actions[action]) {
+  const hasLocationInteraction =
+    location.interactions &&
+    location.interactions.some((i) => {
+      if (i.action === action) return true;
+      if (i.weakness && i.weakness.includes(action)) return true;
+      return false;
+    });
+
+  if (mechanics.actions[action] || hasLocationInteraction) {
     // Execute Genre Action
     handleAction(action, input, location, realm.state, def);
     return;
@@ -138,6 +202,8 @@ export function processRealmCommand(input) {
 
 function handleRealmLook() {
   const realm = dungeon.realm;
+  if (!realm) return; // Realm might have exited
+
   const def = REALM_REGISTRY[realm.gameId];
   const phase = def.phases[realm.state.phaseIndex];
 
@@ -174,8 +240,10 @@ function handleRealmLook() {
 
     // Boss HUD
     const boss = realm.state.activeBoss;
-    const hpBar = "█".repeat(boss.hp) + "░".repeat(8 - boss.hp); // Assuming max 8
-    writeLog(`BOSS HP: [${hpBar}]`, "error");
+    const maxBar = 8;
+    const displayHp = Math.max(0, Math.min(boss.hp, maxBar));
+    const hpBar = "█".repeat(displayHp) + "░".repeat(maxBar - displayHp);
+    writeLog(`BOSS HP: [${hpBar}] (${boss.hp})`, "error");
 
     // Show Cue
     const currentPhaseName = boss.state.pattern[boss.state.step];
@@ -283,20 +351,32 @@ function handleAction(action, fullInput, location, state, def) {
     });
 
     if (interaction) {
+      console.log("DEBUG: Found interaction", interaction);
+      // Check if already completed (if one-time logic applies)
+      // For now, assume "onCollect" implies one-time.
+      const interactId = `interaction_${location.id}_${interaction.action}`;
+      if (interaction.onCollect && state.flags[interactId]) {
+        writeLog("You've already done that.");
+        return; // Success handled, but no-op
+      }
+
       writeLog(
         interaction.onDefeat || interaction.msg || interaction.description
       );
 
+      console.log("DEBUG: Applying effects", interaction.onCollect);
       // Apply effects
       if (interaction.onCollect) {
         state.stats[interaction.onCollect.stat] += interaction.onCollect.value;
         writeLog(interaction.onCollect.msg, "success");
+        state.flags[interactId] = true;
       }
 
-      // Remove interaction (one-time?)
-      location.interactions = location.interactions.filter(
-        (x) => x !== interaction
-      );
+      if (interaction.completesRealm) {
+        completePhase(state, def);
+      }
+
+      // Do not mutate location.interactions!
       success = true;
     }
   }
@@ -329,10 +409,21 @@ function handleAction(action, fullInput, location, state, def) {
       return;
     }
 
-    // Generic flavor text if no specific logic triggered
-    const flavor = def.mechanics.actions[action];
-    if (flavor) writeLog(flavor.description);
-    else writeLog("You can't do that here.");
+    // Generic flavor text / Effect trigger
+    const actionDef = def.mechanics.actions[action];
+    if (actionDef) {
+      if (actionDef.effect) {
+        // Execute custom logic defined in the data file
+        // We pass state, and full input for parsing flexibility
+        const resultMsg = actionDef.effect(state, fullInput);
+        if (resultMsg) writeLog(resultMsg);
+      }
+
+      if (actionDef.msg) writeLog(actionDef.msg, "success");
+      else if (actionDef.description) writeLog(actionDef.description);
+    } else {
+      writeLog("You can't do that here.");
+    }
   }
 }
 
@@ -364,6 +455,16 @@ function completePhase(state, def) {
     // Ensure inventory exists (it's in dungeon module scope, not passed here)
     if (dungeon.inventory) dungeon.inventory.push(reward);
     writeLog(`You obtained: ${reward.name}`, "success");
+
+    // Narrative Trigger: Disable Hacking if Glitch Layer
+    if (def.realmId === "glitch_layer_alpha") {
+      if (!dungeon.flags) dungeon.flags = {};
+      dungeon.flags["hacking_disabled"] = true;
+      writeLog(
+        "WARNING: Neural Link Overload. Hacking Module Offline.",
+        "error"
+      );
+    }
   } else {
     // Next Phase
     const nextPhase = def.phases[state.phaseIndex];

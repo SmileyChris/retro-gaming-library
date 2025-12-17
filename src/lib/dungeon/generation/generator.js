@@ -6,7 +6,10 @@ import { NPC_ROSTER } from "../content/npcs.js";
 import { pickDirectorMode } from "./director.js";
 import { generateZoneTopology } from "./topology.js";
 import { injectPuzzles } from "./puzzles.js";
+import { injectLocalPuzzles } from "./puzzles_local.js";
 import { populateContent } from "./populator.js";
+
+import { generateNarrative } from "./narrative.js";
 
 export function generateDungeon(seed = Date.now()) {
   console.log("Generating Dungeon with seed (Pipeline):", seed);
@@ -15,14 +18,50 @@ export function generateDungeon(seed = Date.now()) {
   const mode = pickDirectorMode(seed);
   console.log(`Director Mode: ${mode.name}`);
 
+  // 1a. Narrative Generation
+  const narrative = generateNarrative(seed);
+  console.log(`Narrative: ${narrative.threat.name} | ${narrative.guide.name}`);
+
+  // 2. Distribute Content
   // 2. Distribute Content
   const zoneContents = distributeGamesToZones(DUNGEON_GAMES, seed);
-  const zoneList = Object.values(ZONES);
+  let allZones = Object.values(ZONES);
+
+  // Extract Fixed Zones
+  const startZone = allZones.find((z) => z.id === "ARCADE");
+  const glitchZone = allZones.find((z) => z.id === "GLITCH");
+
+  // Remove fixed zones from pool
+  let otherZones = allZones.filter(
+    (z) => z.id !== "ARCADE" && z.id !== "GLITCH"
+  );
+
+  // Deterministic Shuffle based on seed
+  let currentSeed = seed;
+  const nextRand = () => {
+    const x = Math.sin(currentSeed++) * 10000;
+    return x - Math.floor(x);
+  };
+
+  for (let i = otherZones.length - 1; i > 0; i--) {
+    const j = Math.floor(nextRand() * (i + 1));
+    [otherZones[i], otherZones[j]] = [otherZones[j], otherZones[i]];
+  }
+
+  // Construct Layout: [Arcade, Random, Glitch, Random...]
+  // Ensure Glitch is at index 2 (Level 3)
+  // If we don't have enough random zones, we just append what we have.
+
+  const zoneList = [startZone];
+  if (otherZones.length > 0) zoneList.push(otherZones.shift()); // Level 2
+  if (glitchZone) zoneList.push(glitchZone); // Level 3
+  zoneList.push(...otherZones); // Rest
 
   // 3. Initialize World
   const world = {
     seed,
     mode: mode.name,
+    narrative: narrative, // Store narrative context
     rooms: {},
     playerStart: "start_gate", // Will link to first hub
   };
@@ -73,9 +112,26 @@ export function generateDungeon(seed = Date.now()) {
     });
     topology.startNode = `hub_${zone.id.toLowerCase()}`;
 
-    // B. Puzzles
+    // B. Puzzles (Global)
     const difficulty = i + 1;
     injectPuzzles(world, topology, difficulty);
+
+    // B2. Puzzles (Local)
+    // We pass the subset of rooms? Or just the world and filter by zone?
+    // Current impl iterates all logic rooms.
+    // It's safer to filter by current zone nodes.
+    // But injectLocalPuzzles iterates Object.values(world.rooms).
+    // Let's just run it once at the end or per zone?
+    // If we run per zone, we need to pass nodes.
+    // My impl simply iterates all rooms.
+    // So let's move it to AFTER the loop or keep it here but know it re-scans?
+    // Actually, world.rooms accumulates.
+    // Let's run it once at the END of generation.
+    // Wait, step 5 iterates zones.
+    // Let's remove it from here and put it after step 6?
+    // Or just let it run on current keys?
+    // Let's just put it here but maybe update the function to take a list of rooms?
+    // No, simpler to run it once at the end.
 
     // C. Populate
     populateContent(world, topology, zone, games, mode);
@@ -134,7 +190,10 @@ export function generateDungeon(seed = Date.now()) {
     }
   });
 
-  // 7. Validate
+  // 7. Local Puzzles
+  injectLocalPuzzles(world);
+
+  // 8. Validate
   const isValid = validateConnectivity(world);
   console.log("Dungeon Connectivity Valid:", isValid);
 

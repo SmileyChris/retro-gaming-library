@@ -69,6 +69,16 @@ export const ZONES = {
       "The hum of a generator provides a low, rhythmic bassline to the silence.",
     ],
   },
+  THE_GLITCH_LAYER: {
+    id: "GLITCH",
+    name: "Sector 0x99 (Glitch Layer)",
+    genres: ["Hacking", "Glitch"],
+    flavor: [
+      "The walls flicker and z-fight with existence.",
+      "You hear the sound of a modem handshake screaming in the void.",
+      "Fragments of code float in the air like dust.",
+    ],
+  },
 };
 
 export const ROOM_TEMPLATES = {
