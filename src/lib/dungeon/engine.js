@@ -376,7 +376,7 @@ function handleExamine(target, system = null) {
         log(`Genre: ${item.metadata.genres.join(", ")}`, "dim");
       if (item.metadata.notes) log(`Notes: ${item.metadata.notes}`, "dim");
     }
-    log("Type 'play' to launch this cartridge.", "info-dim");
+    log("To play: find a Console and USE CARTRIDGE.", "info-dim");
   }
 
   if (item.type === "PACK") {
