@@ -46,17 +46,46 @@ export function handleMove(system, target) {
 
       if (!hasBackpack && dir === "up") {
         writeLog(
-          "The elevator door opens, but you realize you have too many loose cartridges to carry to the next sector efficiently.",
+          "The elevator door opens, but you fumble with your stack of cartridges. They are about to spill everywhere.",
           "error"
         );
-        writeLog("You should speak to the Archivist about a container.", "dim");
-        return;
-      }
+        writeLog(
+          `"Careful!" The Archivist steps out from the shadows.`,
+          "response"
+        );
+        writeLog(
+          `"You cannot ascend to the higher levels with your hands full. The transfer protocols require containment. Take this."`
+        );
 
-      writeLog(`*CLICK* The ${keyItem ? keyItem.name : "key"} turns!`, "info");
-      // Unlock persistently?
-      // In engine.js it did `delete room.locks[dir]`. We should do that.
-      delete room.locks[dir];
+        const pack = {
+          id: "backpack_starter",
+          name: "Infinite Backpack",
+          type: "PACK",
+          description: "Bigger on inside.",
+          contents: [],
+        };
+        dungeon.inventory.push(pack);
+        writeLog(`The Archivist gives you an ${pack.name}.`, "success");
+        writeLog(
+          "You quickly organize your collection. The elevator awaits.",
+          "dim"
+        );
+
+        // Proceed with unlock
+        writeLog(
+          `*CLICK* The ${keyItem ? keyItem.name : "key"} is accepted.`,
+          "info"
+        );
+        delete room.locks[dir];
+        // Continue to move logic below (fall through)
+      } else {
+        // Standard Unlock
+        writeLog(
+          `*CLICK* The ${keyItem ? keyItem.name : "key"} turns!`,
+          "info"
+        );
+        delete room.locks[dir];
+      }
     } else {
       writeLog(lock.msg, "error");
       return; // STOP

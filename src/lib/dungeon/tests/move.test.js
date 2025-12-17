@@ -120,17 +120,26 @@ describe("Command Handlers - Move", () => {
     };
     dungeon.inventory.push({ id: "k_up", name: "Elevator Key" });
 
-    // Try without backpack
+    // Try without backpack - Archivist should intervene and allow passage
     handleMove(system, "Up");
-    expect(dungeon.currentRoom).toBe("hall");
+
+    // Check for intervention logs
     expect(
-      logs.find((l) => l.msg.includes("too many loose cartridges"))
+      logs.find((l) => l.msg.includes("fumble with your stack"))
+    ).toBeTruthy();
+    expect(
+      logs.find((l) => l.msg.includes("Archivist steps out"))
+    ).toBeTruthy();
+    expect(
+      logs.find((l) => l.msg.includes("gives you an Infinite Backpack"))
     ).toBeTruthy();
 
-    // Add backpack
-    dungeon.inventory.push({ id: "backpack_starter", type: "PACK" });
-
-    handleMove(system, "Up");
+    // Should have moved
     expect(dungeon.currentRoom).toBe("floor2");
+
+    // Should have received backpack
+    expect(dungeon.inventory.some((i) => i.id === "backpack_starter")).toBe(
+      true
+    );
   });
 });

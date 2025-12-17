@@ -322,9 +322,8 @@ function listRoomContents(room, system = null) {
     room.items.forEach((item) => {
       if (item.hidden) return;
       if (item.type === "GAME") {
-        const suffix = item.metadata?.platform
-          ? ` (${item.metadata.platform})`
-          : "";
+        const platform = item.platform || item.metadata?.platform;
+        const suffix = platform ? ` (${platform})` : "";
         log(`You spot a cartridge for ${item.name}${suffix}.`, "response");
       } else if (item.type === "KEY") {
         log(`A ${item.name} is shining on the ground.`, "response");
