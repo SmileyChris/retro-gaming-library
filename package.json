@@ -20,6 +20,8 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.17",
+    "dotenv": "^17.2.3",
+    "puppeteer": "^24.34.0",
     "sharp": "^0.34.5"
   }
 }
