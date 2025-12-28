@@ -12,433 +12,310 @@ const args = process.argv.slice(2);
 const FAIL_FAST = args.includes('--fail-fast') || args.includes('-f');
 const DEBUG = args.includes('--debug') || args.includes('-d');
 const REFETCH = args.includes('--refetch') || args.includes('-r');
+const CHECK_DISCS = args.includes('--check-discs') || args.includes('--multi-disc') || args.includes('--check-disks');
 const HEADLESS = !args.includes('--visible');
 
-// Platform filter (e.g., --platform=SNES)
 const platformArg = args.find(a => a.startsWith('--platform='));
 const PLATFORM_FILTER = platformArg ? platformArg.split('=')[1] : null;
 
-// Minimum match score threshold (e.g., --min-score=60)
 const scoreArg = args.find(a => a.startsWith('--min-score='));
 const MIN_SCORE = scoreArg ? parseInt(scoreArg.split('=')[1], 10) : 60;
 
-// Source selection (e.g., --source=romspedia|retrostic|auto)
 const sourceArg = args.find(a => a.startsWith('--source='));
 const SOURCE = sourceArg ? sourceArg.split('=')[1] : 'auto';
-const VALID_SOURCES = ['romspedia', 'retrostic', 'auto'];
-if (!VALID_SOURCES.includes(SOURCE)) {
-    console.error(`Invalid source: ${SOURCE}. Valid options: ${VALID_SOURCES.join(', ')}`);
-    process.exit(1);
-}
 
 const ROMS_DIR = path.join(__dirname, '../roms');
-const TEMP_DIR = path.join(__dirname, '../roms/.temp');
+const TEMP_DIR = path.join(__dirname, '../roms/.temp', `proc-${process.pid}`);
 const FAILED_LOG = path.join(ROMS_DIR, 'failed.log');
 
-// Rate limiting delay (ms)
-const DELAY_BETWEEN_DOWNLOADS = 3000;
-
-// Ensure directories exist
-if (!fs.existsSync(ROMS_DIR)) {
-    fs.mkdirSync(ROMS_DIR, { recursive: true });
-}
-if (!fs.existsSync(TEMP_DIR)) {
-    fs.mkdirSync(TEMP_DIR, { recursive: true });
-}
-
-// Normalize game name for filename
-const normalizeFilename = (name) => {
-    return name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+// Myrient Config
+const MYRIENT_BASE = 'https://myrient.erista.me/files';
+const MYRIENT_PATHS = {
+    'SNES': '/No-Intro/Nintendo - Super Nintendo Entertainment System/',
+    'GBA': '/No-Intro/Nintendo - Game Boy Advance/',
+    'Genesis': '/No-Intro/Sega - Mega Drive - Genesis/',
+    'NES': '/No-Intro/Nintendo - Nintendo Entertainment System (Headered)/',
+    'N64': '/No-Intro/Nintendo - Nintendo 64 (BigEndian)/',
+    'GB/GBC': ['/No-Intro/Nintendo - Game Boy Color/', '/No-Intro/Nintendo - Game Boy/'],
+    'Master System': '/No-Intro/Sega - Master System - Mark III/',
+    'PS1': '/Redump/Sony - PlayStation/',
+    'Saturn': '/Redump/Sega - Saturn/'
 };
 
-// Wait for download to complete
-const waitForDownload = async (downloadPath, timeout = 120000) => {
-    const start = Date.now();
-    let lastLog = 0;
-    while (Date.now() - start < timeout) {
-        const files = fs.readdirSync(downloadPath);
+const MULTI_DISC_PLATFORMS = ['PS1', 'Saturn'];
 
-        // Log progress every 10 seconds
-        if (DEBUG && Date.now() - lastLog > 10000) {
-            console.log(`  Waiting for download... Files: ${files.join(', ') || '(none)'}`);
-            lastLog = Date.now();
+if (!fs.existsSync(ROMS_DIR)) fs.mkdirSync(ROMS_DIR, { recursive: true });
+if (!fs.existsSync(TEMP_DIR)) fs.mkdirSync(TEMP_DIR, { recursive: true });
+
+const normalizeFilename = (name) => name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+
+const formatBytes = (bytes) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+const printSizeSummary = () => {
+    console.log('\n--- ROMs Directory Size Summary ---\n');
+    let totalSize = 0;
+    let totalCount = 0;
+
+    const platforms = Object.entries(platformConfig)
+        .filter(([key, config]) => config.arkosFolder)
+        .sort((a, b) => a[0].localeCompare(b[0]));
+
+    console.log(`${'Platform'.padEnd(15)} | ${'Count'.padEnd(8)} | ${'Size'.padEnd(10)}`);
+    console.log('-'.repeat(40));
+
+    for (const [name, config] of platforms) {
+        const platformDir = path.join(ROMS_DIR, config.arkosFolder);
+        let count = 0;
+        let size = 0;
+
+        if (fs.existsSync(platformDir)) {
+            const files = fs.readdirSync(platformDir).filter(f => !f.startsWith('.'));
+
+            const uniqueGames = new Set();
+
+            for (const file of files) {
+                try {
+                    const filePath = path.join(platformDir, file);
+                    const stats = fs.statSync(filePath);
+                    size += stats.size;
+
+                    // Only count files, exclude gamelist.xml
+                    if (stats.isFile() && file !== 'gamelist.xml') {
+                        const ext = path.extname(file);
+                        const nameWithoutExt = path.basename(file, ext);
+                        // Remove _disc suffix (e.g. game_disc1 -> game)
+                        const baseName = nameWithoutExt.replace(/_disc\w+$/, '');
+                        uniqueGames.add(baseName);
+                    }
+                } catch (e) { }
+            }
+            count = uniqueGames.size;
         }
 
-        const downloadedFile = files.find(f => !f.endsWith('.crdownload') && !f.startsWith('.'));
-        if (downloadedFile) {
-            return path.join(downloadPath, downloadedFile);
-        }
-
-        // Check if download is in progress
-        const inProgress = files.find(f => f.endsWith('.crdownload'));
-        if (inProgress && DEBUG && Date.now() - lastLog > 10000) {
-            console.log(`  Download in progress: ${inProgress}`);
-        }
-
-        await new Promise(r => setTimeout(r, 1000));
+        console.log(`${name.padEnd(15)} | ${count.toString().padEnd(8)} | ${formatBytes(size).padEnd(10)}`);
+        totalSize += size;
+        totalCount += count;
     }
-    throw new Error('Download timeout');
+
+    console.log('-'.repeat(40));
+    console.log(`${'TOTAL'.padEnd(15)} | ${totalCount.toString().padEnd(8)} | ${formatBytes(totalSize).padEnd(10)}\n`);
 };
 
-// Clear temp directory
-const clearTemp = () => {
-    if (fs.existsSync(TEMP_DIR)) {
-        const files = fs.readdirSync(TEMP_DIR);
-        for (const file of files) {
-            fs.unlinkSync(path.join(TEMP_DIR, file));
-        }
-    }
+const cleanSearchTerm = (name) => {
+    let clean = name.replace(/'/g, '').replace(/[^a-z0-9\s]/gi, ' ');
+    const stopWords = ['the', 'and', 'of', 'a', 'an', 'to', 'in', 'for', 'with', 'on', 'at', 'by', 'from'];
+    return clean.toLowerCase().split(/\s+/).filter(w => w && !stopWords.includes(w)).join(' ');
 };
 
-// Log failed download
 const logFailure = (game, error) => {
     const entry = `${new Date().toISOString()} | ${game.platform} | ${game.name} | ${error}\n`;
     fs.appendFileSync(FAILED_LOG, entry);
 };
 
-// Search for a game on retrostic
-const searchGameRetrostic = async (page, platform, gameName) => {
-    const retrosticPlatform = platformConfig[platform].retrostic;
-    const searchUrl = `https://www.retrostic.com/roms/${retrosticPlatform}?search=${encodeURIComponent(gameName)}`;
-
-    if (DEBUG) console.log(`  Search URL: ${searchUrl}`);
-
-    await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 30000 });
-    await new Promise(r => setTimeout(r, 1000)); // Wait for results to render
-
-    return searchUrl;
+const clearTemp = () => {
+    if (fs.existsSync(TEMP_DIR)) {
+        for (const file of fs.readdirSync(TEMP_DIR)) {
+            try {
+                fs.rmSync(path.join(TEMP_DIR, file), { recursive: true, force: true });
+            } catch (e) { }
+        }
+    }
 };
 
-// Find and click the best matching game result (retrostic)
+const getDiscSuffix = (filename) => {
+    const match = filename.match(/\(Disc\s*(\d+|[A-Z])\)/i);
+    return match ? `_disc${match[1].toLowerCase()}` : '';
+};
+
+const findMultiDiscSiblings = (index, mainMatch) => {
+    const mainSuffix = getDiscSuffix(mainMatch.text);
+    if (!mainSuffix) return [];
+
+    const baseName = mainMatch.text.replace(/\(Disc\s*(\d+|[A-Z])\)/i, '').trim();
+    return index.filter(g => {
+        if (g.text === mainMatch.text) return false;
+        const subSuffix = getDiscSuffix(g.text);
+        if (!subSuffix) return false;
+        const subBase = g.text.replace(/\(Disc\s*(\d+|[A-Z])\)/i, '').trim();
+        return subBase === baseName;
+    });
+};
+
+const waitForDownload = async (downloadPath, timeout, logPrefix = '   ') => {
+    const start = Date.now();
+    let lastLog = 0;
+    let lastSize = -1;
+    let lastSizeChange = Date.now();
+
+    while (Date.now() - start < timeout) {
+        let files = [];
+        try { files = fs.readdirSync(downloadPath); } catch (e) { }
+
+        const activeFile = files.find(f => {
+            if (f.startsWith('.')) return false;
+            try { return fs.statSync(path.join(downloadPath, f)).isFile(); } catch { return false; }
+        });
+
+        if (activeFile) {
+            let currentSize = 0;
+            try {
+                const stats = fs.statSync(path.join(downloadPath, activeFile));
+                currentSize = stats.size;
+            } catch (e) { }
+
+            if (currentSize !== lastSize) {
+                lastSize = currentSize;
+                lastSizeChange = Date.now();
+            }
+
+            if (Date.now() - lastLog > 3000) {
+                const elapsed = Math.round((Date.now() - start) / 1000);
+                process.stdout.write(`\r${logPrefix} Downloading: ${formatBytes(currentSize)} (${elapsed}s)    `);
+                lastLog = Date.now();
+            }
+
+            const isCrDownload = activeFile.endsWith('.crdownload') || activeFile.endsWith('.part');
+            if (!isCrDownload && currentSize > 0 && !files.some(f => f.endsWith('.crdownload'))) {
+                process.stdout.write(`\r${logPrefix} Finished: ${formatBytes(currentSize)}                \n`);
+                return path.join(downloadPath, activeFile);
+            }
+
+            if (Date.now() - lastSizeChange > 45000 && currentSize > 0) {
+                process.stdout.write('\n');
+                throw new Error('Download stalled');
+            }
+        }
+        await new Promise(r => setTimeout(r, 1000));
+    }
+    process.stdout.write('\n');
+    throw new Error(`Timeout after ${timeout / 1000}s`);
+};
+
+// --- Myrient ---
+const myrientIndexes = {};
+
+const buildMyrientIndex = async (page, pathSuffix) => {
+    if (myrientIndexes[pathSuffix]) return myrientIndexes[pathSuffix];
+
+    if (!pathSuffix) return null;
+
+    console.log(`[Myrient] Indexing ${pathSuffix}...`);
+    const fullUrl = `${MYRIENT_BASE}${pathSuffix}`;
+
+    try {
+        await page.goto(fullUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+        await page.waitForSelector('table#list tbody tr', { timeout: 30000 });
+
+        const games = await page.evaluate(() => {
+            return Array.from(document.querySelectorAll('table#list tbody tr'))
+                .map(row => {
+                    const link = row.querySelector('a');
+                    return link ? { text: link.textContent.trim(), href: link.href } : null;
+                })
+                .filter(g => g && !g.text.startsWith('.') && g.text !== 'Parent Directory');
+        });
+        console.log(`[Myrient] Indexed ${games.length} games for ${pathSuffix}`);
+        myrientIndexes[pathSuffix] = games;
+        return games;
+    } catch (err) {
+        console.error(`[Myrient] Indexing failed for ${pathSuffix}: ${err.message}`);
+        return null;
+    }
+};
+
+const findBestMatchMyrient = (games, gameName) => {
+    if (!games || games.length === 0) return null;
+    const normalizedTarget = cleanSearchTerm(gameName).replace(/\s+/g, '');
+    const targetWords = cleanSearchTerm(gameName).split(' ');
+
+    const ratedGames = games.map(g => {
+        const fileText = g.text;
+        const normalizedFile = cleanSearchTerm(fileText).replace(/\s+/g, '');
+        let score = 0;
+
+        if (normalizedFile.includes(normalizedTarget)) score = 80;
+        else if (normalizedTarget.includes(normalizedFile)) score = 75;
+        else {
+            const matchCount = targetWords.filter(w => normalizedFile.includes(w)).length;
+            const ratio = matchCount / targetWords.length;
+
+            if (ratio === 1) score = 70;
+            else if (ratio >= 0.5) score = 50;
+
+            const fileWords = cleanSearchTerm(fileText).split(' ');
+            const fileMatchCount = fileWords.filter(w => normalizedTarget.includes(w)).length;
+            if (fileWords.length > 0 && fileMatchCount / fileWords.length >= 0.8) {
+                score = Math.max(score, 60);
+            }
+        }
+
+        if (fileText.includes('(USA)')) score += 20;
+        if (fileText.includes('Rev') || fileText.includes('v1.')) score += 5;
+
+        if (fileText.includes('(Japan)') || fileText.includes('(Europe)') || fileText.includes('(Germany)') || fileText.includes('(France)')) score -= 10;
+        if (fileText.includes('Beta') || fileText.includes('Demo') || fileText.includes('Proto') || fileText.includes('Pirate')) score -= 40;
+
+        return { ...g, score };
+    }).filter(g => g.score > 40).sort((a, b) => b.score - a.score);
+
+    return ratedGames.length > 0 ? ratedGames[0] : null;
+};
+
+// --- Retrostic ---
+const searchGameRetrostic = async (page, platform, gameName) => {
+    const retrosticPlatform = platformConfig[platform] ? platformConfig[platform].retrostic : null;
+    if (!retrosticPlatform) throw new Error('No retrostic platform config');
+    const searchUrl = `https://www.retrostic.com/roms/${retrosticPlatform}?search=${encodeURIComponent(gameName)}`;
+    await page.goto(searchUrl, { waitUntil: 'load', timeout: 45000 });
+    const noResults = await page.evaluate(() => document.body.textContent.toLowerCase().includes('no results found'));
+    if (noResults) throw new Error('No results');
+};
+
 const findBestMatchRetrostic = async (page, gameName) => {
-    // Get all game links on the page
     const gameLinks = await page.$$eval('a[href*="/roms/"]', (links, targetName) => {
         const normalizedTarget = targetName.toLowerCase().replace(/[^a-z0-9]/g, '');
-        // Extract key words from target (for games like "Zelda: Ocarina of Time" -> ["zelda", "ocarina", "time"])
-        const targetWords = targetName.toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 2);
-
-        const results = links
-            .filter(link => {
-                const href = link.getAttribute('href');
-                const text = link.textContent.trim();
-                // Filter to game detail pages with actual text content
-                return href && text.length > 0 && href.match(/\/roms\/[^/]+\/[^/]+-\d+$/);
-            })
-            .map(link => {
-                const text = link.textContent.trim();
-                const href = link.getAttribute('href');
-                const normalizedText = text.toLowerCase().replace(/[^a-z0-9]/g, '');
-                // Also check the URL slug
-                const slug = href.split('/').pop().replace(/-\d+$/, '').replace(/-/g, '');
-
-                // Calculate match score
-                let score = 0;
-
-                // Exact match
-                if (normalizedText === normalizedTarget) score = 100;
-                else if (normalizedText.includes(normalizedTarget)) score = 90;
-                else if (normalizedTarget.includes(normalizedText) && normalizedText.length > 5) score = 70;
-                // Check if key words from search appear in text or slug
-                else {
-                    const matchingWords = targetWords.filter(w =>
-                        normalizedText.includes(w) || slug.includes(w)
-                    );
-                    if (matchingWords.length >= 2) {
-                        score = 50 + (matchingWords.length / targetWords.length) * 40;
-                    } else if (matchingWords.length === 1 && targetWords.length <= 2) {
-                        score = 40;
-                    }
-                }
-
-                // Prefer USA versions
-                if (text.includes('(USA)') || text.includes('(U)') || text.includes('USA')) score += 10;
-                // Prefer non-hacked versions
-                if (text.toLowerCase().includes('hack')) score -= 30;
-                // Prefer v1.0 or latest versions
-                if (text.includes('(V1.2)') || text.includes('(V1.1)')) score += 2;
-
-                return { text, href, score };
-            })
-            .filter(r => r.score > 0)
-            .sort((a, b) => b.score - a.score);
-
-        // Deduplicate by href
-        const seen = new Set();
-        return results.filter(r => {
-            if (seen.has(r.href)) return false;
-            seen.add(r.href);
-            return true;
-        });
+        return links.filter(link => {
+            const href = link.getAttribute('href');
+            return href && href.match(/\/roms\/[^/]+\/[^/]+-\d+$/);
+        }).map(link => {
+            const text = link.textContent.trim();
+            const normalizedText = text.toLowerCase().replace(/[^a-z0-9]/g, '');
+            let score = normalizedText === normalizedTarget ? 100 : (normalizedText.includes(normalizedTarget) ? 90 : 50);
+            if (text.includes('(USA)')) score += 10;
+            return { text, href: link.href, score };
+        }).filter(r => r.score > 0).sort((a, b) => b.score - a.score);
     }, gameName);
 
-    if (DEBUG) {
-        console.log(`  Found ${gameLinks.length} potential matches`);
-        gameLinks.slice(0, 5).forEach((m, i) => console.log(`    ${i + 1}. ${m.text} (score: ${m.score})`));
-    }
-
-    if (gameLinks.length === 0) {
-        throw new Error('No matching games found on search results page');
-    }
-
-    const bestMatch = gameLinks[0];
-
-    // Minimum score threshold to avoid bad matches
-    if (bestMatch.score < MIN_SCORE) {
-        throw new Error(`Best match score too low (${bestMatch.score.toFixed(0)} < ${MIN_SCORE}): "${bestMatch.text}"`);
-    }
-
-    if (DEBUG) console.log(`  Selected: ${bestMatch.text}`);
-
-    // Navigate to the game page
-    const gameUrl = bestMatch.href.startsWith('http')
-        ? bestMatch.href
-        : `https://www.retrostic.com${bestMatch.href}`;
-    await page.goto(gameUrl, { waitUntil: 'networkidle2' });
-    await new Promise(r => setTimeout(r, 1000));
-
-    return bestMatch;
+    if (gameLinks.length === 0) throw new Error('No matches');
+    return gameLinks[0];
 };
 
-// Download ROM from game page (retrostic)
-const downloadRomRetrostic = async (page) => {
-    // Click the download button (has class .romdownbtn)
+const downloadRomRetrostic = async (page, downloadDir, timeout) => {
     const downloadBtn = await page.$('.romdownbtn');
-
-    if (!downloadBtn) {
-        // Fallback: try finding by text
-        const clicked = await page.evaluate(() => {
-            const elements = Array.from(document.querySelectorAll('button, a'));
-            const btn = elements.find(el =>
-                el.textContent.toLowerCase().includes('download') &&
-                !el.textContent.toLowerCase().includes('emulator')
-            );
-            if (btn) {
-                btn.click();
-                return true;
-            }
-            return false;
-        });
-
-        if (!clicked) {
-            throw new Error('Download button not found');
-        }
-    } else {
-        if (DEBUG) console.log('  Clicking download button...');
-        await downloadBtn.click();
-    }
-
-    // Wait for navigation to download page
-    if (DEBUG) console.log('  Waiting for download page...');
-    await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 }).catch(() => {});
-
-    if (DEBUG) console.log(`  Current URL: ${page.url()}`);
-
-    // Wait for download to start (the site may have a delay)
-    await new Promise(r => setTimeout(r, 3000));
-
-    // Wait for download to complete (longer timeout for large files)
-    const downloadedFile = await waitForDownload(TEMP_DIR, 180000); // 3 min timeout
-    return downloadedFile;
-};
-
-// ============ ROMSPEDIA FUNCTIONS ============
-
-// Search for a game on romspedia
-const searchGameRomspedia = async (page, platform, gameName) => {
-    const searchUrl = `https://www.romspedia.com/search.php?search_term_string=${encodeURIComponent(gameName)}`;
-
-    if (DEBUG) console.log(`  [Romspedia] Search URL: ${searchUrl}`);
-
-    await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 30000 });
-    await new Promise(r => setTimeout(r, 1000)); // Wait for results to render
-
-    return searchUrl;
-};
-
-// Find and click the best matching game result (romspedia)
-const findBestMatchRomspedia = async (page, gameName, platform) => {
-    const romspediaPlatform = platformConfig[platform].romspedia;
-
-    // Get all game links on the page - specifically those with h2 titles
-    const gameLinks = await page.$$eval('a[href*="/roms/"]', (links, { targetName, targetPlatform }) => {
-        const normalizedTarget = targetName.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const targetWords = targetName.toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 2);
-
-        // Helper to get clean title text from link
-        const getTitleText = (link) => {
-            // Try h2 element first
-            const h2 = link.querySelector('h2');
-            if (h2) {
-                return h2.textContent.trim();
-            }
-            // Try image alt text (cover images often have game title as alt)
-            const img = link.querySelector('img');
-            if (img && img.alt) {
-                return img.alt.trim();
-            }
-            // Skip links with SVG/CSS noise or just numbers
-            const text = link.textContent.trim().replace(/\s+/g, ' ');
-            if (/^\d+/.test(text) || text.includes('.svg-')) {
-                return '';
-            }
-            return text;
-        };
-
-        const results = links
-            .filter(link => {
-                const href = link.getAttribute('href');
-                const text = getTitleText(link);
-                // Filter to game pages on the correct platform with actual title text
-                return href && text.length > 0 && href.includes(`/roms/${targetPlatform}/`);
-            })
-            .map(link => {
-                const text = getTitleText(link);
-                const href = link.getAttribute('href');
-                const normalizedText = text.toLowerCase().replace(/[^a-z0-9]/g, '');
-                // Extract slug from URL
-                const slug = href.split('/').pop().replace(/-/g, '');
-
-                // Calculate match score
-                let score = 0;
-
-                // Exact match
-                if (normalizedText === normalizedTarget) score = 100;
-                else if (normalizedText.includes(normalizedTarget)) score = 90;
-                else if (normalizedTarget.includes(normalizedText) && normalizedText.length > 5) score = 70;
-                // Check if key words from search appear in text or slug
-                else {
-                    const matchingWords = targetWords.filter(w =>
-                        normalizedText.includes(w) || slug.includes(w)
-                    );
-                    if (matchingWords.length >= 2) {
-                        score = 50 + (matchingWords.length / targetWords.length) * 40;
-                    } else if (matchingWords.length === 1 && targetWords.length <= 2) {
-                        score = 40;
-                    }
-                }
-
-                // Prefer USA versions
-                if (href.includes('-usa') || text.includes('(USA)') || text.includes('(U)')) score += 10;
-                // Penalize Japanese versions
-                if (href.includes('-jap') || href.includes('-japan') || text.includes('(J)') || text.includes('(Japan)')) score -= 15;
-                // Prefer non-hacked versions
-                if (text.toLowerCase().includes('hack')) score -= 30;
-
-                return { text, href, score };
-            })
-            .filter(r => r.score > 0)
-            .sort((a, b) => b.score - a.score);
-
-        // Deduplicate by href
-        const seen = new Set();
-        return results.filter(r => {
-            if (seen.has(r.href)) return false;
-            seen.add(r.href);
-            return true;
-        });
-    }, { targetName: gameName, targetPlatform: romspediaPlatform });
-
-    if (DEBUG) {
-        console.log(`  [Romspedia] Found ${gameLinks.length} potential matches`);
-        gameLinks.slice(0, 5).forEach((m, i) => console.log(`    ${i + 1}. ${m.text} (score: ${m.score})`));
-    }
-
-    if (gameLinks.length === 0) {
-        throw new Error('No matching games found on romspedia');
-    }
-
-    const bestMatch = gameLinks[0];
-
-    // Minimum score threshold
-    if (bestMatch.score < MIN_SCORE) {
-        throw new Error(`Best match score too low (${bestMatch.score.toFixed(0)} < ${MIN_SCORE}): "${bestMatch.text}"`);
-    }
-
-    if (DEBUG) console.log(`  [Romspedia] Selected: ${bestMatch.text}`);
-
-    // Navigate to the game page
-    const gameUrl = bestMatch.href.startsWith('http')
-        ? bestMatch.href
-        : `https://www.romspedia.com${bestMatch.href}`;
-    await page.goto(gameUrl, { waitUntil: 'networkidle2' });
-    await new Promise(r => setTimeout(r, 1000));
-
-    return bestMatch;
-};
-
-// Download ROM from game page (romspedia)
-const downloadRomRomspedia = async (page) => {
-    // Navigate to the download page
-    const currentUrl = page.url();
-    const downloadPageUrl = `${currentUrl}/download?speed=fast`;
-
-    if (DEBUG) console.log(`  [Romspedia] Download page: ${downloadPageUrl}`);
-
-    await page.goto(downloadPageUrl, { waitUntil: 'networkidle2', timeout: 30000 });
-    await new Promise(r => setTimeout(r, 1000));
-
-    // Extract the direct download URL from the page
-    // The page has a countdown that redirects to downloads.romspedia.com
-    const directDownloadUrl = await page.evaluate(() => {
-        // Look for link to downloads.romspedia.com
-        const links = Array.from(document.querySelectorAll('a[href*="downloads.romspedia.com"]'));
-        if (links.length > 0) {
-            return links[0].href;
-        }
-        // Fallback: look in page content for the URL pattern
-        const pageContent = document.body.innerHTML;
-        const match = pageContent.match(/https:\/\/downloads\.romspedia\.com\/[^"'\s]+/);
-        return match ? match[0] : null;
+    if (downloadBtn) await downloadBtn.click();
+    else await page.evaluate(() => {
+        const btn = Array.from(document.querySelectorAll('a, button')).find(el => el.textContent.toLowerCase().includes('download') && !el.textContent.toLowerCase().includes('emulator'));
+        if (btn) btn.click();
     });
-
-    if (!directDownloadUrl) {
-        throw new Error('Could not find direct download URL on romspedia');
+    for (let i = 0; i < 15; i++) {
+        await new Promise(r => setTimeout(r, 1000));
+        let files = [];
+        try { files = fs.readdirSync(downloadDir); } catch (e) { }
+        if (files.some(f => !f.startsWith('.'))) break;
     }
-
-    if (DEBUG) console.log(`  [Romspedia] Direct URL: ${directDownloadUrl}`);
-
-    // Navigate to the direct download URL to trigger the download
-    await page.goto(directDownloadUrl, { waitUntil: 'networkidle2', timeout: 60000 }).catch(() => {});
-
-    // Wait for download to complete
-    const downloadedFile = await waitForDownload(TEMP_DIR, 180000);
-    return downloadedFile;
+    return await waitForDownload(downloadDir, timeout, '   [Retrostic]');
 };
 
-// ============ END ROMSPEDIA FUNCTIONS ============
-
-// Move ROM to final location (keep as ZIP - most emulators support loading from ZIP)
-const moveRom = (downloadedFile, finalPath, gameName) => {
-    const ext = path.extname(downloadedFile).toLowerCase();
-    const baseFilename = normalizeFilename(gameName);
-    const finalFilePath = path.join(finalPath, `${baseFilename}${ext}`);
-
-    fs.renameSync(downloadedFile, finalFilePath);
-    if (DEBUG) console.log(`  Saved: ${baseFilename}${ext}`);
-};
-
-// Check if game already downloaded
-const isAlreadyDownloaded = (platformDir, gameName) => {
-    if (!fs.existsSync(platformDir)) return false;
-
-    const baseFilename = normalizeFilename(gameName);
-    const files = fs.readdirSync(platformDir);
-    return files.some(f => f.startsWith(baseFilename + '.'));
-};
-
-// Main processing function
+// --- Main Process ---
 const processGames = async () => {
-    console.log('Starting ROM download...');
-    console.log(`Output directory: ${ROMS_DIR}`);
-    console.log(`Source: ${SOURCE}${SOURCE === 'auto' ? ' (romspedia -> retrostic fallback)' : ''}`);
-    if (DEBUG) console.log('Debug mode enabled');
-    if (FAIL_FAST) console.log('Fail-fast mode enabled');
-    if (REFETCH) console.log('Refetch mode enabled - will re-download existing ROMs');
-    if (PLATFORM_FILTER) console.log(`Platform filter: ${PLATFORM_FILTER}`);
-    if (!HEADLESS) console.log('Visible browser mode enabled');
-    console.log(`Minimum match score: ${MIN_SCORE}`);
+    fs.appendFileSync(FAILED_LOG, `\n--- RUN START: ${new Date().toISOString()} ---\n`);
 
-    // Launch browser
     const browser = await puppeteer.launch({
         headless: HEADLESS,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
@@ -446,169 +323,185 @@ const processGames = async () => {
 
     const page = await browser.newPage();
 
-    // Set download directory
-    const client = await page.createCDPSession();
-    await client.send('Page.setDownloadBehavior', {
-        behavior: 'allow',
-        downloadPath: TEMP_DIR
+    await page.evaluateOnNewDocument(() => {
+        Object.defineProperty(navigator, 'webdriver', { get: () => false });
     });
 
-    // Set viewport
+    const client = await page.createCDPSession();
+    await client.send('Page.setDownloadBehavior', { behavior: 'allow', downloadPath: TEMP_DIR });
     await page.setViewport({ width: 1280, height: 800 });
 
-    // Filter games
-    const gamesToProcess = PLATFORM_FILTER
-        ? allGames.filter(g => g.platform === PLATFORM_FILTER)
-        : allGames;
-
-    console.log(`\nProcessing ${gamesToProcess.length} games...\n`);
+    const gamesToProcess = PLATFORM_FILTER ? allGames.filter(g => g.platform === PLATFORM_FILTER) : allGames;
+    console.log(`Processing ${gamesToProcess.length} games...\n`);
 
     let successCount = 0;
-    let skipCount = 0;
     let failCount = 0;
+    let skipCount = 0;
 
     for (const game of gamesToProcess) {
-        const config = platformConfig[game.platform];
-        const platformDir = path.join(ROMS_DIR, config.arkosFolder);
-
-        // Create platform directory
-        if (!fs.existsSync(platformDir)) {
-            fs.mkdirSync(platformDir, { recursive: true });
-        }
-
-        // Check if already downloaded
-        if (!REFETCH && isAlreadyDownloaded(platformDir, game.name)) {
-            if (DEBUG) console.log(`Exists: ${game.name}`);
-            skipCount++;
-            continue;
-        }
-
-        console.log(`[${game.platform}] Downloading: ${game.name}...`);
-
         try {
-            clearTemp();
+            const platformDir = path.join(ROMS_DIR, platformConfig[game.platform].arkosFolder);
+            if (!fs.existsSync(platformDir)) fs.mkdirSync(platformDir, { recursive: true });
 
-            // Build list of search terms
-            const searchTerms = [game.name];
-            if (game.libretroName) {
-                const cleanLibretro = game.libretroName.replace(/\s*\([^)]*\)\s*/g, '').trim();
-                if (cleanLibretro !== game.name) {
-                    searchTerms.push(cleanLibretro);
-                }
+            const baseFilename = normalizeFilename(game.name);
+            const mainFileExists = fs.readdirSync(platformDir).some(f => f.startsWith(baseFilename + '.') && !f.includes('_disc'));
+
+            const shouldCheckDiscs = CHECK_DISCS && MULTI_DISC_PLATFORMS.includes(game.platform);
+
+            if (!REFETCH && !shouldCheckDiscs && (mainFileExists || fs.readdirSync(platformDir).some(f => f.startsWith(baseFilename + '_disc1')))) {
+                skipCount++;
+                continue;
             }
 
+            console.log(`[${game.platform}] ${game.name}...`);
+            clearTemp();
+
+            // Default timeout 10 minutes (600s) for all, lengthy downloads common
+            const downloadTimeout = 600000;
+            let downloadedMain = false;
             let downloadedFile = null;
             let usedSource = null;
 
-            // Try romspedia first (if source is 'auto' or 'romspedia')
-            if (SOURCE === 'auto' || SOURCE === 'romspedia') {
-                let bestNonUsaMatch = null;
-                for (const searchTerm of searchTerms) {
+            // Strategy 1: Myrient
+            if (MYRIENT_PATHS[game.platform]) {
+                const paths = Array.isArray(MYRIENT_PATHS[game.platform])
+                    ? MYRIENT_PATHS[game.platform]
+                    : [MYRIENT_PATHS[game.platform]];
+
+                for (const pathSuffix of paths) {
                     try {
-                        if (DEBUG) console.log(`  [Romspedia] Searching: ${searchTerm}`);
-                        await searchGameRomspedia(page, game.platform, searchTerm);
-                        const match = await findBestMatchRomspedia(page, searchTerm, game.platform);
-                        // Check if this is a USA version
-                        const isUsa = match.href.includes('-usa') || match.text.includes('(USA)') || match.text.includes('(U)');
-                        if (isUsa) {
-                            // Found USA version, download it
-                            downloadedFile = await downloadRomRomspedia(page);
-                            usedSource = 'romspedia';
-                            break;
-                        } else if (!bestNonUsaMatch || match.score > bestNonUsaMatch.match.score) {
-                            // Save best non-USA match as fallback
-                            bestNonUsaMatch = { match, searchTerm };
-                            if (DEBUG) console.log(`  [Romspedia] No USA indicator, saving as fallback (score: ${match.score})`);
+                        const index = await buildMyrientIndex(page, pathSuffix);
+                        const match = findBestMatchMyrient(index, game.name);
+
+                        if (match) {
+                            const downloads = [{ match, suffix: getDiscSuffix(match.text) }];
+
+                            // Check for siblings (Multi-Disc)
+                            if (downloads[0].suffix) {
+                                const siblings = findMultiDiscSiblings(index, match);
+                                siblings.forEach(s => downloads.push({ match: s, suffix: getDiscSuffix(s.text) }));
+                                if (siblings.length > 0) console.log(`   Detailed multi-disc detected: ${siblings.length + 1} discs found.`);
+                            }
+
+                            for (const item of downloads) {
+                                const finalExt = path.extname(item.match.text) || '.zip';
+                                const targetName = item.suffix
+                                    ? `${baseFilename}${item.suffix}${finalExt}`
+                                    : `${baseFilename}${finalExt}`;
+
+                                const targetPath = path.join(platformDir, targetName);
+                                let alreadyExists = fs.existsSync(targetPath);
+
+                                if (!alreadyExists && item.suffix === '_disc1') {
+                                    const legacyPath = path.join(platformDir, `${baseFilename}${finalExt}`);
+                                    if (fs.existsSync(legacyPath)) {
+                                        try {
+                                            fs.renameSync(legacyPath, targetPath);
+                                            console.log(`   Renamed legacy file to ${targetName}`);
+                                            alreadyExists = true;
+                                        } catch (e) { }
+                                    }
+                                }
+
+                                if (alreadyExists && !REFETCH) {
+                                    if (downloads.length > 1) console.log(`   Skipping ${targetName} (already exists)`);
+                                    if (item === downloads[0]) downloadedMain = true;
+                                    continue;
+                                }
+
+                                process.stdout.write(`   Found: ${item.match.text}\n`);
+
+                                const targetUrl = `${MYRIENT_BASE}${pathSuffix}`;
+                                if (page.url() !== targetUrl) {
+                                    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+                                    await page.waitForSelector('table#list tbody tr');
+                                } else {
+                                    await new Promise(r => setTimeout(r, 2000));
+                                }
+
+                                const linkHandle = await page.evaluateHandle((targetHref) => {
+                                    return Array.from(document.querySelectorAll('a')).find(a => a.href === targetHref);
+                                }, item.match.href);
+
+                                if (linkHandle && linkHandle.asElement()) {
+                                    await linkHandle.asElement().click();
+
+                                    let dlFile = null;
+                                    for (let i = 0; i < 20; i++) {
+                                        await new Promise(r => setTimeout(r, 500));
+                                        if (fs.readdirSync(TEMP_DIR).some(f => !f.startsWith('.'))) {
+                                            try {
+                                                dlFile = await waitForDownload(TEMP_DIR, downloadTimeout, `   [Myrient]`);
+                                                usedSource = 'myrient';
+                                            } catch (e) { console.log(`   Stalled: ${e.message}`); }
+                                            break;
+                                        }
+                                    }
+
+                                    if (dlFile) {
+                                        fs.renameSync(dlFile, targetPath);
+                                        console.log(`   Saved: ${targetName}`);
+                                        if (item === downloads[0]) downloadedMain = true;
+                                    } else {
+                                        console.log('   Download failed to start.');
+                                    }
+                                }
+
+                                clearTemp();
+                                await new Promise(r => setTimeout(r, 3000));
+                            }
                         }
-                    } catch (err) {
-                        if (DEBUG) console.log(`  [Romspedia] Failed: ${err.message}`);
+                    } catch (e) {
+                        console.log(`   Myrient err (${pathSuffix}): ${e.message}`);
                     }
-                }
-                // If no USA version found but we have a non-USA match, use it
-                if (!downloadedFile && bestNonUsaMatch) {
-                    try {
-                        if (DEBUG) console.log(`  [Romspedia] Using best available: ${bestNonUsaMatch.match.text}`);
-                        await searchGameRomspedia(page, game.platform, bestNonUsaMatch.searchTerm);
-                        await findBestMatchRomspedia(page, bestNonUsaMatch.searchTerm, game.platform);
-                        downloadedFile = await downloadRomRomspedia(page);
-                        usedSource = 'romspedia';
-                    } catch (err) {
-                        if (DEBUG) console.log(`  [Romspedia] Failed: ${err.message}`);
-                    }
+                    if (downloadedMain) break; // Found main game, stop looking in other paths
                 }
             }
 
-            // Fallback to retrostic (if source is 'auto' or 'retrostic')
-            if (!downloadedFile && (SOURCE === 'auto' || SOURCE === 'retrostic')) {
-                if (SOURCE === 'auto' && DEBUG) console.log('  Falling back to retrostic...');
-                clearTemp(); // Clear any partial downloads
-
-                for (const searchTerm of searchTerms) {
+            if (downloadedMain) {
+                console.log(`   Success (via myrient)!`);
+                successCount++;
+            } else if (!downloadedMain && !shouldCheckDiscs && (SOURCE === 'auto' || SOURCE === 'retrostic')) {
+                // Strategy 2: Retrostic
+                const terms = Array.from(new Set([game.name, cleanSearchTerm(game.name)]));
+                for (const term of terms) {
                     try {
-                        if (DEBUG) console.log(`  [Retrostic] Searching: ${searchTerm}`);
-                        await searchGameRetrostic(page, game.platform, searchTerm);
-                        await findBestMatchRetrostic(page, searchTerm);
-                        downloadedFile = await downloadRomRetrostic(page);
+                        await searchGameRetrostic(page, game.platform, term);
+                        const match = await findBestMatchRetrostic(page, term);
+                        await page.goto(match.href, { waitUntil: 'load', timeout: 45000 });
+                        downloadedFile = await downloadRomRetrostic(page, TEMP_DIR, downloadTimeout);
                         usedSource = 'retrostic';
                         break;
-                    } catch (err) {
-                        if (DEBUG) console.log(`  [Retrostic] Failed: ${err.message}`);
-                        if (searchTerms.indexOf(searchTerm) === searchTerms.length - 1) {
-                            throw err; // Last attempt failed
-                        }
-                    }
+                    } catch (e) { }
                 }
+
+                if (downloadedFile) {
+                    const ext = path.extname(downloadedFile).toLowerCase();
+                    const finalName = `${normalizeFilename(game.name)}${ext}`;
+                    fs.renameSync(downloadedFile, path.join(platformDir, finalName));
+                    console.log(`   Success (via ${usedSource})!`);
+                    successCount++;
+                } else {
+                    throw new Error('No matches found');
+                }
+            } else {
+                if (!downloadedMain) throw new Error('No matches found');
             }
-
-            if (!downloadedFile) {
-                throw new Error('All download sources failed');
-            }
-
-            // Move to final location (keep as ZIP)
-            moveRom(downloadedFile, platformDir, game.name);
-
-            console.log(`  Success! (via ${usedSource})`);
-            successCount++;
-
-            // Rate limiting
-            await new Promise(r => setTimeout(r, DELAY_BETWEEN_DOWNLOADS));
 
         } catch (error) {
-            console.error(`  Failed: ${error.message}`);
+            console.error(`   Failed: ${error.message}`);
             logFailure(game, error.message);
             failCount++;
-
-            if (FAIL_FAST) {
-                console.error('Exiting due to --fail-fast');
-                await browser.close();
-                process.exit(1);
-            }
-
-            // Brief delay before next attempt
-            await new Promise(r => setTimeout(r, 1000));
         }
+
+        await new Promise(r => setTimeout(r, 3000));
     }
 
     await browser.close();
+    try { fs.rmSync(TEMP_DIR, { recursive: true, force: true }); } catch (e) { }
 
-    // Clean up temp directory
-    if (fs.existsSync(TEMP_DIR)) {
-        fs.rmSync(TEMP_DIR, { recursive: true, force: true });
-    }
-
-    console.log('\n--- Summary ---');
-    console.log(`Success: ${successCount}`);
-    console.log(`Skipped: ${skipCount}`);
-    console.log(`Failed: ${failCount}`);
-
-    if (failCount > 0) {
-        console.log(`\nFailed downloads logged to: ${FAILED_LOG}`);
-    }
-
-    console.log('\nDownload complete!');
+    printSizeSummary();
+    console.log(`\nAll Done! Success: ${successCount}, Skipped: ${skipCount}, Failed: ${failCount}`);
 };
 
-processGames().catch(err => {
-    console.error('Fatal error:', err);
-    process.exit(1);
-});
+processGames().catch(err => { console.error(err); process.exit(1); });
