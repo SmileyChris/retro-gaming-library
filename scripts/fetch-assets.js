@@ -227,7 +227,8 @@ async function fetchImages(options) {
             fs.mkdirSync(platformDir, { recursive: true });
         }
 
-        const filename = `${game.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
+        const normalizeFilename = (name) => name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/'/g, '').replace(/[^a-z0-9]/gi, '_').replace(/^_+|_+$/g, '').toLowerCase();
+        const filename = `${normalizeFilename(game.name)}.png`;
         const filepath = path.join(platformDir, filename);
 
         if (fs.existsSync(filepath) && !refetch) {
@@ -294,6 +295,60 @@ async function fetchImages(options) {
             }
         }
     }
+
+    // --- Cleanup Step ---
+    console.log('\n--- Cleaning up orphan files ---');
+    const validFilenames = new Set(gamesToProcess.map(g => {
+        const normalizeFilename = (name) => name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/'/g, '').replace(/[^a-z0-9]/gi, '_').replace(/^_+|_+$/g, '').toLowerCase();
+        return `${normalizeFilename(g.name)}.png`;
+    }));
+
+    let cleaned = 0;
+    for (const platform in platformConfig) {
+        if (platform !== platform) continue; // Logic check: we iterate all, but if we filtered 'platform', we should respect it?
+        // Actually, simpler: just iterate folders we touched.
+    }
+
+    // Iterate through all platforms involved in this run
+    const touchedPlatforms = platform ? [platform] : Object.keys(platformConfig);
+
+    for (const plt of touchedPlatforms) {
+        if (!platformConfig[plt]) continue;
+
+        const dir = path.join(baseDir, plt);
+        if (!fs.existsSync(dir)) continue;
+
+        const files = fs.readdirSync(dir);
+        for (const file of files) {
+            // We only clean if: 
+            // 1. It's not in our valid list (for this platform's games).
+            // BUT: if we are running with a filter (e.g. subset of games?), we can't easily know if a file belongs to a game we excluded from this process run.
+            // However, typical usage is full fetch.
+            // If running strictly for one platform, we can clean that platform.
+
+            // To be safe: we only clean if we are processing ALL games for that platform. 
+            // If specific game filtering was added in future, we'd need care. 
+            // Currently gamesToProcess is filtered by platform only.
+
+            // Re-calculate valid names for THIS platform only to be precise
+            const platformGames = allGames.filter(g => g.platform === plt);
+            const platformValidNames = new Set(platformGames.map(g => {
+                const normalizeFilename = (name) => name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/'/g, '').replace(/[^a-z0-9]/gi, '_').replace(/^_+|_+$/g, '').toLowerCase();
+                return `${normalizeFilename(g.name)}.png`;
+            }));
+
+            if (!platformValidNames.has(file)) {
+                if (debug) console.log(`  Deleting orphan: ${plt}/${file}`);
+                try {
+                    fs.unlinkSync(path.join(dir, file));
+                    cleaned++;
+                } catch (e) {
+                    console.error(`  Failed delete: ${file}`);
+                }
+            }
+        }
+    }
+    console.log(`Cleaned ${cleaned} orphan files.`);
 
     console.log(`\nComplete! ${success} downloaded, ${failed} failed, ${skipped} skipped`);
 }
