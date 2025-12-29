@@ -1757,7 +1757,7 @@ export const allGames = [
   },
   {
     id: "gb-8",
-    name: "Donkey Kong '94",
+    name: "Donkey Kong",
     platform: "GB/GBC",
     genres: ["Puzzle", "Platformer"],
     notes: "100+ levels",

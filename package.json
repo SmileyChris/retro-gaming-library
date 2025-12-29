@@ -7,8 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "fetch-boxart": "node scripts/fetch-boxart.js",
-    "fetch-screenshots": "node scripts/fetch-screenshots.js"
+    "fetch-assets": "node scripts/fetch-assets.js --all",
+    "fetch-boxart": "node scripts/fetch-assets.js --boxart",
+    "fetch-screenshots": "node scripts/fetch-assets.js --screenshots",
+    "patch-jp": "node scripts/patch-jp-games.js",
+    "patch-jp:revert": "node scripts/patch-jp-games.js --revert"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^6.2.1",
