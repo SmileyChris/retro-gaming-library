@@ -138,7 +138,7 @@ const findBestMatch = (gameName, fileList) => {
             }
         } else if (normalizedFile.includes(normalizedBase) || normalizedBase.includes(normalizedFile)) {
             const score = Math.min(normalizedFile.length, normalizedBase.length) /
-                         Math.max(normalizedFile.length, normalizedBase.length) * 90;
+                Math.max(normalizedFile.length, normalizedBase.length) * 90;
             if (score > bestScore) {
                 bestMatch = fileName;
                 bestScore = score;
@@ -179,7 +179,7 @@ const downloadImage = (url, filepath) => {
  * @param {boolean} options.refetch - Re-download existing images
  * @param {string} options.platform - Filter to specific platform
  */
-export async function fetchImages(options) {
+async function fetchImages(options) {
     const { type, debug = false, failFast = false, refetch = false, platform = null } = options;
 
     const isBoxart = type === 'boxart';
@@ -192,9 +192,9 @@ export async function fetchImages(options) {
     }
 
     if (hasPngquant) {
-        console.log('pngquant found - images will be compressed');
+        if (debug) console.log('pngquant found - images will be compressed');
     } else {
-        console.log('pngquant not found - using sharp for compression');
+        if (debug) console.log('pngquant not found - using sharp for compression');
     }
 
     console.log(`Fetching ${label}...`);
@@ -298,13 +298,50 @@ export async function fetchImages(options) {
     console.log(`\nComplete! ${success} downloaded, ${failed} failed, ${skipped} skipped`);
 }
 
-// Parse common CLI args
-export function parseArgs(args) {
-    return {
-        debug: args.includes('--debug') || args.includes('-d'),
-        failFast: args.includes('--fail-fast') || args.includes('-f'),
-        refetch: args.includes('--refetch') || args.includes('-r'),
-        platform: args.find(a => a.startsWith('--platform='))?.split('=')[1],
-        help: args.includes('--help') || args.includes('-h'),
-    };
+// CLI Logic
+const args = process.argv.slice(2);
+const help = args.includes('--help') || args.includes('-h');
+
+if (help) {
+    console.log(`Usage: node scripts/fetch-assets.js [options]
+
+Download box art and screenshots from LibRetro Thumbnails repository.
+
+Options:
+  --boxart            Download box art
+  --screenshots       Download screenshots
+  --all               Download both
+  -d, --debug         Show detailed debug output
+  -f, --fail-fast     Exit on first download failure
+  -r, --refetch       Re-download existing images
+  --platform=NAME     Filter to specific platform (e.g., --platform=Saturn)
+  -h, --help          Show this help message
+`);
+    process.exit(0);
 }
+
+const options = {
+    debug: args.includes('--debug') || args.includes('-d'),
+    failFast: args.includes('--fail-fast') || args.includes('-f'),
+    refetch: args.includes('--refetch') || args.includes('-r'),
+    platform: args.find(a => a.startsWith('--platform='))?.split('=')[1],
+};
+
+const doBoxart = args.includes('--boxart') || args.includes('--all');
+const doScreenshots = args.includes('--screenshots') || args.includes('--all');
+
+if (!doBoxart && !doScreenshots) {
+    console.error('Error: Must specify --boxart, --screenshots, or --all');
+    process.exit(1);
+}
+
+(async () => {
+    if (doBoxart) {
+        console.log('\n=== FETCHING BOX ART ===');
+        await fetchImages({ type: 'boxart', ...options });
+    }
+    if (doScreenshots) {
+        console.log('\n=== FETCHING SCREENSHOTS ===');
+        await fetchImages({ type: 'screenshot', ...options });
+    }
+})();
