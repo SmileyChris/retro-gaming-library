@@ -24,6 +24,9 @@ const MIN_SCORE = scoreArg ? parseInt(scoreArg.split('=')[1], 10) : 60;
 const sourceArg = args.find(a => a.startsWith('--source='));
 const SOURCE = sourceArg ? sourceArg.split('=')[1] : 'auto';
 
+const gameArg = args.find(a => a.startsWith('--game='));
+const GAME_FILTER = gameArg ? gameArg.split('=')[1].toLowerCase() : null;
+
 const ROMS_DIR = path.join(__dirname, '../roms');
 const TEMP_DIR = path.join(__dirname, '../roms/.temp', `proc-${process.pid}`);
 const FAILED_LOG = path.join(ROMS_DIR, 'failed.log');
@@ -47,7 +50,7 @@ const MULTI_DISC_PLATFORMS = ['PS1', 'Saturn'];
 if (!fs.existsSync(ROMS_DIR)) fs.mkdirSync(ROMS_DIR, { recursive: true });
 if (!fs.existsSync(TEMP_DIR)) fs.mkdirSync(TEMP_DIR, { recursive: true });
 
-const normalizeFilename = (name) => name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+const normalizeFilename = (name) => name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/'/g, '').replace(/[^a-z0-9]/gi, '_').replace(/^_+|_+$/g, '').toLowerCase();
 
 const formatBytes = (bytes) => {
     if (bytes === 0) return '0 B';
@@ -108,8 +111,12 @@ const printSizeSummary = () => {
 };
 
 const cleanSearchTerm = (name) => {
-    let clean = name.replace(/'/g, '').replace(/[^a-z0-9\s]/gi, ' ');
-    const stopWords = ['the', 'and', 'of', 'a', 'an', 'to', 'in', 'for', 'with', 'on', 'at', 'by', 'from'];
+    let clean = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/'/g, '').replace(/[^a-z0-9\s]/gi, ' ');
+    const stopWords = [
+        'the', 'and', 'of', 'a', 'an', 'to', 'in', 'for', 'with', 'on', 'at', 'by', 'from',
+        'usa', 'europe', 'japan', 'eu', 'us', 'jp', 'rev', 'v1', 'v2', 'v3',
+        'beta', 'demo', 'proto', 'sample', 'sgb', 'enhanced', 'compatible'
+    ];
     return clean.toLowerCase().split(/\s+/).filter(w => w && !stopWords.includes(w)).join(' ');
 };
 
@@ -234,22 +241,59 @@ const findBestMatchMyrient = (games, gameName) => {
     const normalizedTarget = cleanSearchTerm(gameName).replace(/\s+/g, '');
     const targetWords = cleanSearchTerm(gameName).split(' ');
 
+    // Check if target implies a sequel
+    const sequelMarkers = ['2', '3', '4', '5', 'ii', 'iii', 'iv', 'v'];
+    const targetHasSequel = targetWords.some(w => sequelMarkers.includes(w));
+
     const ratedGames = games.map(g => {
         const fileText = g.text;
-        const normalizedFile = cleanSearchTerm(fileText).replace(/\s+/g, '');
+        const nameNoExt = fileText.replace(/\.[^/.]+$/, "");
+        const normalizedFile = cleanSearchTerm(nameNoExt).replace(/\s+/g, '');
+        const fileWords = cleanSearchTerm(nameNoExt).split(' ');
         let score = 0;
 
-        if (normalizedFile.includes(normalizedTarget)) score = 80;
-        else if (normalizedTarget.includes(normalizedFile)) score = 75;
+        // Exact match preference
+        if (normalizedFile === normalizedTarget) score = 100;
+        else if (normalizedFile.includes(normalizedTarget)) {
+            // Check if file is a sequel but target isn't
+            const fileHasSequel = fileWords.some(w => sequelMarkers.includes(w));
+            if (fileHasSequel && !targetHasSequel) {
+                // If file ends with target, the sequel number is likely a prefix (e.g. "SMW 2 - Yoshi's Island"), so match is valid.
+                // We strip trailing digits (e.g. from "Rev 1") to ensure we match
+                const cleanFileEnd = normalizedFile.replace(/\d+$/, '');
+                if (cleanFileEnd.endsWith(normalizedTarget)) {
+                    score = 80;
+                } else {
+                    score = 10;
+                }
+            } else {
+                score = 80;
+                // Penalize if file is significantly longer
+                // e.g. "Super Mario World" (3 words) vs "Super Mario All-Stars + Super Mario World" (8 words)
+                if (fileWords.length > targetWords.length + 3) score -= 15;
+            }
+        }
+        else if (normalizedTarget.includes(normalizedFile)) {
+            // Target is longer than file (e.g. searching "Super Mario World 2" and finding "Super Mario World")
+            // usually safer than the reverse, but still risky
+            score = 60;
+        }
         else {
-            const matchCount = targetWords.filter(w => normalizedFile.includes(w)).length;
+            // Use strict word matching instead of substring inclusion
+            // This avoids "land" matching "island"
+            const matchCount = targetWords.filter(w => fileWords.includes(w)).length;
             const ratio = matchCount / targetWords.length;
 
-            if (ratio === 1) score = 70;
-            else if (ratio >= 0.5) score = 50;
+            if (ratio === 1) {
+                // All target words are in file
+                // Penalize if file is much longer (e.g. "SimCity" -> "SimCity 2000")
+                if (fileWords.length > targetWords.length + 4) score = 40;
+                else score = 70;
+            }
+            else if (ratio >= 0.75) score = 50; // Require 75% match (3/4 words)
 
-            const fileWords = cleanSearchTerm(fileText).split(' ');
-            const fileMatchCount = fileWords.filter(w => normalizedTarget.includes(w)).length;
+            // Reverse check: how many file words are in target?
+            const fileMatchCount = fileWords.filter(w => targetWords.includes(w)).length;
             if (fileWords.length > 0 && fileMatchCount / fileWords.length >= 0.8) {
                 score = Math.max(score, 60);
             }
@@ -262,7 +306,7 @@ const findBestMatchMyrient = (games, gameName) => {
         if (fileText.includes('Beta') || fileText.includes('Demo') || fileText.includes('Proto') || fileText.includes('Pirate')) score -= 40;
 
         return { ...g, score };
-    }).filter(g => g.score > 40).sort((a, b) => b.score - a.score);
+    }).filter(g => g.score > 60).sort((a, b) => b.score - a.score);
 
     return ratedGames.length > 0 ? ratedGames[0] : null;
 };
@@ -331,7 +375,11 @@ const processGames = async () => {
     await client.send('Page.setDownloadBehavior', { behavior: 'allow', downloadPath: TEMP_DIR });
     await page.setViewport({ width: 1280, height: 800 });
 
-    const gamesToProcess = PLATFORM_FILTER ? allGames.filter(g => g.platform === PLATFORM_FILTER) : allGames;
+    const gamesToProcess = allGames.filter((g) => {
+        if (PLATFORM_FILTER && g.platform !== PLATFORM_FILTER) return false;
+        if (GAME_FILTER && !g.name.toLowerCase().includes(GAME_FILTER)) return false;
+        return true;
+    });
     console.log(`Processing ${gamesToProcess.length} games...\n`);
 
     let successCount = 0;
@@ -349,8 +397,12 @@ const processGames = async () => {
             const shouldCheckDiscs = CHECK_DISCS && MULTI_DISC_PLATFORMS.includes(game.platform);
 
             if (!REFETCH && !shouldCheckDiscs && (mainFileExists || fs.readdirSync(platformDir).some(f => f.startsWith(baseFilename + '_disc1')))) {
-                skipCount++;
-                continue;
+                if (DEBUG) {
+                    // Fall through to check matches
+                } else {
+                    skipCount++;
+                    continue;
+                }
             }
 
             console.log(`[${game.platform}] ${game.name}...`);
@@ -368,93 +420,119 @@ const processGames = async () => {
                     ? MYRIENT_PATHS[game.platform]
                     : [MYRIENT_PATHS[game.platform]];
 
+                let candidates = [];
+
                 for (const pathSuffix of paths) {
                     try {
                         const index = await buildMyrientIndex(page, pathSuffix);
                         const match = findBestMatchMyrient(index, game.name);
 
                         if (match) {
-                            const downloads = [{ match, suffix: getDiscSuffix(match.text) }];
-
-                            // Check for siblings (Multi-Disc)
-                            if (downloads[0].suffix) {
-                                const siblings = findMultiDiscSiblings(index, match);
-                                siblings.forEach(s => downloads.push({ match: s, suffix: getDiscSuffix(s.text) }));
-                                if (siblings.length > 0) console.log(`   Detailed multi-disc detected: ${siblings.length + 1} discs found.`);
-                            }
-
-                            for (const item of downloads) {
-                                const finalExt = path.extname(item.match.text) || '.zip';
-                                const targetName = item.suffix
-                                    ? `${baseFilename}${item.suffix}${finalExt}`
-                                    : `${baseFilename}${finalExt}`;
-
-                                const targetPath = path.join(platformDir, targetName);
-                                let alreadyExists = fs.existsSync(targetPath);
-
-                                if (!alreadyExists && item.suffix === '_disc1') {
-                                    const legacyPath = path.join(platformDir, `${baseFilename}${finalExt}`);
-                                    if (fs.existsSync(legacyPath)) {
-                                        try {
-                                            fs.renameSync(legacyPath, targetPath);
-                                            console.log(`   Renamed legacy file to ${targetName}`);
-                                            alreadyExists = true;
-                                        } catch (e) { }
-                                    }
-                                }
-
-                                if (alreadyExists && !REFETCH) {
-                                    if (downloads.length > 1) console.log(`   Skipping ${targetName} (already exists)`);
-                                    if (item === downloads[0]) downloadedMain = true;
-                                    continue;
-                                }
-
-                                process.stdout.write(`   Found: ${item.match.text}\n`);
-
-                                const targetUrl = `${MYRIENT_BASE}${pathSuffix}`;
-                                if (page.url() !== targetUrl) {
-                                    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
-                                    await page.waitForSelector('table#list tbody tr');
-                                } else {
-                                    await new Promise(r => setTimeout(r, 2000));
-                                }
-
-                                const linkHandle = await page.evaluateHandle((targetHref) => {
-                                    return Array.from(document.querySelectorAll('a')).find(a => a.href === targetHref);
-                                }, item.match.href);
-
-                                if (linkHandle && linkHandle.asElement()) {
-                                    await linkHandle.asElement().click();
-
-                                    let dlFile = null;
-                                    for (let i = 0; i < 20; i++) {
-                                        await new Promise(r => setTimeout(r, 500));
-                                        if (fs.readdirSync(TEMP_DIR).some(f => !f.startsWith('.'))) {
-                                            try {
-                                                dlFile = await waitForDownload(TEMP_DIR, downloadTimeout, `   [Myrient]`);
-                                                usedSource = 'myrient';
-                                            } catch (e) { console.log(`   Stalled: ${e.message}`); }
-                                            break;
-                                        }
-                                    }
-
-                                    if (dlFile) {
-                                        fs.renameSync(dlFile, targetPath);
-                                        console.log(`   Saved: ${targetName}`);
-                                        if (item === downloads[0]) downloadedMain = true;
-                                    } else {
-                                        console.log('   Download failed to start.');
-                                    }
-                                }
-
-                                clearTemp();
-                                await new Promise(r => setTimeout(r, 3000));
-                            }
+                            candidates.push({ match, pathSuffix });
                         }
                     } catch (e) {
-                        console.log(`   Myrient err (${pathSuffix}): ${e.message}`);
+                        if (DEBUG) console.log(`   [Debug] Myrient check failed for path ${pathSuffix}: ${e.message}`);
                     }
-                    if (downloadedMain) break; // Found main game, stop looking in other paths
+                }
+
+                candidates.sort((a, b) => b.match.score - a.match.score);
+
+                if (candidates.length > 0) {
+                    const best = candidates[0];
+                    const { match, pathSuffix } = best;
+
+                    // Re-fetch index for the best path to handle multi-disc siblings correctly
+                    // (Unless we want to store the index in candidates, which is heavy)
+                    const index = await buildMyrientIndex(page, pathSuffix);
+
+                    const downloads = [{ match, suffix: getDiscSuffix(match.text) }];
+
+                    if (downloads[0].suffix) {
+                        const siblings = findMultiDiscSiblings(index, match);
+                        siblings.forEach(s => downloads.push({ match: s, suffix: getDiscSuffix(s.text) }));
+                        if (siblings.length > 0) console.log(`   Detailed multi-disc detected: ${siblings.length + 1} discs found.`);
+                    }
+
+                    for (const item of downloads) {
+                        const finalExt = path.extname(item.match.text) || '.zip';
+                        const targetName = item.suffix
+                            ? `${baseFilename}${item.suffix}${finalExt}`
+                            : `${baseFilename}${finalExt}`;
+
+                        const targetPath = path.join(platformDir, targetName);
+                        let alreadyExists = fs.existsSync(targetPath);
+
+                        if (!alreadyExists && item.suffix === '_disc1') {
+                            const legacyPath = path.join(platformDir, `${baseFilename}${finalExt}`);
+                            if (fs.existsSync(legacyPath)) {
+                                try {
+                                    fs.renameSync(legacyPath, targetPath);
+                                    console.log(`   Renamed legacy file to ${targetName}`);
+                                    alreadyExists = true;
+                                } catch (e) { }
+                            }
+                        }
+
+                        if (alreadyExists && !REFETCH) {
+                            if (DEBUG) console.log(`   [Debug Match]: ${item.match.text} (${pathSuffix})`);
+                            if (downloads.length > 1) console.log(`   Skipping ${targetName} (already exists)`);
+                            if (item === downloads[0]) downloadedMain = true;
+                            continue;
+                        }
+
+                        process.stdout.write(`   Found: ${item.match.text}\n`);
+
+                        const targetUrl = `${MYRIENT_BASE}${pathSuffix}`;
+                        if (page.url() !== targetUrl) {
+                            await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+                            await page.waitForSelector('table#list tbody tr');
+                        }
+
+                        const linkHandle = await page.evaluateHandle((targetHref) => {
+                            return Array.from(document.querySelectorAll('a')).find(a => a.href === targetHref);
+                        }, item.match.href);
+
+                        if (linkHandle && linkHandle.asElement()) {
+                            await linkHandle.asElement().click();
+
+                            let dlFile = null;
+                            for (let i = 0; i < 20; i++) {
+                                await new Promise(r => setTimeout(r, 500));
+                                if (fs.readdirSync(TEMP_DIR).some(f => !f.startsWith('.'))) {
+                                    try {
+                                        dlFile = await waitForDownload(TEMP_DIR, downloadTimeout, `   [Myrient]`);
+                                        usedSource = 'myrient';
+                                    } catch (e) { console.log(`   Stalled: ${e.message}`); }
+                                    break;
+                                }
+                            }
+
+                            if (dlFile) {
+                                fs.renameSync(dlFile, targetPath);
+                                console.log(`   Saved: ${targetName}`);
+                                if (item === downloads[0]) downloadedMain = true;
+                            } else {
+                                console.log('   Download failed to start.');
+                            }
+                        }
+                    }
+
+                    // Generate .m3u if multi-disc
+                    if (downloads.length > 1 && MULTI_DISC_PLATFORMS.includes(game.platform)) {
+                        const m3uPath = path.join(platformDir, `${baseFilename}.m3u`);
+                        const m3uContent = downloads.map(d => {
+                            const suffix = d.suffix ? d.suffix : '';
+                            const fExt = path.extname(d.match.text) || '.zip';
+                            return `${baseFilename}${suffix}${fExt}`;
+                        }).join('\n');
+
+                        try {
+                            fs.writeFileSync(m3uPath, m3uContent);
+                            console.log(`   Created playlist: ${baseFilename}.m3u`);
+                        } catch (e) { console.error(`   Failed to write m3u: ${e.message}`); }
+                    }
+                } else if (DEBUG) {
+                    console.log('   [Debug] No match found in any Myrient path.');
                 }
             }
 
