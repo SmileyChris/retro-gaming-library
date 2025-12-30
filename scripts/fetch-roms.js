@@ -117,7 +117,13 @@ const cleanSearchTerm = (name) => {
         'usa', 'europe', 'japan', 'eu', 'us', 'jp', 'rev', 'v1', 'v2', 'v3',
         'beta', 'demo', 'proto', 'sample', 'sgb', 'enhanced', 'compatible'
     ];
-    return clean.toLowerCase().split(/\s+/).filter(w => w && !stopWords.includes(w)).join(' ');
+    const allWords = clean.toLowerCase().split(/\s+/).filter(w => w);
+    const filtered = allWords.filter(w => !stopWords.includes(w));
+    // If filtering leaves only 1 word but original had more, keep all words for better matching
+    if (filtered.length <= 1 && allWords.length > 1) {
+        return allWords.join(' ');
+    }
+    return filtered.join(' ');
 };
 
 const logFailure = (game, error) => {
@@ -299,10 +305,13 @@ const findBestMatchMyrient = (games, gameName) => {
             }
         }
 
-        if (fileText.includes('(USA)')) score += 20;
+        // Check for USA in region tags - handles both (USA) and (USA, Europe, Korea)
+        if (/\(USA[,)]/.test(fileText) || fileText.includes('(USA)')) score += 20;
         if (fileText.includes('Rev') || fileText.includes('v1.')) score += 5;
 
-        if (fileText.includes('(Japan)') || fileText.includes('(Europe)') || fileText.includes('(Germany)') || fileText.includes('(France)')) score -= 10;
+        // Only penalize Japan/Europe-only releases (not multi-region ones that include USA)
+        const hasUSA = /\(USA[,)]/.test(fileText) || fileText.includes('(USA)');
+        if (!hasUSA && (fileText.includes('(Japan)') || fileText.includes('(Europe)') || fileText.includes('(Germany)') || fileText.includes('(France)'))) score -= 10;
         if (fileText.includes('Beta') || fileText.includes('Demo') || fileText.includes('Proto') || fileText.includes('Pirate')) score -= 40;
 
         return { ...g, score };
@@ -425,10 +434,17 @@ const processGames = async () => {
                 for (const pathSuffix of paths) {
                     try {
                         const index = await buildMyrientIndex(page, pathSuffix);
-                        const match = findBestMatchMyrient(index, game.name);
+                        // Try libretroName first (more specific), then fall back to game name
+                        const searchNames = game.libretroName
+                            ? [game.libretroName.replace(/\s*\([^)]*\)\s*/g, '').trim(), game.name]
+                            : [game.name];
 
-                        if (match) {
-                            candidates.push({ match, pathSuffix });
+                        for (const searchName of searchNames) {
+                            const match = findBestMatchMyrient(index, searchName);
+                            if (match) {
+                                candidates.push({ match, pathSuffix });
+                                break;
+                            }
                         }
                     } catch (e) {
                         if (DEBUG) console.log(`   [Debug] Myrient check failed for path ${pathSuffix}: ${e.message}`);

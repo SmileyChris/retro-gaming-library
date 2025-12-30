@@ -1034,7 +1034,7 @@ export const allGames = [
     genres: ["Adventure"],
     notes: "Haunting, meditative",
     gem: false,
-    libretroName: "Ecco the Dolphin (USA)",
+    libretroName: "Ecco the Dolphin (USA, Europe, Korea) (En)",
   },
   {
     id: "gen-28",
