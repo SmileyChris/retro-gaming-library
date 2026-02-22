@@ -1,6 +1,7 @@
 <script>
   import { platformConfig } from "./data.js";
   import { navigate } from "./router.svelte.js";
+  import { gameFilename } from "./utils.js";
 
   let {
     game,
@@ -10,8 +11,7 @@
   } = $props();
 
   const config = platformConfig[game.platform];
-  const filename = game.name.replace(/[^a-z0-9]/gi, "_").toLowerCase() + ".png";
-  const localUrl = `/boxart/${game.platform}/${filename}`;
+  const localUrl = `/boxart/${game.platform}/${gameFilename(game.name)}`;
 
   function handlePlatformClick(event) {
     event.stopPropagation();

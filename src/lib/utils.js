@@ -1,3 +1,7 @@
+export function gameFilename(name) {
+    return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/'/g, "").replace(/[^a-z0-9]/gi, "_").replace(/^_+|_+$/g, "").toLowerCase() + ".png";
+}
+
 export function getGenreColor(name) {
     let hash = 0;
     for (let i = 0; i < name.length; i++) {

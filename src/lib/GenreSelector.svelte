@@ -1,6 +1,7 @@
 <script>
   import { navigate } from "./router.svelte.js";
   import { allGames, platformConfig } from "./data.js";
+  import { gameFilename } from "./utils.js";
   import CartridgeList from "./CartridgeList.svelte";
 
   let {
@@ -65,9 +66,7 @@
   });
 
   function getGameImage(game) {
-    const filename =
-      game.name.replace(/[^a-z0-9]/gi, "_").toLowerCase() + ".png";
-    return `/boxart/${game.platform}/${filename}`;
+    return `/boxart/${game.platform}/${gameFilename(game.name)}`;
   }
 
   function getItemKey(item) {

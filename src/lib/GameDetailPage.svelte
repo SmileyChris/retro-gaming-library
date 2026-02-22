@@ -4,6 +4,7 @@
   import { platformConfig, allGames } from "./data.js";
   import { gameDescriptions } from "./descriptions.js";
   import Cartridge from "./Cartridge.svelte";
+  import { gameFilename } from "./utils.js";
 
   let { gameId } = $props();
 
@@ -52,14 +53,14 @@
   // Box art path
   let boxArtUrl = $derived(
     game
-      ? `/boxart/${game.platform}/${game.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.png`
+      ? `/boxart/${game.platform}/${gameFilename(game.name)}`
       : ""
   );
 
   // Screenshot path
   let screenshotUrl = $derived(
     game
-      ? `/screenshots/${game.platform}/${game.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.png`
+      ? `/screenshots/${game.platform}/${gameFilename(game.name)}`
       : ""
   );
   let hasScreenshot = $state(false);

@@ -4,7 +4,7 @@
   import ViewToggle from "./ViewToggle.svelte";
   import { platformConfig, allGames } from "./data.js";
   import { navigate } from "./router.svelte.js";
-  import { getGenreColor } from "./utils.js";
+  import { getGenreColor, gameFilename } from "./utils.js";
 
   let {
     platform = "All",
@@ -631,8 +631,7 @@
         >
           <div class="relative h-28 w-32 mb-2">
             {#each otherCategoryMatches.slice(0, 3) as game, i}
-              {@const filename =
-                game.name.replace(/[^a-z0-9]/gi, "_").toLowerCase() + ".png"}
+              {@const filename = gameFilename(game.name)}
               <img
                 src="/boxart/{game.platform}/{filename}"
                 alt=""
