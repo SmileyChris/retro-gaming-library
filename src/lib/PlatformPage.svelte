@@ -540,6 +540,7 @@
               }}
               class="vt-random-btn has-tooltip flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition shrink-0"
               data-tooltip="Pick a random game"
+              aria-label="Pick a random game"
             >
               <svg
                 bind:this={randomBtnSvg}
